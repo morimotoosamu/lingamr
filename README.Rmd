@@ -1,0 +1,119 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# DirectLiNGAM
+
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+<!-- badges: end -->
+
+LiNGAM is a new method for estimating structural equation models or linear Bayesian networks. It is based on using the non-Gaussianity of the data.
+
+This package is a port of the Python lingam package to R.
+
+- [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
+- [lingam](https://github.com/cdt15/lingam)
+
+`DirectLiNGAM` は、Pythonで公開されている [LiNGAM パッケージ](https://github.com/cdt15/lingam) (LiNGAM: Linear Non-Gaussian Acyclic Model) の R 言語への移植版です。
+
+現在、開発中のアルファ版であり、動作確認とフィードバックを目的として公開しています。
+
+## 特徴
+* Direct LiNGAM アルゴリズムの実装
+* ブートストラップ法による因果構造の安定性評価
+* DiagrammeR を用いた推定結果の可視化
+
+## Installation
+
+You can install the development version of DirectLiNGAM from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("morimotoosamu/DirectLiNGAM")
+```
+
+
+## Requirements
+
+- DiagrammeR
+
+
+## Example
+
+サンプルデータの呼び出しとDirect LiNGAMの実行。
+
+```{r example}
+library(DirectLiNGAM)
+data(LiNGAM_sample)
+
+model <- direct_lingam(LiNGAM_sample)
+```
+
+推定された因果順序。
+
+```{r causal_order}
+cat("Index: ", model$causal_order, "\n")
+cat("Names: ", colnames(LiNGAM_sample)[model$causal_order], "\n")
+```
+
+推定された隣接行列
+
+```{r adjacency_matrix}
+B_hat <- model$adjacency_matrix
+colnames(B_hat) <- rownames(B_hat) <- colnames(LiNGAM_sample)
+cat("\n--- Estimated Adjacency Matrix ---\n")
+print(round(B_hat, 3))
+```
+
+
+推定された因果グラフの描画
+
+```{r plot_adjacency}
+plot_adjacency_diagrammer(
+  B_hat,
+  threshold = 1,
+  labels = colnames(LiNGAM_sample),
+  graph_label = "Estimated Causal Structure (Direct LiNGAM)",
+  rankdir = "TB",
+  shape = "ellipse",
+  fillcolor = "lightyellow"
+)
+```
+
+
+総合因果効果の推定
+
+```{r total_effects}
+estimate_all_total_effects(LiNGAM_sample, model)
+```
+
+
+
+事前知識を用いた推定
+
+
+誤差独立性の p 値
+
+
+## 注意事項
+本パッケージは Python 版のすべての機能を網羅しているわけではありません。
+
+本パッケージには Python 版に存在しない機能も追加されています。
+
+## ライセンス
+MIT License - オリジナルの作者である Shohei Shimizu 氏らに敬意を表します。
+
+## フィードバック
+バグの報告や機能のリクエストは、GitHub の Issues までお寄せください
