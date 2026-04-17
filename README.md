@@ -53,9 +53,6 @@ pak::pak("morimotoosamu/DirectLiNGAM")
 
 ## Usage
 
-<https://lingam.readthedocs.io/en/latest/tutorial/lingam.html>
-を再現する
-
 ### Sample Data
 
 ``` r
