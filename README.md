@@ -18,17 +18,24 @@ This package is a port of the Python lingam package to R.
 - [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 - [lingam](https://github.com/cdt15/lingam)
 
-`DirectLiNGAM` は、Pythonで公開されている [LiNGAM
-パッケージ](https://github.com/cdt15/lingam) (LiNGAM: Linear
-Non-Gaussian Acyclic Model) の R 言語への移植版です。
+`DirectLiNGAM` is a port to R of the
+[LiNGAM](https://github.com/cdt15/lingam) package (LiNGAM: Linear
+Non-Gaussian Acyclic Model), which is available in Python.
 
-現在、開発中のアルファ版であり、動作確認とフィードバックを目的として公開しています。
+This is currently an alpha version under development, and we are
+releasing it for the purpose of testing and gathering feedback.
 
-## 特徴
+## Features
 
-- Direct LiNGAM アルゴリズムの実装
-- ブートストラップ法による因果構造の安定性評価
-- DiagrammeR を用いた推定結果の可視化
+- Implementation of the Direct LiNGAM algorithm
+- Stability assessment of causal structures using the bootstrap method
+- Visualization of estimation results using DiagrammeR
+
+## Important Notes
+
+- This package does not include all the features of the Python version.
+- This package also includes features that are not present in the Python
+  version.
 
 ## Installation
 
@@ -261,13 +268,7 @@ round(p_vals_k, 3)
 #> x5 0.964 0.948 0.995 0.898 0.998    NA
 ```
 
-## 注意事項
-
-本パッケージは Python 版のすべての機能を網羅しているわけではありません。
-
-本パッケージには Python 版に存在しない機能も追加されています。
-
-## ライセンス
+## Licence
 
 MIT License
 
@@ -276,6 +277,6 @@ W.Kurebayashi, S.Shimizu
 
 Portions of this work: Copyright (c) 2026 O.Morimoto
 
-## フィードバック
+## Feedback
 
-バグの報告や機能のリクエストは、GitHub の Issues までお寄せください
+Please submit bug reports and feature requests via GitHub Issues.
