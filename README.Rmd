@@ -92,12 +92,26 @@ m |>
 
 ### Causal Discovery
 
+独立性の評価はデフォルトでは相互情報量(mutual infomation)を用います。
+
+
+HSIC(Hilbert-Schmidt Independence Criterion)を使いたい場合は引数で `measure = "kernel"` を指定します。
+
+
+係数の算出はデフォルトでは適応的LASSOを用います。
+
+
+また、LASSOのペナルティ（ラムダ）の最適化はデフォルトではBICを用います。
+
+
 ```{r direct_lingam}
 model <- direct_lingam(LiNGAM_sample_1000)
 ```
 
 
 ### Causal Order
+
+推定された因果の順序を確認します。
 
 ```{r causal_order}
 # index number
@@ -109,6 +123,8 @@ colnames(LiNGAM_sample_1000)[model$causal_order]
 
 ### Estimated Adjacency Matrix
 
+推定された効果の量を確認します。
+
 ```{r adjacency_matrix}
 B_hat <- model$adjacency_matrix
 colnames(B_hat) <- rownames(B_hat) <- colnames(LiNGAM_sample_1000)
@@ -117,6 +133,8 @@ round(B_hat, 3)
 
 
 ### Plot The Estimated Causal Graph
+
+推定された隣接行列に基づいて、因果グラフを描きます。
 
 Only paths with a coefficient of 0.5 or greater are being drawn.
 
@@ -135,6 +153,8 @@ B_hat |>
 
 ### Calculating The Total Causal Effect
 
+推定されたすべての総合効果を算出します。
+
 ```{r total_effects}
 LiNGAM_sample_1000 |>
   estimate_all_total_effects(model) |>
@@ -143,6 +163,8 @@ LiNGAM_sample_1000 |>
 
 
 ### Inference Based On Prior Knowledge
+
+事前知識を用いた実行例です。
 
 #### Specify In The Index
 - x3 is an exogenous variable.
@@ -158,12 +180,16 @@ pk1 <- make_prior_knowledge(
 pk1
 ```
 
+Direct LiNGAM を実行する際に、引数 `prior_knowledge` に事前知識を指定します。
+
 ```{r LiNGAM_with_pk_1}
 model_pk1 <- LiNGAM_sample_1000 |>
   direct_lingam(prior_knowledge = pk1)
 
 cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk1$causal_order], "\n")
 ```
+
+結果の隣接行列に基づいて因果グラフを描きます。
 
 ```{r LiNGAM_with_pk_2}
 B_pk <- model_pk1$adjacency_matrix
@@ -183,6 +209,9 @@ plot_adjacency_diagrammer(
 
 
 #### Specify By Variable Name
+
+事前知識を指定する際に変数名を用いる事例です。
+
 - x3 is an exogenous variable.
 - x1, x4, and x5 are sink_variables.
 - There is a path from x3 to x0 and from x3 to x2.
@@ -236,14 +265,6 @@ p_vals <- LiNGAM_sample_1000 |>
   get_error_independence_p_values(result)
 round(p_vals, 3)
 ```
-
-Calculate using Kendall
-```{r Independence_between_error_variables2}
-p_vals_k <- LiNGAM_sample_1000 |>
-  get_error_independence_p_values(result, method = "kendall")
-round(p_vals_k, 3)
-```
-
 
 ## Licence
 

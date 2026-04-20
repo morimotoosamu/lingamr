@@ -84,11 +84,22 @@ m |>
 
 ### Causal Discovery
 
+独立性の評価はデフォルトでは相互情報量(mutual infomation)を用います。
+
+HSIC(Hilbert-Schmidt Independence Criterion)を使いたい場合は引数で
+`measure = "kernel"` を指定します。
+
+係数の算出はデフォルトでは適応的LASSOを用います。
+
+また、LASSOのペナルティ（ラムダ）の最適化はデフォルトではBICを用います。
+
 ``` r
 model <- direct_lingam(LiNGAM_sample_1000)
 ```
 
 ### Causal Order
+
+推定された因果の順序を確認します。
 
 ``` r
 # index number
@@ -102,20 +113,24 @@ colnames(LiNGAM_sample_1000)[model$causal_order]
 
 ### Estimated Adjacency Matrix
 
+推定された効果の量を確認します。
+
 ``` r
 B_hat <- model$adjacency_matrix
 colnames(B_hat) <- rownames(B_hat) <- colnames(LiNGAM_sample_1000)
 round(B_hat, 3)
-#>       x0     x1     x2     x3     x4 x5
-#> x0 0.000  0.000  0.000  2.994  0.000  0
-#> x1 2.996  0.000  1.996 -0.022  0.000  0
-#> x2 0.060  0.000  0.000  5.776  0.000  0
-#> x3 0.000  0.000  0.000  0.000  0.000  0
-#> x4 8.100 -0.033 -0.932 -0.056  0.000  0
-#> x5 4.377 -0.057  0.084 -0.120 -0.022  0
+#>       x0 x1    x2    x3 x4 x5
+#> x0 0.000  0 0.000 2.994  0  0
+#> x1 3.084  0 1.932 0.000  0  0
+#> x2 0.000  0 0.000 5.917  0  0
+#> x3 0.000  0 0.000 0.000  0  0
+#> x4 6.154  0 0.000 0.000  0  0
+#> x5 3.954  0 0.000 0.000  0  0
 ```
 
 ### Plot The Estimated Causal Graph
+
+推定された隣接行列に基づいて、因果グラフを描きます。
 
 Only paths with a coefficient of 0.5 or greater are being drawn.
 
@@ -135,20 +150,24 @@ B_hat |>
 
 ### Calculating The Total Causal Effect
 
+推定されたすべての総合効果を算出します。
+
 ``` r
 LiNGAM_sample_1000 |>
   estimate_all_total_effects(model) |>
   round(3)
-#>       x0     x1     x2     x3     x4 x5
-#> x0 0.000  0.000  0.000  2.994  0.000  0
-#> x1 3.116  0.000  1.996 20.836  0.000  0
-#> x2 0.060  0.000  0.000  5.957  0.000  0
-#> x3 0.000  0.000  0.000  0.000  0.000  0
-#> x4 7.941 -0.033 -0.997 17.957  0.000  0
-#> x5 4.028 -0.056 -0.007 11.898 -0.022  0
+#>       x0     x1     x2     x3    x4 x5
+#> x0 0.000  0.000  0.000  2.994 0.000  0
+#> x1 3.116  0.000  2.176 20.836 0.000  0
+#> x2 0.060  0.000  0.000  5.957 0.000  0
+#> x3 0.000  0.000  0.000  0.000 0.000  0
+#> x4 7.941 -0.033 -0.516 17.957 0.000  0
+#> x5 4.028 -0.056  0.235 11.898 0.015  0
 ```
 
 ### Inference Based On Prior Knowledge
+
+事前知識を用いた実行例です。
 
 #### Specify In The Index
 
@@ -172,6 +191,9 @@ pk1
 #> [6,]   -1    0   -1   -1    0   -1
 ```
 
+Direct LiNGAM を実行する際に、引数 `prior_knowledge`
+に事前知識を指定します。
+
 ``` r
 model_pk1 <- LiNGAM_sample_1000 |>
   direct_lingam(prior_knowledge = pk1)
@@ -180,17 +202,19 @@ cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk1$causal_order], "\n"
 #> Causal Order:  x3 x0 x2 x1 x4 x5
 ```
 
+結果の隣接行列に基づいて因果グラフを描きます。
+
 ``` r
 B_pk <- model_pk1$adjacency_matrix
 colnames(B_pk) <- rownames(B_pk) <- colnames(LiNGAM_sample_1000)
 round(B_pk, 3)
-#>       x0 x1     x2     x3 x4 x5
-#> x0 0.000  0  0.000  2.994  0  0
-#> x1 2.996  0  1.996 -0.022  0  0
-#> x2 0.060  0  0.000  5.776  0  0
-#> x3 0.000  0  0.000  0.000  0  0
-#> x4 8.002  0 -0.997 -0.056  0  0
-#> x5 4.028  0 -0.007 -0.118  0  0
+#>       x0 x1    x2    x3 x4 x5
+#> x0 0.000  0 0.000 2.994  0  0
+#> x1 3.084  0 1.932 0.000  0  0
+#> x2 0.000  0 0.000 5.917  0  0
+#> x3 0.000  0 0.000 0.000  0  0
+#> x4 6.154  0 0.000 0.000  0  0
+#> x5 3.954  0 0.000 0.000  0  0
 
 plot_adjacency_diagrammer(
   B_pk,
@@ -206,6 +230,8 @@ plot_adjacency_diagrammer(
 <img src="man/figures/README-LiNGAM_with_pk_2-1.png" alt="" width="100%" />
 
 #### Specify By Variable Name
+
+事前知識を指定する際に変数名を用いる事例です。
 
 - x3 is an exogenous variable.
 - x1, x4, and x5 are sink_variables.
@@ -244,13 +270,13 @@ cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk2$causal_order], "\n"
 B_pk <- model_pk2$adjacency_matrix
 colnames(B_pk) <- rownames(B_pk) <- colnames(LiNGAM_sample_1000)
 round(B_pk, 3)
-#>       x0 x1     x2     x3 x4 x5
-#> x0 0.000  0  0.000  2.994  0  0
-#> x1 2.996  0  1.996 -0.022  0  0
-#> x2 0.060  0  0.000  5.776  0  0
-#> x3 0.000  0  0.000  0.000  0  0
-#> x4 8.002  0 -0.997 -0.056  0  0
-#> x5 4.021  0 -0.023  0.000  0  0
+#>       x0 x1    x2    x3 x4 x5
+#> x0 0.000  0 0.000 2.994  0  0
+#> x1 3.084  0 1.932 0.000  0  0
+#> x2 0.000  0 0.000 5.917  0  0
+#> x3 0.000  0 0.000 0.000  0  0
+#> x4 6.154  0 0.000 0.000  0  0
+#> x5 3.954  0 0.000 0.000  0  0
 
 B_pk |>
   plot_adjacency_diagrammer(
@@ -276,28 +302,13 @@ result <- LiNGAM_sample_1000 |>
 p_vals <- LiNGAM_sample_1000 |>
   get_error_independence_p_values(result)
 round(p_vals, 3)
-#>       x0    x1    x2    x3    x4    x5
-#> x0    NA 0.962 0.984 0.976 0.977 0.952
-#> x1 0.962    NA 0.998 0.988 0.997 0.966
-#> x2 0.984 0.998    NA 0.958 0.966 0.998
-#> x3 0.976 0.988 0.958    NA 0.970 0.902
-#> x4 0.977 0.997 0.966 0.970    NA 0.995
-#> x5 0.952 0.966 0.998 0.902 0.995    NA
-```
-
-Calculate using Kendall
-
-``` r
-p_vals_k <- LiNGAM_sample_1000 |>
-  get_error_independence_p_values(result, method = "kendall")
-round(p_vals_k, 3)
-#>       x0    x1    x2    x3    x4    x5
-#> x0    NA 0.969 0.982 0.963 0.971 0.964
-#> x1 0.969    NA 0.984 0.986 0.996 0.948
-#> x2 0.982 0.984    NA 0.920 0.996 0.995
-#> x3 0.963 0.986 0.920    NA 0.983 0.898
-#> x4 0.971 0.996 0.996 0.983    NA 0.998
-#> x5 0.964 0.948 0.995 0.898 0.998    NA
+#>       x0    x1    x2    x3   x4    x5
+#> x0    NA 0.009 0.059 0.976 0.00 0.022
+#> x1 0.009    NA 0.061 0.004 0.00 0.086
+#> x2 0.059 0.061    NA 0.267 0.00 0.959
+#> x3 0.976 0.004 0.267    NA 0.00 0.085
+#> x4 0.000 0.000 0.000 0.000   NA 0.180
+#> x5 0.022 0.086 0.959 0.085 0.18    NA
 ```
 
 ## Licence

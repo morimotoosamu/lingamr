@@ -1,11 +1,101 @@
+#' 指定した2変数間の総合因果効果を推定
+#'
+#' @param X 元データ (matrix or data.frame)
+#' @param lingam_result direct_lingam() の返り値
+#' @param from_index 原因変数 (1-based index or 変数名)
+#' @param to_index 結果変数 (1-based index or 変数名)
+#' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
+#' @param lambda LASSO のペナルティ選択 ("lambda.min" or "lambda.1se")
+#' @return 推定された総合因果効果
+estimate_total_effect <- function(X, lingam_result, from_index, to_index,
+                                  method = "ols", lambda = "lambda.1se") {
+  if (is.data.frame(X)) {
+    col_names <- colnames(X)
+    X <- as.matrix(X)
+  } else {
+    X <- as.matrix(X)
+    col_names <- colnames(X)
+  }
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.")
+
+  n_features <- ncol(X)
+
+  # --- 変数名 → インデックス変換 ---
+  resolve_index <- function(idx, arg_name) {
+    if (is.character(idx)) {
+      if (is.null(col_names)) {
+        stop(sprintf("'%s' was specified as a name, but X has no column names.", arg_name))
+      }
+      pos <- match(idx, col_names)
+      if (is.na(pos)) {
+        stop(sprintf(
+          "Variable '%s' not found. Available: %s",
+          idx, paste(col_names, collapse = ", ")
+        ))
+      }
+      return(pos)
+    } else if (is.numeric(idx)) {
+      idx <- as.integer(idx)
+      if (idx < 1 || idx > n_features) {
+        stop(sprintf("'%s' must be between 1 and %d.", arg_name, n_features))
+      }
+      return(idx)
+    }
+    stop(sprintf("'%s' must be integer or character.", arg_name))
+  }
+
+  from_index <- resolve_index(from_index, "from_index")
+  to_index <- resolve_index(to_index, "to_index")
+  if (from_index == to_index) stop("from_index and to_index must differ.")
+
+  adjacency_matrix <- lingam_result$adjacency_matrix
+  causal_order <- lingam_result$causal_order
+
+  # --- 因果順序チェック ---
+  from_order <- which(causal_order == from_index)
+  to_order <- which(causal_order == to_index)
+
+  from_label <- if (!is.null(col_names)) col_names[from_index] else paste0("x", from_index)
+  to_label <- if (!is.null(col_names)) col_names[to_index] else paste0("x", to_index)
+
+  if (from_order > to_order) {
+    warning(sprintf(
+      "Causal order of %s (to) is earlier than %s (from). Result may be incorrect.",
+      to_label, from_label
+    ))
+  }
+
+  # --- 親変数の特定と回帰 ---
+  parents <- which(abs(adjacency_matrix[from_index, ]) > 0)
+  predictors <- unique(c(from_index, parents))
+  from_pos <- which(predictors == from_index)
+
+  y <- X[, to_index]
+  Xp <- X[, predictors, drop = FALSE]
+
+  coefs <- switch(method,
+    "ols"            = fit_ols(y, Xp),
+    "lasso"          = fit_lasso(y, Xp, lambda),
+    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda)
+  )
+
+  return(coefs[from_pos])
+}
+
+
 #' 全変数間の総合因果効果を一括推定
 #'
 #' @param X 元データ (n_samples x n_features)
 #' @param lingam_result direct_lingam() の返り値
+#' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
+#' @param lambda LASSO のペナルティ選択 ("lambda.min" or "lambda.1se")
+#' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
 #' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
 #' @importFrom stats cov
 #' @export
 #' @examples
+
+#'
 #' # ここの実行例を書き直し
 #' pk <- make_prior_knowledge(6, exogenous_variables = c(4))
 #'
@@ -17,57 +107,46 @@
 #'   no_paths = list(c("x5", "x2")),
 #'   labels = c("x0", "x1", "x2", "x3", "x4", "x5")
 #' )
-estimate_all_total_effects <- function(X, lingam_result) {
+estimate_all_total_effects <- function(X,
+                                       lingam_result,
+                                       method = "ols",
+                                       lambda = "lambda.1se") {
   X <- as.matrix(X)
   n_features <- ncol(X)
-  adj_matrix <- lingam_result$adjacency_matrix
   causal_order <- lingam_result$causal_order
-
-  # --- 【最大の高速化】数万件のデータを一度だけ共分散行列に圧縮 ---
-  cov_mat <- stats::cov(X)
-
-  # 結果を格納する行列 (ゼロ初期化)
+  adj_matrix <- lingam_result$adjacency_matrix
   TE <- matrix(0, nrow = n_features, ncol = n_features)
   if (!is.null(colnames(X))) {
     rownames(TE) <- colnames(X)
     colnames(TE) <- colnames(X)
   }
-
-  # 因果順序の上流から下流へ向かって処理
-  # (一番下流の変数は他の原因にならないので n_features - 1 まで)
   for (i in 1:(n_features - 1)) {
     from_idx <- causal_order[i]
-
-    # from_idx の親変数を特定し、説明変数を定義
+    # from_idx の親変数を特定
     parents <- which(abs(adj_matrix[from_idx, ]) > 0)
     predictors <- unique(c(from_idx, parents))
-
-    # 説明変数同士の共分散行列 (Σ_xx)
-    cov_xx <- cov_mat[predictors, predictors, drop = FALSE]
-
-    # --- 【ベクトル化】因果順序が from_idx より「後」の全変数を一括で目的変数(Y)とする ---
-    to_indices <- causal_order[(i + 1):n_features]
-
-    # 説明変数と目的変数群との共分散行列 (Σ_xy)
-    cov_xy <- cov_mat[predictors, to_indices, drop = FALSE]
-
-    # 係数行列を一括計算: β = Σ_xx^-1 Σ_xy
-    # Rのsolve()は連立方程式を解くC言語ルーチンを呼び出すため極めて高速
-    beta_mat <- tryCatch(
-      solve(cov_xx, cov_xy),
-      error = function(e) {
-        # ムーア・ペンローズ逆行列にフォールバック
-        MASS::ginv(cov_xx) %*% cov_xy
-        # または: 当該反復をスキップ
+    from_pos <- which(predictors == from_idx)
+    # from_idx より下流の全変数
+    downstream <- causal_order[(i + 1):n_features]
+    if (method == "ols") {
+      # --- OLS: 共分散行列ベースで高速一括計算 ---
+      cov_mat <- cov(X)
+      cov_xx <- cov_mat[predictors, predictors, drop = FALSE]
+      cov_xy <- cov_mat[predictors, downstream, drop = FALSE]
+      beta_mat <- solve(cov_xx, cov_xy)
+      TE[downstream, from_idx] <- beta_mat[from_pos, ]
+    } else {
+      # --- LASSO / Adaptive LASSO: 各目的変数ごとに回帰 ---
+      Xp <- X[, predictors, drop = FALSE]
+      for (to_idx in downstream) {
+        y <- X[, to_idx]
+        coefs <- switch(method,
+          "lasso"          = fit_lasso(y, Xp, lambda),
+          "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda)
+        )
+        TE[to_idx, from_idx] <- coefs[from_pos]
       }
-    )
-
-    # predictors の中の from_idx の位置を特定し、その行(係数)を抽出
-    from_pos <- which(predictors == from_idx)[1]
-
-    # 結果行列の該当箇所に一括代入
-    TE[to_indices, from_idx] <- beta_mat[from_pos, ]
+    }
   }
-
   return(TE)
 }

@@ -77,66 +77,69 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #' @param prior_knowledge 事前知識行列 (NULL可)
 #' @param apply_prior_knowledge_softly 事前知識のソフト適用 (logical)
 #' @param measure 独立性の評価尺度 ("pwling" or "kernel")
+#' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso")
+#' @param lambda LASSO のペナルティ選択
 #' @param seed 乱数シード (NULL可)
 #' @param verbose 進捗を表示するか (logical)
 #' @return BootstrapResult (list)
 #' @export
+#' @examples
+#'
+#'
+#'
+#'
+#' # 個々の実行例を書き直す
+#' bs <- bootstrap_lingam(X, n_sampling = 50L, reg_method = "lasso", seed = 42)
+#' cdc <- get_causal_direction_counts(bs, labels = colnames(X), min_causal_effect = 0.01)
+#' print(cdc[, c("from_name", "to_name", "count", "proportion")])
 bootstrap_lingam <- function(X,
                              n_sampling,
                              prior_knowledge = NULL,
                              apply_prior_knowledge_softly = FALSE,
                              measure = "pwling",
+                             reg_method = "ols",
+                             lambda = "lambda.1se",
                              seed = NULL,
                              verbose = TRUE) {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix.")
-  if (!is.integer(n_sampling)) n_sampling <- as.integer(n_sampling)
-  if (n_sampling <= 0) stop("n_sampling must be an integer greater than 0.")
-  if (!is.null(seed)) {
-    old_seed <- .Random.seed
-    on.exit(
-      {
-        .Random.seed <<- old_seed
-      },
-      add = TRUE
-    )
-    set.seed(seed)
-  }
+  n_sampling <- as.integer(n_sampling)
+  if (n_sampling <= 0) stop("n_sampling must be > 0.")
+  if (!is.null(seed)) set.seed(seed)
   n_samples <- nrow(X)
   n_features <- ncol(X)
-  # 結果格納用
   adjacency_matrices <- array(0, dim = c(n_sampling, n_features, n_features))
   total_effects <- array(0, dim = c(n_sampling, n_features, n_features))
   resampled_indices <- vector("list", n_sampling)
   if (verbose) {
-    message(sprintf(
-      "Starting bootstrap: %d iterations, %d samples, %d features",
-      n_sampling, n_samples, n_features
-    ))
+    message(sprintf("Bootstrap: %d iterations, method=%s", n_sampling, reg_method))
     t_start <- proc.time()
   }
   for (i in seq_len(n_sampling)) {
     if (verbose && (i %% 10 == 0 || i == 1)) {
       message(sprintf("  iteration %d / %d", i, n_sampling))
     }
-    # リサンプリング
     idx <- sample(n_samples, replace = TRUE)
     resampled_X <- X[idx, , drop = FALSE]
     resampled_indices[[i]] <- idx
-    # Direct LiNGAM の実行
     result <- direct_lingam(
       resampled_X,
       prior_knowledge = prior_knowledge,
       apply_prior_knowledge_softly = apply_prior_knowledge_softly,
-      measure = measure
+      measure = measure,
+      reg_method = reg_method,
+      lambda = lambda
     )
     adjacency_matrices[i, , ] <- result$adjacency_matrix
-    # 総合因果効果の一括計算
-    total_effects[i, , ] <- estimate_all_total_effects(resampled_X, result)
+    total_effects[i, , ] <- estimate_all_total_effects(
+      resampled_X, result,
+      method = reg_method,
+      lambda = lambda
+    )
   }
   if (verbose) {
     elapsed <- (proc.time() - t_start)["elapsed"]
-    message(sprintf("Bootstrap completed in %.1f seconds.", elapsed))
+    message(sprintf("Completed in %.1f seconds.", elapsed))
   }
   create_bootstrap_result(adjacency_matrices, total_effects, resampled_indices)
 }
