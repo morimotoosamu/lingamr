@@ -26,3 +26,12 @@ list(dag = list of data.frames, count = integer vector)
 \description{
 DAG カウントを取得
 }
+\examples{
+data(LiNGAM_sample_1000)
+
+bs_model <- LiNGAM_sample_1000 |>
+  bootstrap_lingam(n_sampling = 30L, seed = 42)
+
+bs_model |>
+  get_directed_acyclic_graph_counts()
+}

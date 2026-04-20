@@ -10,6 +10,8 @@ bootstrap_lingam(
   prior_knowledge = NULL,
   apply_prior_knowledge_softly = FALSE,
   measure = "pwling",
+  reg_method = "lasso",
+  lambda = "AICc",
   seed = NULL,
   verbose = TRUE
 )
@@ -25,6 +27,10 @@ bootstrap_lingam(
 
 \item{measure}{独立性の評価尺度 ("pwling" or "kernel")}
 
+\item{reg_method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
+
+\item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")}
+
 \item{seed}{乱数シード (NULL可)}
 
 \item{verbose}{進捗を表示するか (logical)}
@@ -34,4 +40,23 @@ BootstrapResult (list)
 }
 \description{
 Direct LiNGAM のブートストラップ
+}
+\examples{
+data(LiNGAM_sample_1000)
+
+# Fast example with OLS
+bs <- bootstrap_lingam(LiNGAM_sample_1000,
+  n_sampling = 10L,
+  reg_method = "ols",
+  seed = 42
+)
+get_probabilities(bs)
+
+\donttest{
+# With LASSO (requires glmnet)
+bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000,
+  n_sampling = 30L,
+  seed = 42
+)
+}
 }

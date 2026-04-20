@@ -4,12 +4,16 @@
 \alias{estimate_all_total_effects}
 \title{全変数間の総合因果効果を一括推定}
 \usage{
-estimate_all_total_effects(X, lingam_result)
+estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AICc")
 }
 \arguments{
 \item{X}{元データ (n_samples x n_features)}
 
 \item{lingam_result}{direct_lingam() の返り値}
+
+\item{method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
+
+\item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")}
 }
 \value{
 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
@@ -18,15 +22,11 @@ estimate_all_total_effects(X, lingam_result)
 全変数間の総合因果効果を一括推定
 }
 \examples{
-# ここの実行例を書き直し
-pk <- make_prior_knowledge(6, exogenous_variables = c(4))
+data(LiNGAM_sample_1000)
 
-# ここの実行例を書き直し
-pk <- make_prior_knowledge(6,
-  exogenous_variables = "x3",
-  sink_variables = c("x1", "x4"),
-  paths = list(c("x3", "x0"), c("x3", "x2")),
-  no_paths = list(c("x5", "x2")),
-  labels = c("x0", "x1", "x2", "x3", "x4", "x5")
-)
+model <- LiNGAM_sample_1000 |>
+  direct_lingam()
+
+LiNGAM_sample_1000 |>
+  estimate_all_total_effects(model)
 }

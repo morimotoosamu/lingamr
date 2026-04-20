@@ -4,7 +4,13 @@
 \alias{estimate_adjacency_matrix}
 \title{因果順序から隣接行列を推定}
 \usage{
-estimate_adjacency_matrix(X, causal_order, prior_knowledge = NULL)
+estimate_adjacency_matrix(
+  X,
+  causal_order,
+  prior_knowledge = NULL,
+  method = "lasso",
+  lambda = "AICc"
+)
 }
 \arguments{
 \item{X}{元データ}
@@ -12,6 +18,15 @@ estimate_adjacency_matrix(X, causal_order, prior_knowledge = NULL)
 \item{causal_order}{因果順序 (1-based index のベクトル)}
 
 \item{prior_knowledge}{事前知識行列 (NULL可)}
+
+\item{method}{回帰手法
+"ols"           : 通常の最小二乗法（デフォルト）
+"lasso"         : LASSO回帰（glmnet）
+"adaptive_lasso": Adaptive LASSO（2段階）}
+
+\item{lambda}{LASSO のペナルティ (NULL = 交差検証で自動選択)
+"lambda.min" : 予測誤差最小
+"lambda.1se" : 1SE ルール（よりスパース、デフォルト）}
 }
 \value{
 隣接行列 B (n_features x n_features)

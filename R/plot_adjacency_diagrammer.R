@@ -28,21 +28,17 @@
 #' @importFrom grDevices col2rgb
 #' @export
 #' @examples
-#' # 個々の実行例を書き直す
-#' pk <- make_prior_knowledge(6, exogenous_variables = c(4))
+#' data(LiNGAM_sample_1000)
 #'
-#' # 書き直す
-#' pk <- make_prior_knowledge(6,
-#'   exogenous_variables = "x3",
-#'   sink_variables = c("x1", "x4"),
-#'   paths = list(c("x3", "x0"), c("x3", "x2")),
-#'   no_paths = list(c("x5", "x2")),
-#'   labels = c("x0", "x1", "x2", "x3", "x4", "x5")
-#' )
+#' model <- LiNGAM_sample_1000 |>
+#'   direct_lingam()
+#'
+#' model$adjacency_matrix |>
+#'   plot_adjacency_diagrammer()
 plot_adjacency_diagrammer <- function(B,
                                       labels = NULL,
                                       threshold = 0.01,
-                                      rankdir = "LR",
+                                      rankdir = "TB",
                                       graph_label = "Estimated Causal Structure",
                                       shape = "circle",
                                       fillcolor = "lightyellow",

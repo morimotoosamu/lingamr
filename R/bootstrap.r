@@ -78,27 +78,36 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #' @param apply_prior_knowledge_softly 事前知識のソフト適用 (logical)
 #' @param measure 独立性の評価尺度 ("pwling" or "kernel")
 #' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso")
-#' @param lambda LASSO のペナルティ選択
+#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")
 #' @param seed 乱数シード (NULL可)
 #' @param verbose 進捗を表示するか (logical)
 #' @return BootstrapResult (list)
 #' @export
 #' @examples
+#' data(LiNGAM_sample_1000)
 #'
+#' # Fast example with OLS
+#' bs <- bootstrap_lingam(LiNGAM_sample_1000,
+#'   n_sampling = 10L,
+#'   reg_method = "ols",
+#'   seed = 42
+#' )
+#' get_probabilities(bs)
 #'
-#'
-#'
-#' # 個々の実行例を書き直す
-#' bs <- bootstrap_lingam(X, n_sampling = 50L, reg_method = "lasso", seed = 42)
-#' cdc <- get_causal_direction_counts(bs, labels = colnames(X), min_causal_effect = 0.01)
-#' print(cdc[, c("from_name", "to_name", "count", "proportion")])
+#' \donttest{
+#' # With LASSO (requires glmnet)
+#' bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000,
+#'   n_sampling = 30L,
+#'   seed = 42
+#' )
+#' }
 bootstrap_lingam <- function(X,
                              n_sampling,
                              prior_knowledge = NULL,
                              apply_prior_knowledge_softly = FALSE,
                              measure = "pwling",
-                             reg_method = "ols",
-                             lambda = "lambda.1se",
+                             reg_method = "lasso",
+                             lambda = "AICc",
                              seed = NULL,
                              verbose = TRUE) {
   X <- as.matrix(X)
@@ -172,6 +181,14 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #' @param ... 追加の引数 (S3メソッド互換用)
 #' @method print BootstrapResult
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'
+#' bs_model |>
+#'   print()
 print.BootstrapResult <- function(x, ...) {
   n_sampling <- dim(x$adjacency_matrices)[1]
   n_features <- dim(x$adjacency_matrices)[2]
@@ -194,6 +211,14 @@ print.BootstrapResult <- function(x, ...) {
 #'                     sd_effect, ci_lower, ci_upper [, sign] [, from_name, to_name])
 #' @importFrom stats sd median quantile
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'
+#' bs_model |>
+#'   get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
 get_causal_direction_counts <- function(result,
                                         n_directions = NULL,
                                         min_causal_effect = NULL,
@@ -316,6 +341,14 @@ get_causal_direction_counts <- function(result,
 #' @param split_by_causal_effect_sign 因果効果の符号で分割するか
 #' @return list(dag = list of data.frames, count = integer vector)
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'
+#' bs_model |>
+#'   get_directed_acyclic_graph_counts()
 get_directed_acyclic_graph_counts <- function(result,
                                               n_dags = NULL,
                                               min_causal_effect = NULL,
@@ -334,19 +367,14 @@ get_directed_acyclic_graph_counts <- function(result,
   dag_list <- vector("list", n_sampling)
 
   if (split_by_causal_effect_sign) {
-    # 符号を抽出して文字列化
     sign_array <- sign(am_array)
     sign_array[abs(am_array) <= min_causal_effect] <- 0
     dag_keys <- apply(sign_array, MARGIN = 1, FUN = paste, collapse = ",")
-
-    # リストへの格納も lapply で一括処理可能
     dag_list <- lapply(seq_len(n_sampling), function(s) sign_array[s, , ])
   } else {
-    # 2値化して文字列化
     bin_array <- abs(am_array) > min_causal_effect
-    mode(bin_array) <- "integer"
+    mode(bin_array) <- "integer" # 文字列化のために integer に変換
     dag_keys <- apply(bin_array, MARGIN = 1, FUN = paste, collapse = ",")
-
     dag_list <- lapply(seq_len(n_sampling), function(s) bin_array[s, , ])
   }
 
@@ -363,19 +391,28 @@ get_directed_acyclic_graph_counts <- function(result,
 
   for (i in seq_along(tbl)) {
     key <- names(tbl)[i]
-    # 対応する DAG を見つける
     match_idx <- which(dag_keys == key)[1]
     mat <- dag_list[[match_idx]]
 
-    if (split_by_causal_effect_sign) {
-      idx <- which(mat != 0, arr.ind = TRUE)
+    # ★修正: 両方とも which(mat != 0) で統一
+    idx <- which(mat != 0, arr.ind = TRUE)
+
+    if (nrow(idx) == 0) {
+      if (split_by_causal_effect_sign) {
+        dags_result[[i]] <- data.frame(
+          from = integer(0), to = integer(0),
+          sign = integer(0)
+        )
+      } else {
+        dags_result[[i]] <- data.frame(from = integer(0), to = integer(0))
+      }
+    } else if (split_by_causal_effect_sign) {
       dags_result[[i]] <- data.frame(
         from = idx[, 2],
         to   = idx[, 1],
         sign = sapply(seq_len(nrow(idx)), function(k) mat[idx[k, 1], idx[k, 2]])
       )
     } else {
-      idx <- which(mat, arr.ind = TRUE)
       dags_result[[i]] <- data.frame(
         from = idx[, 2],
         to   = idx[, 1]
@@ -393,6 +430,14 @@ get_directed_acyclic_graph_counts <- function(result,
 #' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
 #' @return 確率行列 (n_features x n_features)
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'
+#' bs_model |>
+#'   get_probabilities()
 get_probabilities <- function(result, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -415,6 +460,14 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' @return data.frame (from, to, effect, probability)
 #' @importFrom stats median
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'
+#' bs_model |>
+#'   get_total_causal_effects()
 get_total_causal_effects <- function(result, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -471,6 +524,13 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' @return data.frame (path, effect, probability)
 #' @importFrom stats median
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#' bs_model |>
+#'   get_paths(1, 6)
 get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -539,11 +599,18 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 #' @param shape ノード形状
 #' @return grViz オブジェクト
 #' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#' bs_model |>
+#'   plot_bootstrap_probabilities()
 plot_bootstrap_probabilities <- function(result,
                                          labels = NULL,
                                          min_causal_effect = NULL,
                                          min_probability = 0.5,
-                                         rankdir = "LR",
+                                         rankdir = "TB",
                                          shape = "circle") {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -593,4 +660,71 @@ plot_bootstrap_probabilities <- function(result,
   )
 
   DiagrammeR::grViz(dot)
+}
+
+
+#' ブートストラップ結果から因果効果の代表値の隣接行列を作成
+#'
+#' @param result BootstrapResult オブジェクト
+#' @param stat 代表値 ("mean" or "median")
+#' @param min_causal_effect 因果効果の最小閾値（これ以下はゼロ扱い）(NULL = 0)
+#' @param min_probability この確率未満のエッジはゼロにする (NULL = 0)
+#' @param labels 変数名ベクトル (NULL可)
+#' @return 隣接行列 (n_features x n_features)
+#' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' bs_model <- LiNGAM_sample_1000 |>
+#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#' bs_model |>
+#'   get_adjacency_matrix_summary()
+get_adjacency_matrix_summary <- function(result,
+                                         stat = "median",
+                                         min_causal_effect = NULL,
+                                         min_probability = NULL,
+                                         labels = NULL) {
+  stopifnot(inherits(result, "BootstrapResult"))
+  if (!(stat %in% c("mean", "median"))) {
+    stop("stat は 'mean' または 'median' を指定してください。")
+  }
+
+  if (is.null(min_causal_effect)) min_causal_effect <- 0.0
+  if (is.null(min_probability)) min_probability <- 0.0
+
+  am_array <- result$adjacency_matrices
+  am_array[is.na(am_array)] <- 0
+  n_sampling <- dim(am_array)[1]
+  n_features <- dim(am_array)[2]
+
+  B <- matrix(0, nrow = n_features, ncol = n_features)
+
+  for (i in 1:n_features) {
+    for (j in 1:n_features) {
+      if (i == j) next
+
+      # 全ブートストラップでの (i,j) 要素を取得
+      vals <- am_array[, i, j]
+
+      # 閾値を超える値のみ抽出
+      significant <- vals[abs(vals) > min_causal_effect]
+
+      # 確率の計算
+      prob <- length(significant) / n_sampling
+
+      if (prob < min_probability || length(significant) == 0) {
+        B[i, j] <- 0
+      } else {
+        B[i, j] <- if (stat == "mean") mean(significant) else median(significant)
+      }
+    }
+  }
+
+  # 変数名の付与
+  if (!is.null(labels)) {
+    rownames(B) <- labels
+    colnames(B) <- labels
+  }
+
+  return(B)
 }

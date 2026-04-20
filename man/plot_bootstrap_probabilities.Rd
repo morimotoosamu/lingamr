@@ -9,7 +9,7 @@ plot_bootstrap_probabilities(
   labels = NULL,
   min_causal_effect = NULL,
   min_probability = 0.5,
-  rankdir = "LR",
+  rankdir = "TB",
   shape = "circle"
 )
 }
@@ -31,4 +31,12 @@ grViz オブジェクト
 }
 \description{
 ブートストラップ確率を DiagrammeR で描画
+}
+\examples{
+data(LiNGAM_sample_1000)
+
+bs_model <- LiNGAM_sample_1000 |>
+  bootstrap_lingam(n_sampling = 30L, seed = 42)
+bs_model |>
+  plot_bootstrap_probabilities()
 }

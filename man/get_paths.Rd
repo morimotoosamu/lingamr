@@ -21,3 +21,11 @@ data.frame (path, effect, probability)
 \description{
 指定した2変数間の全パスとブートストラップ確率を取得
 }
+\examples{
+data(LiNGAM_sample_1000)
+
+bs_model <- LiNGAM_sample_1000 |>
+  bootstrap_lingam(n_sampling = 30L, seed = 42)
+bs_model |>
+  get_paths(1, 6)
+}

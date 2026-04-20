@@ -30,3 +30,12 @@ data.frame (from, to, count, proportion, mean_effect, median_effect,
 \description{
 因果方向のカウント・割合・因果効果を取得
 }
+\examples{
+data(LiNGAM_sample_1000)
+
+bs_model <- LiNGAM_sample_1000 |>
+  bootstrap_lingam(n_sampling = 30L, seed = 42)
+
+bs_model |>
+  get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
+}

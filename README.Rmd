@@ -58,7 +58,7 @@ pak::pak("morimotoosamu/DirectLiNGAM")
 ## Requirements
 
 - DiagrammeR
-
+- glmnet
 
 ## Usage
 
@@ -98,10 +98,7 @@ m |>
 HSIC(Hilbert-Schmidt Independence Criterion)を使いたい場合は引数で `measure = "kernel"` を指定します。
 
 
-係数の算出はデフォルトでは適応的LASSOを用います。
-
-
-また、LASSOのペナルティ（ラムダ）の最適化はデフォルトではBICを用います。
+係数の算出はデフォルトではLASSOを用い、ラムダの選択はAICcを用います。
 
 
 ```{r direct_lingam}
@@ -136,12 +133,13 @@ round(B_hat, 3)
 
 推定された隣接行列に基づいて、因果グラフを描きます。
 
+余計なpath(x3 to x1, x0 to x2)が推定されていますが、係数はとても小さいです。
+
 Only paths with a coefficient of 0.5 or greater are being drawn.
 
 ```{r plot_adjacency}
 B_hat |>
   plot_adjacency_diagrammer(
-      threshold = 0.5,
       labels = colnames(LiNGAM_sample_1000),
       graph_label = "Estimated Causal Structure (Direct LiNGAM)",
       rankdir = "TB",
@@ -189,7 +187,7 @@ model_pk1 <- LiNGAM_sample_1000 |>
 cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk1$causal_order], "\n")
 ```
 
-結果の隣接行列に基づいて因果グラフを描きます。
+結果の隣接行列に基づいて因果グラフを描きます。今度は真の因果構造に非常に近い結果が得られました
 
 ```{r LiNGAM_with_pk_2}
 B_pk <- model_pk1$adjacency_matrix
@@ -207,53 +205,6 @@ plot_adjacency_diagrammer(
 )
 ```
 
-
-#### Specify By Variable Name
-
-事前知識を指定する際に変数名を用いる事例です。
-
-- x3 is an exogenous variable.
-- x1, x4, and x5 are sink_variables.
-- There is a path from x3 to x0 and from x3 to x2.
-- There is no path from x3 to x5.
-
-```{r make_prior_knowledge2}
-pk2 <- make_prior_knowledge(
-  n_variables         = 6,
-  exogenous_variables = "x3",
-  sink_variables = c("x1", "x4", "x5"),
-  paths = list(c("x3", "x0"), c("x3", "x2")),
-  no_paths = list(c("x3", "x5")),
-  labels = c("x0", "x1", "x2", "x3", "x4", "x5")
-)
-
-pk2
-```
-
-```{r LiNGAM_with_pk_3}
-model_pk2 <- LiNGAM_sample_1000 |>
-  direct_lingam(prior_knowledge = pk2)
-
-cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk2$causal_order], "\n")
-```
-
-```{r LiNGAM_with_pk_4}
-B_pk <- model_pk2$adjacency_matrix
-colnames(B_pk) <- rownames(B_pk) <- colnames(LiNGAM_sample_1000)
-round(B_pk, 3)
-
-B_pk |>
-  plot_adjacency_diagrammer(
-    threshold = 0.5,
-    labels      = colnames(LiNGAM_sample_1000),
-    graph_label = "Estimated (with Prior Knowledge)",
-    rankdir     = "TB",
-    shape       = "circle",
-    fillcolor   = "lightgreen"
-)
-```
-
-
 ### Independence between error variables
 
 Calculation of the p-value (default: Spearman)
@@ -265,6 +216,79 @@ p_vals <- LiNGAM_sample_1000 |>
   get_error_independence_p_values(result)
 round(p_vals, 3)
 ```
+
+### Bootstrap Direct LiNGAM
+
+```{r bootstrap_direct_lingam}
+bs_model <- LiNGAM_sample_1000 |>
+  bootstrap_lingam(n_sampling = 30L, seed = 42)
+```
+
+```{r BootstrapResult}
+bs_model
+```
+
+ブートストラップの結果
+
+係数
+
+```{r get_causal_direction_counts}
+bs_model |>
+  get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
+```
+
+平均因果効果の隣接行列
+
+```{r get_adjacency_matrix_summary}
+bs_adjacency_matrix <- bs_model |>
+  get_adjacency_matrix_summary(stat = "median")
+
+bs_adjacency_matrix |>
+  round(3)
+```
+
+係数の可視化（係数0.5以上のパスを描画）
+```{r plot_bootstrap}
+bs_adjacency_matrix |>
+  plot_adjacency_diagrammer(
+    threshold = 0.5,
+    labels      = colnames(LiNGAM_sample_1000),
+    graph_label = "Estimated (with Bootstrap)",
+    rankdir     = "TB",
+    shape       = "circle",
+    fillcolor   = "lightgreen"
+    )
+```
+
+
+
+ブートストラップ確率の行列
+
+```{r get_probabilities}
+bs_model |>
+  get_probabilities() 
+```
+
+平均総合効果
+
+```{r get_total_causal_effects}
+bs_model |>
+  get_total_causal_effects()
+```
+
+bootstrapの結果を因果グラフに
+
+デフォルトでは50%以上出現しているパスを表示
+
+```{r}
+bs_model |>
+  plot_bootstrap_probabilities()
+```
+
+
+
+
+
 
 ## Licence
 

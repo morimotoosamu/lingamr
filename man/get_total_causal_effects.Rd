@@ -17,3 +17,12 @@ data.frame (from, to, effect, probability)
 \description{
 総合因果効果リストを取得
 }
+\examples{
+data(LiNGAM_sample_1000)
+
+bs_model <- LiNGAM_sample_1000 |>
+  bootstrap_lingam(n_sampling = 30L, seed = 42)
+
+bs_model |>
+  get_total_causal_effects()
+}

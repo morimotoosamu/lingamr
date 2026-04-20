@@ -8,7 +8,9 @@ direct_lingam(
   X,
   prior_knowledge = NULL,
   apply_prior_knowledge_softly = FALSE,
-  measure = "pwling"
+  measure = "pwling",
+  reg_method = "lasso",
+  lambda = "AICc"
 )
 }
 \arguments{
@@ -22,6 +24,17 @@ direct_lingam(
 \item{apply_prior_knowledge_softly}{事前知識をソフトに適用するか (logical)}
 
 \item{measure}{独立性の評価尺度 ("pwling" または "kernel")}
+
+\item{reg_method}{隣接行列推定の回帰手法
+"ols": 最小二乗法
+"lasso": LASSO回帰、デフォルト
+"adaptive_lasso": 適応的LASSO回帰}
+
+\item{lambda}{LASSO のペナルティ（ラムダ）選択
+"lambda.min" : CV予測誤差最小
+"lambda.1se" : CV 1SEルール
+"AICc"       : AICc最小（CVなし、高速）デフォルト
+"BIC"        : BIC最小（CVなし、高速、最もスパース）}
 }
 \value{
 list(adjacency_matrix, causal_order)
@@ -30,5 +43,15 @@ list(adjacency_matrix, causal_order)
 Direct LiNGAM
 }
 \examples{
-# ここの実行例を書き直し
+data(LiNGAM_sample_1000)
+
+# OLS (no additional packages required)
+result <- direct_lingam(LiNGAM_sample_1000, reg_method = "ols")
+print(round(result$adjacency_matrix, 3))
+
+\donttest{
+# LASSO (requires glmnet)
+result_lasso <- direct_lingam(LiNGAM_sample_1000)
+print(round(result_lasso$adjacency_matrix, 3))
+}
 }

@@ -23,23 +23,36 @@
 #'  -1: 不明
 #' @param apply_prior_knowledge_softly 事前知識をソフトに適用するか (logical)
 #' @param measure 独立性の評価尺度 ("pwling" または "kernel")
-#' @param reg_method 隣接行列推定の回帰手法 ("ols", "lasso", "adaptive_lasso")
+#' @param reg_method 隣接行列推定の回帰手法
+#'   "ols": 最小二乗法
+#'   "lasso": LASSO回帰、デフォルト
+#'   "adaptive_lasso": 適応的LASSO回帰
 #' @param lambda LASSO のペナルティ（ラムダ）選択
 #'   "lambda.min" : CV予測誤差最小
-#'   "lambda.1se" : CV 1SEルール（デフォルト）
-#'   "AICc"       : AICc最小（CVなし、高速）
+#'   "lambda.1se" : CV 1SEルール
+#'   "AICc"       : AICc最小（CVなし、高速）デフォルト
 #'   "BIC"        : BIC最小（CVなし、高速、最もスパース）
 #' @return list(adjacency_matrix, causal_order)
 #' @importFrom stats sd lm.fit cov median quantile
 #' @export
 #' @examples
-#' # ここの実行例を書き直し
+#' data(LiNGAM_sample_1000)
+#'
+#' # OLS (no additional packages required)
+#' result <- direct_lingam(LiNGAM_sample_1000, reg_method = "ols")
+#' print(round(result$adjacency_matrix, 3))
+#'
+#' \donttest{
+#' # LASSO (requires glmnet)
+#' result_lasso <- direct_lingam(LiNGAM_sample_1000)
+#' print(round(result_lasso$adjacency_matrix, 3))
+#' }
 direct_lingam <- function(X,
                           prior_knowledge = NULL,
                           apply_prior_knowledge_softly = FALSE,
                           measure = "pwling",
-                          reg_method = "adaptive_lasso",
-                          lambda = "BIC") {
+                          reg_method = "lasso",
+                          lambda = "AICc") {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix.")
   n_samples <- nrow(X)
@@ -398,11 +411,12 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
 #'   "lambda.min" : 予測誤差最小
 #'   "lambda.1se" : 1SE ルール（よりスパース、デフォルト）
 #' @return 隣接行列 B (n_features x n_features)
+#' @keywords internal
 estimate_adjacency_matrix <- function(X,
                                       causal_order,
                                       prior_knowledge = NULL,
-                                      method = "ols",
-                                      lambda = "lambda.1se") {
+                                      method = "lasso",
+                                      lambda = "AICc") {
   valid_methods <- c("ols", "lasso", "adaptive_lasso")
   if (!(method %in% valid_methods)) {
     stop(sprintf(
@@ -465,16 +479,24 @@ estimate_adjacency_matrix <- function(X,
 # 各回帰手法の内部関数
 # =============================================================================
 
-#' OLS 回帰
+
+#' OLS regression
+#'
+#' @param y response variable (numeric vector)
+#' @param Xp predictor matrix
+#' @return coefficient vector (excluding intercept)
+#' @keywords internal
 fit_ols <- function(y, Xp) {
-  fit <- lm.fit(x = cbind(1, Xp), y = y)
-  fit$coefficients[-1] # 切片を除く
+  fit <- stats::lm.fit(x = cbind(1, as.matrix(Xp)), y = y)
+  fit$coefficients[-1]
 }
 
-#' 情報量基準でラムダを選択（tidyverse不要版）
+
+#' Select lambda by information criterion
 #'
-#' @param glmnet_model glmnet() の返り値
-#' @return list(lambda_AICc_best, lambda_BIC_best, lambda_Cp_best, ic_table)
+#' @param glmnet_model a glmnet model object
+#' @return list with lambda_AICc_best, lambda_BIC_best, ic_table
+#' @keywords internal
 ic_glmnet <- function(glmnet_model) {
   tLL <- glmnet_model$nulldev - deviance(glmnet_model)
   k <- glmnet_model$df
@@ -505,32 +527,34 @@ ic_glmnet <- function(glmnet_model) {
 #'   "AICc"       : AICc最小
 #'   "BIC"        : BIC最小
 #' @return 係数ベクトル
-fit_lasso <- function(y, Xp, lambda = "lambda.1se") {
+#' @keywords internal
+fit_lasso <- function(y, Xp, lambda = "AICc") {
   if (ncol(Xp) == 1) {
+    return(fit_ols(y, Xp))
+  }
+  # glmnet の確認
+  if (!requireNamespace("glmnet", quietly = TRUE)) {
+    message("glmnet package is not installed.")
+    message("Install it with: install.packages('glmnet')")
+    message("Falling back to OLS.")
     return(fit_ols(y, Xp))
   }
   Xp_mat <- as.matrix(Xp)
   if (lambda %in% c("AICc", "BIC")) {
-    # --- 情報量基準（CVなし → 高速）---
     fit <- glmnet::glmnet(
       x = Xp_mat, y = y,
-      alpha = 1,
-      intercept = TRUE,
-      standardize = TRUE
+      alpha = 1, intercept = TRUE, standardize = TRUE
     )
     ic <- ic_glmnet(fit)
     lambda_val <- if (lambda == "AICc") ic$lambda_AICc_best else ic$lambda_BIC_best
-    coef_vec <- as.numeric(coef(fit, s = lambda_val))[-1]
+    coef_vec <- as.numeric(stats::coef(fit, s = lambda_val))[-1]
   } else {
-    # --- CV ベース ---
     cv_fit <- glmnet::cv.glmnet(
       x = Xp_mat, y = y,
-      alpha = 1,
-      intercept = TRUE,
-      standardize = TRUE
+      alpha = 1, intercept = TRUE, standardize = TRUE
     )
     lambda_val <- cv_fit[[lambda]]
-    coef_vec <- as.numeric(coef(cv_fit, s = lambda_val))[-1]
+    coef_vec <- as.numeric(stats::coef(cv_fit, s = lambda_val))[-1]
   }
   return(coef_vec)
 }
@@ -543,47 +567,45 @@ fit_lasso <- function(y, Xp, lambda = "lambda.1se") {
 #' @param lambda ラムダ選択方法 ("lambda.min", "lambda.1se", "AICc", "BIC")
 #' @param gamma_weight 重みの指数
 #' @return 係数ベクトル
-fit_adaptive_lasso <- function(y, Xp, lambda = "lambda.1se", gamma_weight = 1) {
+#' @keywords internal
+fit_adaptive_lasso <- function(y, Xp, lambda = "AICc", gamma_weight = 1) {
   if (ncol(Xp) == 1) {
+    return(fit_ols(y, Xp))
+  }
+  if (!requireNamespace("glmnet", quietly = TRUE)) {
+    message("glmnet package is not installed. Falling back to OLS.")
     return(fit_ols(y, Xp))
   }
   Xp_mat <- as.matrix(Xp)
   p <- ncol(Xp_mat)
-  # --- Step 1: 初期推定 ---
   if (nrow(Xp_mat) > p) {
-    init_fit <- lm.fit(x = cbind(1, Xp_mat), y = y)
+    init_fit <- stats::lm.fit(x = cbind(1, Xp_mat), y = y)
     init_coefs <- init_fit$coefficients[-1]
   } else {
     cv_ridge <- glmnet::cv.glmnet(
       x = Xp_mat, y = y,
       alpha = 0, intercept = TRUE, standardize = TRUE
     )
-    init_coefs <- as.numeric(coef(cv_ridge, s = cv_ridge$lambda.min))[-1]
+    init_coefs <- as.numeric(stats::coef(cv_ridge, s = cv_ridge$lambda.min))[-1]
   }
-  # --- Step 2: 重みの計算 ---
   weights <- 1 / (abs(init_coefs) + .Machine$double.eps)^gamma_weight
-  # --- Step 3: 重み付き LASSO ---
   if (lambda %in% c("AICc", "BIC")) {
     fit <- glmnet::glmnet(
       x = Xp_mat, y = y,
-      alpha = 1,
-      intercept = TRUE,
-      standardize = TRUE,
+      alpha = 1, intercept = TRUE, standardize = TRUE,
       penalty.factor = weights
     )
     ic <- ic_glmnet(fit)
     lambda_val <- if (lambda == "AICc") ic$lambda_AICc_best else ic$lambda_BIC_best
-    coef_vec <- as.numeric(coef(fit, s = lambda_val))[-1]
+    coef_vec <- as.numeric(stats::coef(fit, s = lambda_val))[-1]
   } else {
     cv_fit <- glmnet::cv.glmnet(
       x = Xp_mat, y = y,
-      alpha = 1,
-      intercept = TRUE,
-      standardize = TRUE,
+      alpha = 1, intercept = TRUE, standardize = TRUE,
       penalty.factor = weights
     )
     lambda_val <- cv_fit[[lambda]]
-    coef_vec <- as.numeric(coef(cv_fit, s = lambda_val))[-1]
+    coef_vec <- as.numeric(stats::coef(cv_fit, s = lambda_val))[-1]
   }
   return(coef_vec)
 }

@@ -4,11 +4,21 @@
 #' @param lingam_result direct_lingam() の返り値
 #' @param from_index 原因変数 (1-based index or 変数名)
 #' @param to_index 結果変数 (1-based index or 変数名)
-#' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
-#' @param lambda LASSO のペナルティ選択 ("lambda.min" or "lambda.1se")
+#' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはlasso
+#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")デフォルトはAICc
 #' @return 推定された総合因果効果
+#' @importFrom stats cov
+#' @export
+#' @examples
+#' data(LiNGAM_sample_1000)
+#'
+#' model <- LiNGAM_sample_1000 |>
+#'   direct_lingam()
+#'
+#' LiNGAM_sample_1000 |>
+#'   estimate_total_effect(model, 4, 1)
 estimate_total_effect <- function(X, lingam_result, from_index, to_index,
-                                  method = "ols", lambda = "lambda.1se") {
+                                  method = "lasso", lambda = "AICc") {
   if (is.data.frame(X)) {
     col_names <- colnames(X)
     X <- as.matrix(X)
@@ -88,55 +98,51 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @param X 元データ (n_samples x n_features)
 #' @param lingam_result direct_lingam() の返り値
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
-#' @param lambda LASSO のペナルティ選択 ("lambda.min" or "lambda.1se")
-#' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
+#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")
 #' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
 #' @importFrom stats cov
 #' @export
 #' @examples
-
+#' data(LiNGAM_sample_1000)
 #'
-#' # ここの実行例を書き直し
-#' pk <- make_prior_knowledge(6, exogenous_variables = c(4))
+#' model <- LiNGAM_sample_1000 |>
+#'   direct_lingam()
 #'
-#' # ここの実行例を書き直し
-#' pk <- make_prior_knowledge(6,
-#'   exogenous_variables = "x3",
-#'   sink_variables = c("x1", "x4"),
-#'   paths = list(c("x3", "x0"), c("x3", "x2")),
-#'   no_paths = list(c("x5", "x2")),
-#'   labels = c("x0", "x1", "x2", "x3", "x4", "x5")
-#' )
+#' LiNGAM_sample_1000 |>
+#'   estimate_all_total_effects(model)
 estimate_all_total_effects <- function(X,
                                        lingam_result,
-                                       method = "ols",
-                                       lambda = "lambda.1se") {
+                                       method = "lasso",
+                                       lambda = "AICc") {
   X <- as.matrix(X)
   n_features <- ncol(X)
   causal_order <- lingam_result$causal_order
   adj_matrix <- lingam_result$adjacency_matrix
+
   TE <- matrix(0, nrow = n_features, ncol = n_features)
   if (!is.null(colnames(X))) {
     rownames(TE) <- colnames(X)
     colnames(TE) <- colnames(X)
   }
+
   for (i in 1:(n_features - 1)) {
     from_idx <- causal_order[i]
-    # from_idx の親変数を特定
+
     parents <- which(abs(adj_matrix[from_idx, ]) > 0)
     predictors <- unique(c(from_idx, parents))
     from_pos <- which(predictors == from_idx)
-    # from_idx より下流の全変数
+
     downstream <- causal_order[(i + 1):n_features]
+
     if (method == "ols") {
-      # --- OLS: 共分散行列ベースで高速一括計算 ---
+      # --- OLS: 共分散行列ベースで一括計算（最速）---
       cov_mat <- cov(X)
       cov_xx <- cov_mat[predictors, predictors, drop = FALSE]
       cov_xy <- cov_mat[predictors, downstream, drop = FALSE]
       beta_mat <- solve(cov_xx, cov_xy)
       TE[downstream, from_idx] <- beta_mat[from_pos, ]
     } else {
-      # --- LASSO / Adaptive LASSO: 各目的変数ごとに回帰 ---
+      # --- LASSO / Adaptive LASSO ---
       Xp <- X[, predictors, drop = FALSE]
       for (to_idx in downstream) {
         y <- X[, to_idx]
@@ -148,5 +154,6 @@ estimate_all_total_effects <- function(X,
       }
     }
   }
+
   return(TE)
 }
