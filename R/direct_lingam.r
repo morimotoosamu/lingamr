@@ -409,7 +409,9 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
 #'   "adaptive_lasso": Adaptive LASSO（2段階）
 #' @param lambda LASSO のペナルティ (NULL = 交差検証で自動選択)
 #'   "lambda.min" : 予測誤差最小
-#'   "lambda.1se" : 1SE ルール（よりスパース、デフォルト）
+#'   "lambda.1se" : 1SE ルール（よりスパース）
+#'   "AICc"       : AICc最小（CVなし、高速）デフォルト
+#'   "BIC"        : BIC最小（CVなし、高速、最もスパース）
 #' @return 隣接行列 B (n_features x n_features)
 #' @keywords internal
 estimate_adjacency_matrix <- function(X,
