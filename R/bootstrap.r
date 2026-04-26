@@ -78,7 +78,7 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #' @param apply_prior_knowledge_softly 事前知識のソフト適用 (logical)
 #' @param measure 独立性の評価尺度 ("pwling" or "kernel")
 #' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso")
-#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")
+#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
 #' @param seed 乱数シード (NULL可)
 #' @param verbose 進捗を表示するか (logical)
 #' @return BootstrapResult (list)
@@ -107,7 +107,7 @@ bootstrap_lingam <- function(X,
                              apply_prior_knowledge_softly = FALSE,
                              measure = "pwling",
                              reg_method = "lasso",
-                             lambda = "AICc",
+                             lambda = "AIC",
                              seed = NULL,
                              verbose = TRUE) {
   X <- as.matrix(X)

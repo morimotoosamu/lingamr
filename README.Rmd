@@ -83,7 +83,7 @@ colnames(m) <- rownames(m) <- colnames(LiNGAM_sample_1000)
 m |>
   plot_adjacency_diagrammer(
   labels      = colnames(LiNGAM_sample_1000),
-  graph_label = "True causal structure",
+  title = "True causal structure",
   rankdir     = "TB",
   shape       = "circle"
 )
@@ -98,7 +98,7 @@ m |>
 HSIC(Hilbert-Schmidt Independence Criterion)を使いたい場合は引数で `measure = "kernel"` を指定します。
 
 
-係数の算出はデフォルトではLASSOを用い、ラムダの選択はAICcを用います。
+係数の算出はデフォルトではLASSOを用い、ラムダの選択はAICを用います。
 
 
 ```{r direct_lingam}
@@ -141,7 +141,7 @@ Only paths with a coefficient of 0.5 or greater are being drawn.
 B_hat |>
   plot_adjacency_diagrammer(
       labels = colnames(LiNGAM_sample_1000),
-      graph_label = "Estimated Causal Structure (Direct LiNGAM)",
+      title = "Estimated Causal Structure (Direct LiNGAM)",
       rankdir = "TB",
       shape = "ellipse",
       fillcolor = "lightgreen"
@@ -198,7 +198,7 @@ plot_adjacency_diagrammer(
   B_pk,
   threshold = 0.5,
   labels      = colnames(LiNGAM_sample_1000),
-  graph_label = "Estimated (with Prior Knowledge)",
+  title = "Estimated (with Prior Knowledge)",
   rankdir     = "TB",
   shape       = "circle",
   fillcolor   = "lightgreen"
@@ -253,7 +253,7 @@ bs_adjacency_matrix |>
   plot_adjacency_diagrammer(
     threshold = 0.5,
     labels      = colnames(LiNGAM_sample_1000),
-    graph_label = "Estimated (with Bootstrap)",
+    title = "Estimated (with Bootstrap)",
     rankdir     = "TB",
     shape       = "circle",
     fillcolor   = "lightgreen"
@@ -286,7 +286,36 @@ bs_model |>
 ```
 
 
+### sample data 10000
 
+```{r example_10000}
+data(LiNGAM_sample_10000)
+
+m <- matrix(c(
+  0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
+  3, 0, 2, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 6, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  8, 0, -1, 0, 0, 0, 0, 0, 0, 0,
+  4, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+  3, 0, 0, 0, 1.5, 0, 0, 0, 0, 0,
+  0, 0, 0.5, 0, 0, 2, 0, 0, 0, 0,
+  0, 0, 0, 7, 0, 0, 1, 0, 0, 0
+  ),
+  nrow = 10, byrow = TRUE
+  )
+
+colnames(m) <- rownames(m) <- colnames(LiNGAM_sample_10000)
+
+m |>
+  plot_adjacency_diagrammer(
+  labels      = colnames(LiNGAM_sample_10000),
+  title = "True causal structure",
+  rankdir     = "TB",
+  shape       = "circle"
+)
+```
 
 
 

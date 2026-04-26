@@ -27,11 +27,13 @@
 #'   "ols": 最小二乗法
 #'   "lasso": LASSO回帰、デフォルト
 #'   "adaptive_lasso": 適応的LASSO回帰
+#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
 #' @param lambda LASSO のペナルティ（ラムダ）選択
 #'   "lambda.min" : CV予測誤差最小
 #'   "lambda.1se" : CV 1SEルール
-#'   "AICc"       : AICc最小（CVなし、高速）デフォルト
+#'   "AIC"       : AIC最小（CVなし、高速）デフォルト
 #'   "BIC"        : BIC最小（CVなし、高速、最もスパース）
+#'   "oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλ
 #' @return list(adjacency_matrix, causal_order)
 #' @importFrom stats sd lm.fit cov median quantile
 #' @export
@@ -51,8 +53,9 @@ direct_lingam <- function(X,
                           prior_knowledge = NULL,
                           apply_prior_knowledge_softly = FALSE,
                           measure = "pwling",
-                          reg_method = "lasso",
-                          lambda = "AICc") {
+                          reg_method = "adaptive_lasso",
+                          lambda = "oracle",
+                          init_method = "ols") {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix.")
   n_samples <- nrow(X)
@@ -74,7 +77,12 @@ direct_lingam <- function(X,
   K <- integer(0)
   X_ <- X
   if (measure == "kernel") {
-    X_ <- apply(X_, 2, function(col) (col - mean(col)) / stats::sd(col))
+    X_ <- apply(X_, 2, function(col) {
+      pop_sd <- sqrt(mean((col - mean(col))^2))
+      (col - mean(col)) / pop_sd
+    })
+    # n-1割
+    # X_ <- apply(X_, 2, function(col) (col - mean(col)) / stats::sd(col))
   }
   # --- 因果順序の探索 ---
   for (iter in seq_len(n_features)) {
@@ -98,7 +106,8 @@ direct_lingam <- function(X,
   # --- 隣接行列の推定（回帰手法を選択可能）---
   B <- estimate_adjacency_matrix(X, K, Aknw,
     method = reg_method,
-    lambda = lambda
+    lambda = lambda,
+    init_method = init_method
   )
   list(adjacency_matrix = B, causal_order = K)
 }
@@ -107,6 +116,18 @@ direct_lingam <- function(X,
 # =============================================================================
 # 内部関数群
 # =============================================================================
+
+#' Population standard deviation (n割)
+#' @keywords internal
+sd_pop <- function(x) {
+  sqrt(mean((x - mean(x))^2))
+}
+
+#' Variance (n割り)
+#' @keywords internal
+var_pop <- function(x) {
+  mean((x - mean(x))^2)
+}
 
 #' 事前知識から部分順序を抽出
 #' @param pk 事前知識行列 (NaN = 不明)
@@ -180,14 +201,9 @@ residual_vec <- function(xi, xj, standardized = FALSE) {
     beta <- sum(xi * xj) / sum(xj * xj)
   } else {
     # 汎用版: 中心化を含む
-    n <- length(xi)
-    mean_xi <- mean(xi)
-    mean_xj <- mean(xj)
-    xi_c <- xi - mean_xi
-    xj_c <- xj - mean_xj
-    cov_val <- sum(xi_c * xj_c) / n
-    var_val <- sum(xj_c * xj_c) / n
-    beta <- cov_val / var_val
+    xi_c <- xi - mean(xi)
+    xj_c <- xj - mean(xj)
+    beta <- sum(xi_c * xj_c) / sum(xj_c * xj_c)
   }
   xi - beta * xj
 }
@@ -215,9 +231,9 @@ entropy_approx <- function(u) {
 #' @return 相互情報量の差
 #' @keywords internal
 diff_mutual_info <- function(xi_std, xj_std, ri_j, rj_i) {
-  # 残差の標準偏差（mean=0なので RMS と等価）
-  sd_ri_j <- sqrt(mean(ri_j^2))
-  sd_rj_i <- sqrt(mean(rj_i^2))
+  # 残差の母標準偏差
+  sd_ri_j <- sd_pop(ri_j)
+  sd_rj_i <- sd_pop(rj_i)
   (entropy_approx(xj_std) + entropy_approx(ri_j / sd_ri_j)) -
     (entropy_approx(xi_std) + entropy_approx(rj_i / sd_rj_i))
 }
@@ -305,7 +321,7 @@ search_causal_order_pwling <- function(X, U, Uc, Vj) {
   X_std <- matrix(0, nrow = nrow(X), ncol = ncol(X))
   for (k in U) {
     xk <- X[, k]
-    X_std[, k] <- (xk - mean(xk)) / sd(xk)
+    X_std[, k] <- (xk - mean(xk)) / sd_pop(xk)  # ★ sd() ではなく sd_pop()
   }
   M_list <- numeric(length(Uc))
   for (idx in seq_along(Uc)) {
@@ -423,10 +439,11 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
 #'   "ols"           : 通常の最小二乗法（デフォルト）
 #'   "lasso"         : LASSO回帰（glmnet）
 #'   "adaptive_lasso": Adaptive LASSO（2段階）
+#' @param init_method: Adaptive LASSOの初期重みの推定手法 ("ols" または "ridge")
 #' @param lambda LASSO のペナルティ (NULL = 交差検証で自動選択)
 #'   "lambda.min" : 予測誤差最小
 #'   "lambda.1se" : 1SE ルール（よりスパース）
-#'   "AICc"       : AICc最小（CVなし、高速）デフォルト
+#'   "AIC"       : AIC最小（CVなし、高速）デフォルト
 #'   "BIC"        : BIC最小（CVなし、高速、最もスパース）
 #' @return 隣接行列 B (n_features x n_features)
 #' @keywords internal
@@ -434,7 +451,8 @@ estimate_adjacency_matrix <- function(X,
                                       causal_order,
                                       prior_knowledge = NULL,
                                       method = "lasso",
-                                      lambda = "AICc") {
+                                      lambda = "AIC",
+                                      init_method = "ridge") {
   valid_methods <- c("ols", "lasso", "adaptive_lasso")
   if (!(method %in% valid_methods)) {
     stop(sprintf(
@@ -483,7 +501,9 @@ estimate_adjacency_matrix <- function(X,
     coefs <- switch(method,
       "ols"            = fit_ols(y, Xp),
       "lasso"          = fit_lasso(y, Xp, lambda = lambda),
-      "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda = lambda)
+      "adaptive_lasso" = fit_adaptive_lasso(y, Xp,
+                                            lambda = lambda,
+                                            init_method = init_method)
     )
 
     B[target, predictors] <- coefs
@@ -513,22 +533,22 @@ fit_ols <- function(y, Xp) {
 #' Select lambda by information criterion
 #'
 #' @param glmnet_model a glmnet model object
-#' @return list with lambda_AICc_best, lambda_BIC_best, ic_table
+#' @return list with lambda_AIC_best, lambda_BIC_best, ic_table
 #' @keywords internal
 ic_glmnet <- function(glmnet_model) {
   tLL <- glmnet_model$nulldev - deviance(glmnet_model)
   k <- glmnet_model$df
   n <- glmnet_model$nobs
-  AICc <- -tLL + 2 * k + 2 * k * (k + 1) / pmax(n - k - 1, 1)
+  AIC <- -tLL + 2 * k + 2 * k * (k + 1) / pmax(n - k - 1, 1)
   BIC <- log(n) * k - tLL
   ic_table <- data.frame(
     lambda = glmnet_model$lambda,
     df     = k,
-    AICc   = AICc,
+    AIC   = AIC,
     BIC    = BIC
   )
   list(
-    lambda_AICc_best = ic_table$lambda[which.min(ic_table$AICc)],
+    lambda_AIC_best = ic_table$lambda[which.min(ic_table$AIC)],
     lambda_BIC_best  = ic_table$lambda[which.min(ic_table$BIC)],
     ic_table         = ic_table
   )
@@ -542,14 +562,15 @@ ic_glmnet <- function(glmnet_model) {
 #' @param lambda ラムダ選択方法
 #'   "lambda.min" : CV予測誤差最小
 #'   "lambda.1se" : CV 1SEルール
-#'   "AICc"       : AICc最小
+#'   "AIC"       : AIC最小
 #'   "BIC"        : BIC最小
 #' @return 係数ベクトル
 #' @keywords internal
-fit_lasso <- function(y, Xp, lambda = "AICc") {
+fit_lasso <- function(y, Xp, lambda = "AIC") {
   if (ncol(Xp) == 1) {
     return(fit_ols(y, Xp))
   }
+
   # glmnet の確認
   if (!requireNamespace("glmnet", quietly = TRUE)) {
     message("glmnet package is not installed.")
@@ -557,90 +578,111 @@ fit_lasso <- function(y, Xp, lambda = "AICc") {
     message("Falling back to OLS.")
     return(fit_ols(y, Xp))
   }
+
   Xp_mat <- as.matrix(Xp)
-  if (lambda %in% c("AICc", "BIC")) {
+
+  # --- lambdaの探索範囲を明示的に指定 (打ち切り防止) ---
+  lambda_seq <- exp(seq(2, -7, length.out = 80)) #
+
+  if (lambda %in% c("AIC", "BIC")) {
     fit <- glmnet::glmnet(
       x = Xp_mat, y = y,
-      alpha = 1, intercept = TRUE, standardize = TRUE
+      alpha = 1, intercept = TRUE, standardize = TRUE,
+      lambda = lambda_seq  # ← ここに探索範囲を追加 [cite: 59, 77]
     )
+
     ic <- ic_glmnet(fit)
-    lambda_val <- if (lambda == "AICc") ic$lambda_AICc_best else ic$lambda_BIC_best
+    lambda_val <- if (lambda == "AIC") ic$lambda_AIC_best else ic$lambda_BIC_best
     coef_vec <- as.numeric(stats::coef(fit, s = lambda_val))[-1]
+
   } else {
     cv_fit <- glmnet::cv.glmnet(
       x = Xp_mat, y = y,
-      alpha = 1, intercept = TRUE, standardize = TRUE
+      alpha = 1, intercept = TRUE, standardize = TRUE,
+      lambda = lambda_seq  # ← CV側にも探索範囲を追加 [cite: 60, 77]
     )
+
     lambda_val <- cv_fit[[lambda]]
     coef_vec <- as.numeric(stats::coef(cv_fit, s = lambda_val))[-1]
   }
+
   return(coef_vec)
 }
+
 
 #' Adaptive LASSO
 #' @param y 目的変数
 #' @param Xp 説明変数行列
-#' @param lambda ラムダ選択方法 ("lambda.min", "lambda.1se", "AICc", "BIC")
+#' @param lambda ラムダ選択方法 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")
 #' @param gamma_weight 重みの指数
+#' @param init_method 初期重みの推定手法 ("ols" または "ridge")
 #' @return 係数ベクトル
 #' @keywords internal
 fit_adaptive_lasso <- function(y, Xp,
-                               lambda = "BIC",        # ← lambda を3番目に
-                               gamma_weight = 1.0) {  # ← gamma_weight を4番目に
+                               lambda = "BIC",
+                               gamma_weight = 1.0,
+                               init_method = "ridge") {
   if (ncol(Xp) == 1) return(fit_ols(y, Xp))
   if (!requireNamespace("glmnet", quietly = TRUE)) {
     return(fit_ols(y, Xp))
   }
 
   Xp_mat <- as.matrix(Xp)
-  p <- ncol(Xp_mat)
+  n <- nrow(Xp_mat) # サンプルサイズ n を取得
 
-  # --- Step 0: 各変数のスケール ---
-  x_sds <- apply(Xp_mat, 2, sd)
+  # --- Step 1: 初期推定量 (元のスケール) の計算 ---
+  if (init_method == "ols") {
+    init_fit <- stats::lm.fit(x = cbind(1, Xp_mat), y = y)
+    init_coefs <- as.numeric(init_fit$coefficients[-1])
+  } else {
+    ridge_cv <- glmnet::cv.glmnet(
+      x = Xp_mat, y = y, alpha = 0,
+      intercept = TRUE, standardize = TRUE
+    )
+    init_coefs <- as.numeric(stats::coef(ridge_cv, s = "lambda.min"))[-1]
+  }
+  init_coefs[is.na(init_coefs)] <- 0
+
+  # --- Step 2: penalty.factor の計算 ---
+  x_sds <- apply(Xp_mat, 2, sd_pop)
   x_sds[x_sds < 1e-10] <- 1e-10
 
-  # --- Step 1: 標準化されたデータで OLS ---
-  # scale() ではなく手動で標準化（属性を持たない普通の行列に）
-  x_means <- colMeans(Xp_mat)
-  Xp_std <- sweep(Xp_mat, 2, x_means, "-")
-  Xp_std <- sweep(Xp_std, 2, x_sds, "/")
+  init_coefs_std <- init_coefs * x_sds
 
-  init_fit <- stats::lm.fit(x = cbind(1, Xp_std), y = y)
-  init_coefs_std <- as.numeric(init_fit$coefficients[-1])  # ★ as.numeric() で確実に数値ベクトルに
+  pf <- 1 / (abs(init_coefs_std)^gamma_weight)
+  pf[is.infinite(pf) | is.na(pf)] <- 1e10
 
-  # NA対策（共線性などで NA が発生する場合）
-  init_coefs_std[is.na(init_coefs_std)] <- 0
-
-  # --- Step 2: 重み計算 ---
-  weights <- abs(init_coefs_std)^gamma_weight
-  weights[weights < 1e-10] <- 1e-10
-
-  # --- Step 3: X * w を入力に LASSO ---
-  Xp_weighted <- sweep(Xp_mat, 2, weights, "*")
+  # --- Step 3: Adaptive LASSO の実行 ---
+  lambda_seq <- exp(seq(2, -7, length.out = 80))
 
   fit <- glmnet::glmnet(
-    x = Xp_weighted, y = y,
-    alpha = 1, intercept = TRUE, standardize = FALSE
+    x = Xp_mat, y = y, alpha = 1,
+    intercept = TRUE, standardize = TRUE,
+    penalty.factor = pf,
+    lambda = lambda_seq  # ← 探索範囲を明示的に指定
   )
 
-  if (lambda == "BIC") {
+  if (lambda == "oracle") {
+    # lambda_val <- 5 / (n^(0.75))
+    lambda_val <- 5 / n^(1.75)
+  } else if (lambda == "BIC") {
     ic <- ic_glmnet(fit)
     lambda_val <- ic$lambda_BIC_best
-  } else if (lambda == "AICc") {
+  } else if (lambda == "AIC") {
     ic <- ic_glmnet(fit)
-    lambda_val <- ic$lambda_AICc_best
+    lambda_val <- ic$lambda_AIC_best
   } else {
     cv_fit <- glmnet::cv.glmnet(
-      x = Xp_weighted, y = y, alpha = 1,
-      intercept = TRUE, standardize = FALSE
+      x = Xp_mat, y = y, alpha = 1,
+      intercept = TRUE, standardize = TRUE,
+      penalty.factor = pf,
+      lambda = lambda_seq  # ← CV側にも必ず指定
     )
+
     lambda_val <- cv_fit[[lambda]]
   }
 
   coef_vec <- as.numeric(stats::coef(fit, s = lambda_val))[-1]
-
-  # --- Step 4: 重みでスケールバック ---
-  coef_vec <- coef_vec * weights
 
   return(coef_vec)
 }

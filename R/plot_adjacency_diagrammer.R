@@ -13,7 +13,7 @@
 #' @param threshold 表示する最小係数の絶対値 (default: 0.01)
 #' @param rankdir レイアウト方向 (default: "LR")
 #'   "LR" = 左→右, "RL" = 右→左, "TB" = 上→下, "BT" = 下→上
-#' @param graph_label グラフのタイトル (default: "Estimated Causal Structure")
+#' @param title グラフのタイトル (default: "Estimated Causal Structure")
 #' @param shape ノードの形状 (default: "circle")
 #'   "circle", "box", "ellipse", "diamond", "plaintext",
 #'   "square", "triangle", "hexagon", "octagon" など
@@ -39,7 +39,7 @@ plot_adjacency_diagrammer <- function(B,
                                       labels = NULL,
                                       threshold = 0.01,
                                       rankdir = "TB",
-                                      graph_label = "Estimated Causal Structure",
+                                      title = "Estimated Causal Structure",
                                       shape = "circle",
                                       fillcolor = "lightyellow",
                                       bordercolor = "black",
@@ -115,8 +115,8 @@ plot_adjacency_diagrammer <- function(B,
   p <- ncol(B)
   if (is.null(labels)) labels <- paste0("x", seq_len(p) - 1)
 
-  # --- graph_label のエスケープ ---
-  safe_label <- gsub("'", "\\\\'", graph_label)
+  # --- title のエスケープ ---
+  safe_label <- gsub("'", "\\\\'", title)
 
   # --- エッジ記述の生成 ---
   edge_lines <- c()

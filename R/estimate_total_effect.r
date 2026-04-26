@@ -5,7 +5,7 @@
 #' @param from_index 原因変数 (1-based index or 変数名)
 #' @param to_index 結果変数 (1-based index or 変数名)
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはlasso
-#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")デフォルトはAICc
+#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")デフォルトはAIC
 #' @return 推定された総合因果効果
 #' @importFrom stats cov
 #' @export
@@ -18,7 +18,7 @@
 #' LiNGAM_sample_1000 |>
 #'   estimate_total_effect(model, 4, 1)
 estimate_total_effect <- function(X, lingam_result, from_index, to_index,
-                                  method = "lasso", lambda = "AICc") {
+                                  method = "lasso", lambda = "AIC") {
   if (is.data.frame(X)) {
     col_names <- colnames(X)
     X <- as.matrix(X)
@@ -98,7 +98,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @param X 元データ (n_samples x n_features)
 #' @param lingam_result direct_lingam() の返り値
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
-#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AICc", "BIC")
+#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
 #' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
 #' @importFrom stats cov
 #' @export
@@ -113,7 +113,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 estimate_all_total_effects <- function(X,
                                        lingam_result,
                                        method = "lasso",
-                                       lambda = "AICc") {
+                                       lambda = "AIC") {
   X <- as.matrix(X)
   n_features <- ncol(X)
   causal_order <- lingam_result$causal_order
