@@ -1,7 +1,7 @@
 Type: Package
 Package: DirectLiNGAM
 Title: Direct LiNGAM for Causal Discovery
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: person("Osamu", "Morimoto", email = "galactic.supermarket@gmail.com", role = c("aut", "cre"))
 Description: R implementation of Direct LiNGAM algorithm for causal discovery
     based on non-Gaussianity. Supports OLS, LASSO, and Adaptive LASSO
