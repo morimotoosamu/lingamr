@@ -5,3 +5,7 @@
 .DS_Store
 .quarto
 .positai
+R/紹介記事.Rmd
+R/紹介記事.html
+R/紹介記事_cache
+R/紹介記事_files

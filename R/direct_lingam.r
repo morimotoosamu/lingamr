@@ -17,25 +17,26 @@
 #' Direct LiNGAM
 #'
 #' @param X 数値行列 (n_samples x n_features), data frame or matrix
-#' @param prior_knowledge 事前知識行列 (n_features x n_features) または NULL
+#' @param prior_knowledge 事前知識行列 (n_features x n_features) または NULL。
 #'   0: x_i から x_j への有向パスなし
 #'   1: x_i から x_j への有向パスあり
 #'  -1: 不明
 #' @param apply_prior_knowledge_softly 事前知識をソフトに適用するか (logical)
 #' @param measure 独立性の評価尺度 ("pwling" または "kernel")
-#' @param reg_method 隣接行列推定の回帰手法
-#'   "ols": 最小二乗法
-#'   "lasso": LASSO回帰
-#'   "adaptive_lasso": 適応的LASSO回帰、デフォルト
-#' @param init_method 適応的LASSO回帰の初期重みの推定手法
-#'   "ols": 最小二乗法。デフォルト
-#'   "ridge": Ridege回帰。多重共線性が疑われる場合に適用。
-#' @param lambda LASSO のペナルティ（ラムダ）選択
-#'   "lambda.min" : CV予測誤差最小
-#'   "lambda.1se" : CV 1SEルール
-#'   "AIC"       : AIC最小。高速
-#'   "BIC"        : BIC最小（CVなし、高速、最もスパース）。デフォルト
-#'   "oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλを選択。高速
+#' @param reg_method 隣接行列推定の回帰手法。
+#' "ols": 最小二乗法、
+#' "lasso": LASSO回帰、
+#' "adaptive_lasso": 適応的LASSO回帰（デフォルト）。
+#' @param init_method 適応的LASSO回帰の初期重みの推定手法。
+#' "ols": 最小二乗法（デフォルト）、
+#' "ridge": Ridege回帰。
+#' 多重共線性が疑われる場合はRidege回帰がおすすめ。
+#' @param lambda LASSO のペナルティ（ラムダ）選択。
+#' "lambda.min" : CV予測誤差最小, 予測精度優先。
+#' "lambda.1se" : CV 1SEルール、ロバストで過学習しにくい。
+#' "AIC": AIC最小。高速。
+#' "BIC": BIC最小。高速、最もスパース。デフォルト。
+#' "oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλを選択。高速。
 #' @return list(adjacency_matrix, causal_order)
 #' @importFrom stats sd lm.fit cov median quantile
 #' @export

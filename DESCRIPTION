@@ -2,11 +2,12 @@ Type: Package
 Package: DirectLiNGAM
 Title: Direct LiNGAM for Causal Discovery
 Version: 0.1.0.9000
-Authors@R: person("Osamu", "Morimoto", email = "galactic.supermarket@gmail.com", role = c("aut", "cre"))
-Description: R implementation of Direct LiNGAM algorithm for causal discovery
-    based on non-Gaussianity. Supports OLS, LASSO, and Adaptive LASSO
-    for adjacency matrix estimation.
-    Based on the Python implementation by Ikeuchi et al. (2023)
+Authors@R: 
+    person("Osamu", "Morimoto", , "galactic.supermarket@gmail.com", role = c("aut", "cre"))
+Description: R implementation of Direct LiNGAM algorithm for causal
+    discovery based on non-Gaussianity. Supports OLS, LASSO, and Adaptive
+    LASSO for adjacency matrix estimation.  Based on the Python
+    implementation by Ikeuchi et al. (2023)
     <https://github.com/cdt15/lingam>.
 License: MIT + file LICENSE
 URL: https://github.com/morimotoosamu/DirectLiNGAM
@@ -14,12 +15,12 @@ BugReports: https://github.com/morimotoosamu/DirectLiNGAM/issues
 Depends: 
     R (>= 3.5)
 Imports:
-    stats,
-    grDevices
+    grDevices,
+    stats
 Suggests:
-    glmnet,
     DiagrammeR,
     ggplot2,
+    glmnet,
     nortest,
     tseries
 Encoding: UTF-8
