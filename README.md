@@ -54,46 +54,38 @@ pak::pak("morimotoosamu/DirectLiNGAM")
 
 ## Usage
 
+``` r
+library(DirectLiNGAM)
+```
+
 ### Sample Data
 
 ``` r
-library(DirectLiNGAM)
-data(LiNGAM_sample_1000)
+tam6 <- true_adjacency_matrix_6()
 
-m <- matrix(
-  c(0.0, 0.0, 0.0, 3.0, 0.0, 0.0,
-    3.0, 0.0, 2.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 6.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    8.0, 0.0,-1.0, 0.0, 0.0, 0.0,
-    4.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-  nrow = 6, byrow = TRUE
-  )
-
-colnames(m) <- rownames(m) <- colnames(LiNGAM_sample_1000)
-
-m |>
+tam6 |>
   plot_adjacency_diagrammer(
-  labels      = colnames(LiNGAM_sample_1000),
-  title = "True causal structure",
-  rankdir     = "TB",
-  shape       = "circle"
+  labels  = colnames(tam6),
+  title   = "True causal structure",
+  rankdir = "TB",
+  shape   = "circle"
 )
 ```
 
-<img src="man/figures/README-example-1.png" alt="" width="100%" />
+<img src="man/figures/README-sample1_matrix6-1.png" alt="" width="100%" />
+
+``` r
+x1k <- generate_lingam_sample_6(n = 1000)
+```
 
 ### Causal Discovery
 
 独立性の評価はデフォルトでは相互情報量(mutual infomation)を用います。
 
-HSIC(Hilbert-Schmidt Independence Criterion)を使いたい場合は引数で
-`measure = "kernel"` を指定します。ただし、実行速度が非常に遅いです。
-
-係数の算出はデフォルトでは Adaptive LASSO を用います。
+パス係数の算出には適応的LASSO回帰が使われます。
 
 ``` r
-model <- direct_lingam(LiNGAM_sample_1000, lambda = "BIC")
+model <- x1k |> direct_lingam()
 ```
 
 ### Causal Order
@@ -103,11 +95,11 @@ model <- direct_lingam(LiNGAM_sample_1000, lambda = "BIC")
 ``` r
 # index number
 model$causal_order
-#> [1] 4 1 3 2 5 6
+#> [1] 4 3 1 5 6 2
 
 # variable name
-colnames(LiNGAM_sample_1000)[model$causal_order]
-#> [1] "x3" "x0" "x2" "x1" "x4" "x5"
+colnames(x1k)[model$causal_order]
+#> [1] "x3" "x2" "x0" "x4" "x5" "x1"
 ```
 
 ### Estimated Adjacency Matrix
@@ -115,16 +107,14 @@ colnames(LiNGAM_sample_1000)[model$causal_order]
 推定された効果の量を確認します。
 
 ``` r
-B_hat <- model$adjacency_matrix
-colnames(B_hat) <- rownames(B_hat) <- colnames(LiNGAM_sample_1000)
-round(B_hat, 3)
+round(model$adjacency_matrix, 3)
 #>       x0 x1     x2    x3 x4 x5
-#> x0 0.000  0  0.000 2.994  0  0
-#> x1 2.995  0  1.993 0.000  0  0
-#> x2 0.000  0  0.000 5.956  0  0
+#> x0 0.000  0  0.000 3.033  0  0
+#> x1 2.988  0  2.002 0.000  0  0
+#> x2 0.000  0  0.000 5.993  0  0
 #> x3 0.000  0  0.000 0.000  0  0
-#> x4 7.997  0 -1.004 0.000  0  0
-#> x5 3.979  0  0.000 0.000  0  0
+#> x4 8.017  0 -1.009 0.000  0  0
+#> x5 4.015  0  0.000 0.000  0  0
 ```
 
 ### Plot The Estimated Causal Graph
@@ -132,9 +122,9 @@ round(B_hat, 3)
 推定された隣接行列に基づいて、因果グラフを描きます。
 
 ``` r
-B_hat |>
+model$adjacency_matrix |>
   plot_adjacency_diagrammer(
-      labels = colnames(LiNGAM_sample_1000),
+      labels = colnames(model$adjacency_matrix),
       title = "Estimated Causal Structure (Direct LiNGAM)",
       rankdir = "TB",
       shape = "ellipse",
@@ -149,16 +139,16 @@ B_hat |>
 推定されたすべての総合効果を算出します。
 
 ``` r
-LiNGAM_sample_1000 |>
+x1k |>
   estimate_all_total_effects(model) |>
   round(3)
-#>       x0 x1     x2     x3    x4 x5
-#> x0 0.000  0  0.000  2.994 0.000  0
-#> x1 3.116  0  2.183 20.836 0.000  0
-#> x2 0.058  0  0.000  5.957 0.000  0
-#> x3 0.000  0  0.000  0.000 0.000  0
-#> x4 7.908  0 -0.443 17.957 0.000  0
-#> x5 3.977  0  0.241 11.898 0.021  0
+#>       x0 x1     x2     x3    x4    x5
+#> x0 0.000  0  0.000  3.033 0.000 0.000
+#> x1 2.909  0  1.889 21.059 0.000 0.155
+#> x2 0.000  0  0.000  5.993 0.000 0.000
+#> x3 0.000  0  0.000  0.000 0.000 0.000
+#> x4 8.001  0 -1.309 18.276 0.000 0.000
+#> x5 4.014  0  0.000 12.179 0.003 0.000
 ```
 
 ### Inference Based On Prior Knowledge
@@ -194,61 +184,60 @@ Direct LiNGAM を実行する際に、引数 `prior_knowledge`
 に事前知識を指定します。
 
 ``` r
-model_pk1 <- LiNGAM_sample_1000 |>
+model_pk1 <- x1k |>
   direct_lingam(prior_knowledge = pk1, lambda = "BIC")
 
-cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk1$causal_order], "\n")
-#> Causal Order:  x3 x0 x2 x1 x4 x5
+cat("Causal Order: ", colnames(x1k)[model_pk1$causal_order], "\n")
+#> Causal Order:  x3 x2 x0 x4 x5 x1
 ```
 
 結果の隣接行列に基づいて因果グラフを描きます。
 
 ``` r
-B_pk <- model_pk1$adjacency_matrix
-colnames(B_pk) <- rownames(B_pk) <- colnames(LiNGAM_sample_1000)
-round(B_pk, 3)
+round(model_pk1$adjacency_matrix, 3)
 #>       x0 x1     x2    x3 x4 x5
-#> x0 0.000  0  0.000 2.994  0  0
-#> x1 2.995  0  1.993 0.000  0  0
-#> x2 0.000  0  0.000 5.957  0  0
+#> x0 0.000  0  0.000 3.033  0  0
+#> x1 2.988  0  2.002 0.000  0  0
+#> x2 0.000  0  0.000 5.993  0  0
 #> x3 0.000  0  0.000 0.000  0  0
-#> x4 7.998  0 -1.005 0.000  0  0
-#> x5 3.980  0  0.000 0.000  0  0
+#> x4 8.017  0 -1.009 0.000  0  0
+#> x5 4.015  0  0.000 0.000  0  0
 
-plot_adjacency_diagrammer(
-  B_pk,
-  labels      = colnames(LiNGAM_sample_1000),
-  title = "Estimated (with Prior Knowledge)",
-  rankdir     = "TB",
-  shape       = "circle",
-  fillcolor   = "lightgreen"
-)
+model_pk1$adjacency_matrix |>
+  plot_adjacency_diagrammer(
+    labels      = colnames(model_pk1$adjacency_matrix),
+    title = "Estimated (with Prior Knowledge)",
+    rankdir     = "TB",
+    shape       = "circle",
+    fillcolor   = "lightgreen"
+    )
 ```
 
 <img src="man/figures/README-LiNGAM_with_pk_2-1.png" alt="" width="100%" />
 
 ### Independence between error variables
 
-LiNGAMでは残差が独立であることがを仮定している。
+LiNGAMでは残差が独立であることを仮定している。
 
 get_error_independence_p_values関数は残差間の独立性の検定のp値を返す。
 
 Calculation of the p-value (default: Spearman)
 
 ``` r
-result <- LiNGAM_sample_1000 |>
+result <- x1k |>
   direct_lingam()
 
-p_vals <- LiNGAM_sample_1000 |>
+p_vals <- x1k |>
   get_error_independence_p_values(result)
+
 round(p_vals, 3)
 #>       x0    x1    x2    x3    x4    x5
-#> x0    NA 0.998 0.056 0.976 0.855 0.123
-#> x1 0.998    NA 0.923 0.999 0.302 0.090
-#> x2 0.056 0.923    NA 0.976 0.857 0.895
-#> x3 0.976 0.999 0.976    NA 0.942 0.585
-#> x4 0.855 0.302 0.857 0.942    NA 0.524
-#> x5 0.123 0.090 0.895 0.585 0.524    NA
+#> x0    NA 0.988 0.214 0.976 0.484 0.954
+#> x1 0.988    NA 0.986 0.991 0.323 0.882
+#> x2 0.214 0.986    NA 0.919 0.100 0.124
+#> x3 0.976 0.991 0.919    NA 0.806 0.974
+#> x4 0.484 0.323 0.100 0.806    NA 0.643
+#> x5 0.954 0.882 0.124 0.974 0.643    NA
 ```
 
 ### 正規性の検定
@@ -256,14 +245,9 @@ round(p_vals, 3)
 残差の正規性の検定を行う
 
 ``` r
-# サンプルデータの呼び出し
-data(LiNGAM_sample_1000)
-
-# Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000)
- 
 # Shapiro-Wilk (default)
-test_residual_normality(LiNGAM_sample_1000, result)
+x1k |>
+  test_residual_normality(result)
 #> === Residual Normality Test ===
 #> Method:         shapiro
 #> Sample size:    1000
@@ -271,12 +255,12 @@ test_residual_normality(LiNGAM_sample_1000, result)
 #> Non-Gaussian:   6 / 6 variables
 #> 
 #>  variable statistic   p_value is_non_gauss skewness kurtosis
-#>        x0    0.9514 < 2.2e-16         TRUE    0.079   -1.221
-#>        x1    0.9549 < 2.2e-16         TRUE   -0.100   -1.176
-#>        x2    0.9566  1.22e-16         TRUE    0.016   -1.185
-#>        x3    0.9571  1.61e-16         TRUE    0.033   -1.165
-#>        x4    0.9555 < 2.2e-16         TRUE    0.025   -1.191
-#>        x5    0.9610  1.09e-15         TRUE    0.010   -1.126
+#>        x0    0.9516 < 2.2e-16         TRUE    0.061   -1.215
+#>        x1    0.9521 < 2.2e-16         TRUE    0.026   -1.213
+#>        x2    0.9557 < 2.2e-16         TRUE    0.083   -1.170
+#>        x3    0.9578  2.25e-16         TRUE    0.025   -1.163
+#>        x4    0.9546 < 2.2e-16         TRUE   -0.003   -1.205
+#>        x5    0.9536 < 2.2e-16         TRUE   -0.052   -1.206
 #> 
 #> Interpretation:
 #>   is_non_gauss = TRUE  -> rejects normality (supports LiNGAM assumption)
@@ -288,13 +272,8 @@ test_residual_normality(LiNGAM_sample_1000, result)
 QQプロットでも残差の正規性を確認する
 
 ``` r
-# サンプルデータの呼び出し
-data(LiNGAM_sample_1000)
-
-# Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000)
-
-plot_residual_qq(LiNGAM_sample_1000, result)
+x1k |>
+  plot_residual_qq(result)
 ```
 
 <img src="man/figures/README-qqplot-1.png" alt="" width="100%" />
@@ -302,14 +281,14 @@ plot_residual_qq(LiNGAM_sample_1000, result)
 ### Bootstrap Direct LiNGAM
 
 ``` r
-bs_model <- LiNGAM_sample_1000 |>
+bs_model <- x1k |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #> Bootstrap: 30 iterations, method=adaptive_lasso
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 5.9 seconds.
+#> Completed in 7.3 seconds.
 
 bs_model
 #> BootstrapResult: 30 samplings, 6 features
@@ -319,23 +298,35 @@ bs_model
 
 ``` r
 bs_model |>
-  get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
-#>   from to count proportion mean_effect median_effect   sd_effect  ci_lower
-#> 1    1  2    30          1    2.999478      3.000034 0.024778370  2.960955
-#> 2    1  5    30          1    7.995598      7.993571 0.025933833  7.949036
-#> 3    1  6    30          1    3.980438      3.981888 0.009968875  3.963580
-#> 4    3  2    30          1    1.990247      1.990514 0.012479154  1.967352
-#> 5    3  5    30          1   -1.003159     -1.003891 0.014890399 -1.026718
-#> 6    4  1    30          1    2.990307      2.993976 0.028665229  2.927646
-#> 7    4  3    30          1    5.951686      5.950718 0.026991172  5.909625
-#>     ci_upper from_name to_name
-#> 1  3.0438051        x0      x1
-#> 2  8.0476302        x0      x4
-#> 3  4.0013215        x0      x5
-#> 4  2.0087882        x2      x1
-#> 5 -0.9736465        x2      x4
-#> 6  3.0328700        x3      x0
-#> 7  6.0130651        x3      x2
+  get_causal_direction_counts(labels = names(x1k))
+#>    from to count proportion mean_effect median_effect   sd_effect    ci_lower
+#> 1     1  6    30 1.00000000  4.02010918    4.01886128 0.009510235  4.00298581
+#> 2     1  2    29 0.96666667  2.98872289    2.98691378 0.029595289  2.94808621
+#> 3     1  5    29 0.96666667  8.02805949    8.03049041 0.030493711  7.97909377
+#> 4     3  2    29 0.96666667  2.00133847    2.00270222 0.015820048  1.97089548
+#> 5     3  5    29 0.96666667 -1.01545079   -1.01650518 0.015564566 -1.03972182
+#> 6     4  1    29 0.96666667  3.03159775    3.03291869 0.035791478  2.96698487
+#> 7     4  3    29 0.96666667  6.00046795    6.00363746 0.031652501  5.94254816
+#> 8     2  1     1 0.03333333  0.05299398    0.05299398 0.000000000  0.05299398
+#> 9     2  3     1 0.03333333  0.40422428    0.40422428 0.000000000  0.40422428
+#> 10    2  5     1 0.03333333  0.90679690    0.90679690 0.000000000  0.90679690
+#> 11    3  4     1 0.03333333  0.16165370    0.16165370 0.000000000  0.16165370
+#> 12    5  1     1 0.03333333  0.10459193    0.10459193 0.000000000  0.10459193
+#> 13    5  3     1 0.03333333 -0.13879324   -0.13879324 0.000000000 -0.13879324
+#>       ci_upper from_name to_name
+#> 1   4.03756004        x0      x5
+#> 2   3.04468103        x0      x1
+#> 3   8.08567538        x0      x4
+#> 4   2.02581141        x2      x1
+#> 5  -0.98775234        x2      x4
+#> 6   3.09090167        x3      x0
+#> 7   6.05479799        x3      x2
+#> 8   0.05299398        x1      x0
+#> 9   0.40422428        x1      x2
+#> 10  0.90679690        x1      x4
+#> 11  0.16165370        x2      x3
+#> 12  0.10459193        x4      x0
+#> 13 -0.13879324        x4      x2
 ```
 
 平均因果効果の隣接行列
@@ -346,13 +337,13 @@ bs_adjacency_matrix <- bs_model |>
 
 bs_adjacency_matrix |>
   round(3)
-#>       [,1] [,2]   [,3]  [,4] [,5] [,6]
-#> [1,] 0.000    0  0.000 2.994    0    0
-#> [2,] 3.000    0  1.991 0.000    0    0
-#> [3,] 0.000    0  0.000 5.951    0    0
-#> [4,] 0.000    0  0.000 0.000    0    0
-#> [5,] 7.994    0 -1.004 0.000    0    0
-#> [6,] 3.982    0  0.000 0.000    0    0
+#>       [,1]  [,2]   [,3]  [,4]   [,5] [,6]
+#> [1,] 0.000 0.053  0.000 3.033  0.105    0
+#> [2,] 2.987 0.000  2.003 0.000  0.000    0
+#> [3,] 0.000 0.404  0.000 6.004 -0.139    0
+#> [4,] 0.000 0.000  0.162 0.000  0.000    0
+#> [5,] 8.030 0.907 -1.017 0.000  0.000    0
+#> [6,] 4.019 0.000  0.000 0.000  0.000    0
 ```
 
 係数の可視化（係数0.5以上のパスを描画）
@@ -361,7 +352,7 @@ bs_adjacency_matrix |>
 bs_adjacency_matrix |>
   plot_adjacency_diagrammer(
     threshold = 0.5,
-    labels      = colnames(LiNGAM_sample_1000),
+    labels      = colnames(x1k),
     title = "Estimated (with Bootstrap)",
     rankdir     = "TB",
     shape       = "circle",
@@ -376,13 +367,13 @@ bs_adjacency_matrix |>
 ``` r
 bs_model |>
   get_probabilities() 
-#>      [,1] [,2] [,3] [,4] [,5] [,6]
-#> [1,]    0    0    0    1    0    0
-#> [2,]    1    0    1    0    0    0
-#> [3,]    0    0    0    1    0    0
-#> [4,]    0    0    0    0    0    0
-#> [5,]    1    0    1    0    0    0
-#> [6,]    1    0    0    0    0    0
+#>           [,1]       [,2]       [,3]      [,4]       [,5] [,6]
+#> [1,] 0.0000000 0.03333333 0.00000000 0.9666667 0.03333333    0
+#> [2,] 0.9666667 0.00000000 0.96666667 0.0000000 0.00000000    0
+#> [3,] 0.0000000 0.03333333 0.00000000 0.9666667 0.03333333    0
+#> [4,] 0.0000000 0.00000000 0.03333333 0.0000000 0.00000000    0
+#> [5,] 0.9666667 0.03333333 0.96666667 0.0000000 0.00000000    0
+#> [6,] 1.0000000 0.00000000 0.00000000 0.0000000 0.00000000    0
 ```
 
 平均総合効果
@@ -390,19 +381,28 @@ bs_model |>
 ``` r
 bs_model |>
   get_total_causal_effects()
-#>    from to     effect probability
-#> 1     1  2  3.1249145   1.0000000
-#> 2     1  5  7.9077103   1.0000000
-#> 3     1  6  3.9822275   1.0000000
-#> 4     3  2  2.2281291   1.0000000
-#> 5     4  1  2.9939760   1.0000000
-#> 6     4  2 20.8047080   1.0000000
-#> 7     4  3  5.9517481   1.0000000
-#> 8     4  5 17.9702666   1.0000000
-#> 9     4  6 11.8995582   1.0000000
-#> 10    3  5 -0.4602349   0.8333333
-#> 11    3  6  0.2631429   0.3000000
-#> 12    6  2 -0.2299079   0.1666667
+#>    from to      effect probability
+#> 1     1  6  4.01907390  1.00000000
+#> 2     1  2  2.93210481  0.96666667
+#> 3     1  5  8.00575712  0.96666667
+#> 4     3  2  1.94023398  0.96666667
+#> 5     3  5 -1.18014784  0.96666667
+#> 6     4  1  3.03291869  0.96666667
+#> 7     4  2 21.05796205  0.96666667
+#> 8     4  3  6.00363746  0.96666667
+#> 9     4  5 18.27768167  0.96666667
+#> 10    4  6 12.18492785  0.96666667
+#> 11    6  2  0.19623886  0.06666667
+#> 12    2  1  0.14794503  0.03333333
+#> 13    2  3  0.27850920  0.03333333
+#> 14    2  4  0.04611007  0.03333333
+#> 15    2  5  0.90679690  0.03333333
+#> 16    2  6  0.59359217  0.03333333
+#> 17    3  4  0.16191585  0.03333333
+#> 18    3  6 -0.35827083  0.03333333
+#> 19    5  1  0.10506715  0.03333333
+#> 20    5  3 -0.13869103  0.03333333
+#> 21    5  6  0.41846402  0.03333333
 ```
 
 bootstrapの結果を因果グラフに
@@ -416,38 +416,27 @@ bs_model |>
 
 <img src="man/figures/README-unnamed-chunk-2-1.png" alt="" width="100%" />
 
-### sample data 10000
+### sample data 10変数
+
+大きめのデータセット。10変数、1万行。
 
 ``` r
-data(LiNGAM_sample_10000)
+tam10 <- true_adjacency_matrix_10()
 
-m <- matrix(c(
-  0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
-  3, 0, 2, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 6, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  8, 0, -1, 0, 0, 0, 0, 0, 0, 0,
-  4, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
-  3, 0, 0, 0, 1.5, 0, 0, 0, 0, 0,
-  0, 0, 0.5, 0, 0, 2, 0, 0, 0, 0,
-  0, 0, 0, 7, 0, 0, 1, 0, 0, 0
-  ),
-  nrow = 10, byrow = TRUE
-  )
-
-colnames(m) <- rownames(m) <- colnames(LiNGAM_sample_10000)
-
-m |>
+tam10 |>
   plot_adjacency_diagrammer(
-  labels      = colnames(LiNGAM_sample_10000),
-  title = "True causal structure",
-  rankdir     = "TB",
-  shape       = "circle"
+  labels  = colnames(tam6),
+  title   = "True causal structure",
+  rankdir = "TB",
+  shape   = "circle"
 )
 ```
 
-<img src="man/figures/README-example_10000-1.png" alt="" width="100%" />
+<img src="man/figures/README-sample1_matrix10-1.png" alt="" width="100%" />
+
+``` r
+x10k <- generate_lingam_sample_10(n = 10000)
+```
 
 ## Licence
 

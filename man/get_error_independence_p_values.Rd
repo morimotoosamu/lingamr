@@ -21,7 +21,7 @@ p 値の行列 (n_features x n_features)
 }
 \examples{
 # サンプルデータの呼び出し
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Direct LiNGAM の実行
 result <- direct_lingam(LiNGAM_sample_1000)

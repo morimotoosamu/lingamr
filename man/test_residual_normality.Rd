@@ -30,7 +30,7 @@ rejecting normality (small p-value) supports the LiNGAM model assumption.
 }
 \examples{
 # サンプルデータの呼び出し
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Direct LiNGAM の実行
 result <- direct_lingam(LiNGAM_sample_1000)

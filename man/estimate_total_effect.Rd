@@ -33,7 +33,7 @@ estimate_total_effect(
 指定した2変数間の総合因果効果を推定
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000 |>
   direct_lingam()

@@ -41,7 +41,7 @@
 #' @importFrom stats sd lm.fit cov median quantile
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # OLS (no additional packages required)
 #' result <- direct_lingam(LiNGAM_sample_1000, reg_method = "ols")
@@ -110,6 +110,7 @@ direct_lingam <- function(X,
     lambda = lambda,
     init_method = init_method
   )
+  colnames(B) <- rownames(B) <- colnames(X)
   list(adjacency_matrix = B, causal_order = K)
 }
 

@@ -31,7 +31,7 @@ data.frame (from, to, count, proportion, mean_effect, median_effect,
 因果方向のカウント・割合・因果効果を取得
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 bs_model <- LiNGAM_sample_1000 |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)

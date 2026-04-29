@@ -57,7 +57,7 @@ grViz オブジェクト（DiagrammeR が利用可能な場合）
 隣接行列から DiagrammeR で因果グラフを描画
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000 |>
   direct_lingam()

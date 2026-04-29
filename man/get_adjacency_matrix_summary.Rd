@@ -30,7 +30,7 @@ get_adjacency_matrix_summary(
 ブートストラップ結果から因果効果の代表値の隣接行列を作成
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 bs_model <- LiNGAM_sample_1000 |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)

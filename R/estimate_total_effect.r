@@ -10,7 +10,7 @@
 #' @importFrom stats cov
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000 |>
 #'   direct_lingam()
@@ -103,7 +103,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @importFrom stats cov
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000 |>
 #'   direct_lingam()

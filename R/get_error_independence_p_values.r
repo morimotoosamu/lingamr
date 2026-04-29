@@ -8,7 +8,7 @@
 #' @export
 #' @examples
 #' # サンプルデータの呼び出し
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
 #' result <- direct_lingam(LiNGAM_sample_1000)
@@ -66,7 +66,7 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 #' @export
 #' @examples
 #' # サンプルデータの呼び出し
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
 #' result <- direct_lingam(LiNGAM_sample_1000)
@@ -252,7 +252,7 @@ print.lingam_normality_test <- function(x, ...) {
 #' @export
 #' @examples
 #' # サンプルデータの呼び出し
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
 #' result <- direct_lingam(LiNGAM_sample_1000)

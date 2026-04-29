@@ -28,7 +28,7 @@
 #' @importFrom grDevices col2rgb
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000 |>
 #'   direct_lingam()

@@ -33,7 +33,7 @@ grViz オブジェクト
 ブートストラップ確率を DiagrammeR で描画
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 bs_model <- LiNGAM_sample_1000 |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)

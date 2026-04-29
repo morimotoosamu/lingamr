@@ -42,7 +42,7 @@ BootstrapResult (list)
 Direct LiNGAM のブートストラップ
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Fast example with OLS
 bs <- bootstrap_lingam(LiNGAM_sample_1000,

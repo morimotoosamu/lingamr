@@ -22,7 +22,7 @@ estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
 全変数間の総合因果効果を一括推定
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000 |>
   direct_lingam()

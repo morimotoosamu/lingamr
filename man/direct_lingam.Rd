@@ -17,7 +17,7 @@ direct_lingam(
 \arguments{
 \item{X}{数値行列 (n_samples x n_features), data frame or matrix}
 
-\item{prior_knowledge}{事前知識行列 (n_features x n_features) または NULL
+\item{prior_knowledge}{事前知識行列 (n_features x n_features) または NULL。
  0: x_i から x_j への有向パスなし
  1: x_i から x_j への有向パスあり
 -1: 不明}
@@ -26,21 +26,22 @@ direct_lingam(
 
 \item{measure}{独立性の評価尺度 ("pwling" または "kernel")}
 
-\item{reg_method}{隣接行列推定の回帰手法
-"ols": 最小二乗法
-"lasso": LASSO回帰
-"adaptive_lasso": 適応的LASSO回帰、デフォルト}
+\item{reg_method}{隣接行列推定の回帰手法。
+"ols": 最小二乗法、
+"lasso": LASSO回帰、
+"adaptive_lasso": 適応的LASSO回帰（デフォルト）。}
 
-\item{lambda}{LASSO のペナルティ（ラムダ）選択
-"lambda.min" : CV予測誤差最小
-"lambda.1se" : CV 1SEルール
-"AIC"       : AIC最小。高速
-"BIC"        : BIC最小（CVなし、高速、最もスパース）。デフォルト
-"oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλを選択。高速}
+\item{lambda}{LASSO のペナルティ（ラムダ）選択。
+"lambda.min" : CV予測誤差最小, 予測精度優先。
+"lambda.1se" : CV 1SEルール、ロバストで過学習しにくい。
+"AIC": AIC最小。高速。
+"BIC": BIC最小。高速、最もスパース。デフォルト。
+"oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλを選択。高速。}
 
-\item{init_method}{適応的LASSO回帰の初期重みの推定手法
-"ols": 最小二乗法。デフォルト
-"ridge": Ridege回帰。多重共線性が疑われる場合に適用。}
+\item{init_method}{適応的LASSO回帰の初期重みの推定手法。
+"ols": 最小二乗法（デフォルト）、
+"ridge": Ridege回帰。
+多重共線性が疑われる場合はRidege回帰がおすすめ。}
 }
 \value{
 list(adjacency_matrix, causal_order)
@@ -49,7 +50,7 @@ list(adjacency_matrix, causal_order)
 Direct LiNGAM
 }
 \examples{
-data(LiNGAM_sample_1000)
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # OLS (no additional packages required)
 result <- direct_lingam(LiNGAM_sample_1000, reg_method = "ols")

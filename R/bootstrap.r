@@ -84,7 +84,7 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #' @return BootstrapResult (list)
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Fast example with OLS
 #' bs <- bootstrap_lingam(LiNGAM_sample_1000,
@@ -182,7 +182,7 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #' @method print BootstrapResult
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -212,7 +212,7 @@ print.BootstrapResult <- function(x, ...) {
 #' @importFrom stats sd median quantile
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -342,7 +342,7 @@ get_causal_direction_counts <- function(result,
 #' @return list(dag = list of data.frames, count = integer vector)
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -431,7 +431,7 @@ get_directed_acyclic_graph_counts <- function(result,
 #' @return 確率行列 (n_features x n_features)
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -461,7 +461,7 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' @importFrom stats median
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -525,7 +525,7 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' @importFrom stats median
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -600,7 +600,7 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 #' @return grViz オブジェクト
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
@@ -669,7 +669,7 @@ plot_bootstrap_probabilities <- function(result,
 #' @return 隣接行列 (n_features x n_features)
 #' @export
 #' @examples
-#' data(LiNGAM_sample_1000)
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000 |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)

@@ -62,31 +62,26 @@ pak::pak("morimotoosamu/DirectLiNGAM")
 
 ## Usage
 
+```{r library}
+library(DirectLiNGAM)
+```
+
 ### Sample Data
 
-```{r example}
-library(DirectLiNGAM)
-data(LiNGAM_sample_1000)
+```{r sample1_matrix6}
+tam6 <- true_adjacency_matrix_6()
 
-m <- matrix(
-  c(0.0, 0.0, 0.0, 3.0, 0.0, 0.0,
-    3.0, 0.0, 2.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 6.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    8.0, 0.0,-1.0, 0.0, 0.0, 0.0,
-    4.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-  nrow = 6, byrow = TRUE
-  )
-
-colnames(m) <- rownames(m) <- colnames(LiNGAM_sample_1000)
-
-m |>
+tam6 |>
   plot_adjacency_diagrammer(
-  labels      = colnames(LiNGAM_sample_1000),
-  title = "True causal structure",
-  rankdir     = "TB",
-  shape       = "circle"
+  labels  = colnames(tam6),
+  title   = "True causal structure",
+  rankdir = "TB",
+  shape   = "circle"
 )
+```
+
+```{r gen_sample6}
+x1k <- generate_lingam_sample_6(n = 1000)
 ```
 
 
@@ -94,15 +89,10 @@ m |>
 
 独立性の評価はデフォルトでは相互情報量(mutual infomation)を用います。
 
-
-HSIC(Hilbert-Schmidt Independence Criterion)を使いたい場合は引数で `measure = "kernel"` を指定します。ただし、実行速度が非常に遅いです。
-
-
-係数の算出はデフォルトでは Adaptive LASSO を用います。
-
+パス係数の算出には適応的LASSO回帰が使われます。
 
 ```{r direct_lingam}
-model <- direct_lingam(LiNGAM_sample_1000, lambda = "BIC")
+model <- x1k |> direct_lingam()
 ```
 
 
@@ -115,7 +105,7 @@ model <- direct_lingam(LiNGAM_sample_1000, lambda = "BIC")
 model$causal_order
 
 # variable name
-colnames(LiNGAM_sample_1000)[model$causal_order]
+colnames(x1k)[model$causal_order]
 ```
 
 ### Estimated Adjacency Matrix
@@ -123,9 +113,7 @@ colnames(LiNGAM_sample_1000)[model$causal_order]
 推定された効果の量を確認します。
 
 ```{r adjacency_matrix}
-B_hat <- model$adjacency_matrix
-colnames(B_hat) <- rownames(B_hat) <- colnames(LiNGAM_sample_1000)
-round(B_hat, 3)
+round(model$adjacency_matrix, 3)
 ```
 
 
@@ -134,9 +122,9 @@ round(B_hat, 3)
 推定された隣接行列に基づいて、因果グラフを描きます。
 
 ```{r plot_adjacency}
-B_hat |>
+model$adjacency_matrix |>
   plot_adjacency_diagrammer(
-      labels = colnames(LiNGAM_sample_1000),
+      labels = colnames(model$adjacency_matrix),
       title = "Estimated Causal Structure (Direct LiNGAM)",
       rankdir = "TB",
       shape = "ellipse",
@@ -150,7 +138,7 @@ B_hat |>
 推定されたすべての総合効果を算出します。
 
 ```{r total_effects}
-LiNGAM_sample_1000 |>
+x1k |>
   estimate_all_total_effects(model) |>
   round(3)
 ```
@@ -180,32 +168,30 @@ pk1
 Direct LiNGAM を実行する際に、引数 `prior_knowledge` に事前知識を指定します。
 
 ```{r LiNGAM_with_pk_1}
-model_pk1 <- LiNGAM_sample_1000 |>
+model_pk1 <- x1k |>
   direct_lingam(prior_knowledge = pk1, lambda = "BIC")
 
-cat("Causal Order: ", colnames(LiNGAM_sample_1000)[model_pk1$causal_order], "\n")
+cat("Causal Order: ", colnames(x1k)[model_pk1$causal_order], "\n")
 ```
 
 結果の隣接行列に基づいて因果グラフを描きます。
 
 ```{r LiNGAM_with_pk_2}
-B_pk <- model_pk1$adjacency_matrix
-colnames(B_pk) <- rownames(B_pk) <- colnames(LiNGAM_sample_1000)
-round(B_pk, 3)
+round(model_pk1$adjacency_matrix, 3)
 
-plot_adjacency_diagrammer(
-  B_pk,
-  labels      = colnames(LiNGAM_sample_1000),
-  title = "Estimated (with Prior Knowledge)",
-  rankdir     = "TB",
-  shape       = "circle",
-  fillcolor   = "lightgreen"
-)
+model_pk1$adjacency_matrix |>
+  plot_adjacency_diagrammer(
+    labels      = colnames(model_pk1$adjacency_matrix),
+    title = "Estimated (with Prior Knowledge)",
+    rankdir     = "TB",
+    shape       = "circle",
+    fillcolor   = "lightgreen"
+    )
 ```
 
 ### Independence between error variables
 
-LiNGAMでは残差が独立であることがを仮定している。
+LiNGAMでは残差が独立であることを仮定している。
 
 get_error_independence_p_values関数は残差間の独立性の検定のp値を返す。
 
@@ -213,11 +199,12 @@ Calculation of the p-value (default: Spearman)
 
 
 ```{r Independence_between_error_variables1}
-result <- LiNGAM_sample_1000 |>
+result <- x1k |>
   direct_lingam()
 
-p_vals <- LiNGAM_sample_1000 |>
+p_vals <- x1k |>
   get_error_independence_p_values(result)
+
 round(p_vals, 3)
 ```
 
@@ -226,33 +213,23 @@ round(p_vals, 3)
 残差の正規性の検定を行う
 
 ```{r nortest}
-# サンプルデータの呼び出し
-data(LiNGAM_sample_1000)
-
-# Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000)
- 
 # Shapiro-Wilk (default)
-test_residual_normality(LiNGAM_sample_1000, result)
+x1k |>
+  test_residual_normality(result)
 ```
 
 QQプロットでも残差の正規性を確認する
 
 ```{r qqplot}
-# サンプルデータの呼び出し
-data(LiNGAM_sample_1000)
-
-# Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000)
-
-plot_residual_qq(LiNGAM_sample_1000, result)
+x1k |>
+  plot_residual_qq(result)
 ```
 
 
 ### Bootstrap Direct LiNGAM
 
 ```{r bootstrap_direct_lingam}
-bs_model <- LiNGAM_sample_1000 |>
+bs_model <- x1k |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)
 
 bs_model
@@ -263,7 +240,7 @@ bs_model
 
 ```{r get_causal_direction_counts}
 bs_model |>
-  get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
+  get_causal_direction_counts(labels = names(x1k))
 ```
 
 平均因果効果の隣接行列
@@ -281,7 +258,7 @@ bs_adjacency_matrix |>
 bs_adjacency_matrix |>
   plot_adjacency_diagrammer(
     threshold = 0.5,
-    labels      = colnames(LiNGAM_sample_1000),
+    labels      = colnames(x1k),
     title = "Estimated (with Bootstrap)",
     rankdir     = "TB",
     shape       = "circle",
@@ -315,36 +292,26 @@ bs_model |>
 ```
 
 
-### sample data 10000
+### sample data 10変数
 
-```{r example_10000}
-data(LiNGAM_sample_10000)
+大きめのデータセット。10変数、1万行。
 
-m <- matrix(c(
-  0, 0, 0, 3, 0, 0, 0, 0, 0, 0,
-  3, 0, 2, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 6, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  8, 0, -1, 0, 0, 0, 0, 0, 0, 0,
-  4, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
-  3, 0, 0, 0, 1.5, 0, 0, 0, 0, 0,
-  0, 0, 0.5, 0, 0, 2, 0, 0, 0, 0,
-  0, 0, 0, 7, 0, 0, 1, 0, 0, 0
-  ),
-  nrow = 10, byrow = TRUE
-  )
+```{r sample1_matrix10}
+tam10 <- true_adjacency_matrix_10()
 
-colnames(m) <- rownames(m) <- colnames(LiNGAM_sample_10000)
-
-m |>
+tam10 |>
   plot_adjacency_diagrammer(
-  labels      = colnames(LiNGAM_sample_10000),
-  title = "True causal structure",
-  rankdir     = "TB",
-  shape       = "circle"
+  labels  = colnames(tam6),
+  title   = "True causal structure",
+  rankdir = "TB",
+  shape   = "circle"
 )
 ```
+
+```{r gen_sample10}
+x10k <- generate_lingam_sample_10(n = 10000)
+```
+
 
 
 
