@@ -1,7 +1,7 @@
 Type: Package
 Package: DirectLiNGAM
 Title: Direct LiNGAM for Causal Discovery
-Version: 0.1.0.9000
+Version: 0.1.0.9001
 Authors@R: 
     person("Osamu", "Morimoto", , "galactic.supermarket@gmail.com", role = c("aut", "cre"))
 Description: R implementation of Direct LiNGAM algorithm for causal
