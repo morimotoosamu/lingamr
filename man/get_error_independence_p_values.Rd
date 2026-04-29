@@ -24,13 +24,14 @@ p 値の行列 (n_features x n_features)
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000)
+result <- LiNGAM_sample_1000$data |>
+  direct_lingam()
 
 # p 値の計算（デフォルト: Spearman）
-p_vals <- get_error_independence_p_values(LiNGAM_sample_1000, result)
+p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
 round(p_vals, 3)
 
 # Kendall で計算
-p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000, result, method = "kendall")
+p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000$data, result, method = "kendall")
 round(p_vals_k, 3)
 }

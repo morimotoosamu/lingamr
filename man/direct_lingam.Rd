@@ -53,12 +53,12 @@ Direct LiNGAM
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # OLS (no additional packages required)
-result <- direct_lingam(LiNGAM_sample_1000, reg_method = "ols")
+result <- direct_lingam(LiNGAM_sample_1000$data, reg_method = "ols")
 round(result$adjacency_matrix, 3)
 
 \donttest{
 # LASSO (requires glmnet)
-result_lasso <- direct_lingam(LiNGAM_sample_1000)
+result_lasso <- direct_lingam(LiNGAM_sample_1000$data)
 round(result_lasso$adjacency_matrix, 3)
 }
 }

@@ -45,7 +45,7 @@ Direct LiNGAM のブートストラップ
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Fast example with OLS
-bs <- bootstrap_lingam(LiNGAM_sample_1000,
+bs <- bootstrap_lingam(LiNGAM_sample_1000$data,
   n_sampling = 10L,
   reg_method = "ols",
   seed = 42
@@ -54,7 +54,7 @@ get_probabilities(bs)
 
 \donttest{
 # With LASSO (requires glmnet)
-bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000,
+bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000$data,
   n_sampling = 30L,
   seed = 42
 )

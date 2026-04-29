@@ -35,9 +35,9 @@ estimate_total_effect(
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-model <- LiNGAM_sample_1000 |>
+model <- LiNGAM_sample_1000$data |>
   direct_lingam()
 
-LiNGAM_sample_1000 |>
+LiNGAM_sample_1000$data |>
   estimate_total_effect(model, 4, 1)
 }

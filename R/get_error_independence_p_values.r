@@ -11,14 +11,15 @@
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
-#' result <- direct_lingam(LiNGAM_sample_1000)
+#' result <- LiNGAM_sample_1000$data |>
+#'   direct_lingam()
 #'
 #' # p 値の計算（デフォルト: Spearman）
-#' p_vals <- get_error_independence_p_values(LiNGAM_sample_1000, result)
+#' p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
 #' round(p_vals, 3)
 #'
 #' # Kendall で計算
-#' p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000, result, method = "kendall")
+#' p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000$data, result, method = "kendall")
 #' round(p_vals_k, 3)
 get_error_independence_p_values <- function(X, lingam_result, method = "spearman") {
   X <- as.matrix(X)
@@ -69,10 +70,10 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
-#' result <- direct_lingam(LiNGAM_sample_1000)
+#' result <- direct_lingam(LiNGAM_sample_1000$data)
 #'
 #' # Shapiro-Wilk (default)
-#' test_residual_normality(LiNGAM_sample_1000, result)
+#' test_residual_normality(LiNGAM_sample_1000$data, result)
 test_residual_normality <- function(X, lingam_result,
                                     method = "shapiro",
                                     alpha = 0.05) {
@@ -255,9 +256,9 @@ print.lingam_normality_test <- function(x, ...) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
-#' result <- direct_lingam(LiNGAM_sample_1000)
+#' result <- direct_lingam(LiNGAM_sample_1000$data)
 #'
-#' plot_residual_qq(LiNGAM_sample_1000, result)
+#' plot_residual_qq(LiNGAM_sample_1000$data, result)
 plot_residual_qq <- function(X, lingam_result, ncol = 3, nrow = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required. Please install it.", call. = FALSE)

@@ -12,10 +12,10 @@
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' model <- LiNGAM_sample_1000 |>
+#' model <- LiNGAM_sample_1000$data |>
 #'   direct_lingam()
 #'
-#' LiNGAM_sample_1000 |>
+#' LiNGAM_sample_1000$data |>
 #'   estimate_total_effect(model, 4, 1)
 estimate_total_effect <- function(X, lingam_result, from_index, to_index,
                                   method = "adaptive_lasso", lambda = "BIC") {
@@ -105,10 +105,10 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' model <- LiNGAM_sample_1000 |>
+#' model <- LiNGAM_sample_1000$data |>
 #'   direct_lingam()
 #'
-#' LiNGAM_sample_1000 |>
+#' LiNGAM_sample_1000$data |>
 #'   estimate_all_total_effects(model)
 estimate_all_total_effects <- function(X,
                                        lingam_result,

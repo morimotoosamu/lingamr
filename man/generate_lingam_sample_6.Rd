@@ -2,35 +2,45 @@
 % Please edit documentation in R/generate_lingam_sample.r
 \name{generate_lingam_sample_6}
 \alias{generate_lingam_sample_6}
-\title{Generate sample data for Direct LiNGAM}
+\title{Generate sample data for Direct LiNGAM (6 variables)}
 \usage{
-generate_lingam_sample_6(n = 1000L, seed = 42L)
+generate_lingam_sample_6(n = 1000L, seed = 42L, noise_dist = "uniform")
 }
 \arguments{
 \item{n}{number of samples (default: 1000)}
 
 \item{seed}{random seed (default: 42)}
+
+\item{noise_dist}{error term distribution
+"uniform"     : Uniform(0, 1) - default, non-Gaussian (LiNGAM works well)
+"gaussian"    : Normal(0, 1)  - LiNGAM may fail
+"lognormal"   : Log-normal(0, 1) - skewed, non-Gaussian
+"exponential" : Exponential(1) - skewed, non-Gaussian
+"t3"          : t-distribution (df=3) - heavy tails}
 }
 \value{
-data.frame with columns x0, x1, x2, x3, x4, x5
+list(data, true_adjacency)
 }
 \description{
-Generates a sample dataset with a known causal structure for testing
-and demonstrating Direct LiNGAM. The true causal structure is:
-}
-\details{
-x3 -> x0 (coef = 3.0)
-x3 -> x2 (coef = 6.0)
-x0 -> x1 (coef = 3.0)
-x2 -> x1 (coef = 2.0)
-x0 -> x5 (coef = 4.0)
-x0 -> x4 (coef = 8.0)
-x2 -> x4 (coef = -1.0)
+Generates a sample dataset with a known causal structure.
+The true causal structure is:
+  x3 -> x0 (coef = 3.0)
+  x3 -> x2 (coef = 6.0)
+  x0 -> x1 (coef = 3.0)
+  x2 -> x1 (coef = 2.0)
+  x0 -> x5 (coef = 4.0)
+  x0 -> x4 (coef = 8.0)
+  x2 -> x4 (coef = -1.0)
 }
 \examples{
-X <- generate_lingam_sample_6(n = 1000, seed = 42)
-head(X)
-result <- direct_lingam(X)
+# Non-Gaussian (LiNGAM works well)
+X_nongauss <- generate_lingam_sample_6(noise_dist = "uniform")
+result <- direct_lingam(X_nongauss$data)
+result$causal_order
+
+# Gaussian (LiNGAM may fail)
+X_gauss <- generate_lingam_sample_6(noise_dist = "gaussian")
+result <- direct_lingam(X_gauss$data)
 result$causal_order
 
 }

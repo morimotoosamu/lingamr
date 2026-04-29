@@ -33,9 +33,9 @@ data.frame (from, to, count, proportion, mean_effect, median_effect,
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- LiNGAM_sample_1000 |>
+bs_model <- LiNGAM_sample_1000$data |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)
 
 bs_model |>
-  get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
+  get_causal_direction_counts(labels = names(LiNGAM_sample_1000$data))
 }

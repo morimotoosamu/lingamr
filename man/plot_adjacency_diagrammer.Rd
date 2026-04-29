@@ -59,7 +59,10 @@ grViz オブジェクト（DiagrammeR が利用可能な場合）
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-model <- LiNGAM_sample_1000 |>
+LiNGAM_sample_1000$true_adjacency |>
+  plot_adjacency_diagrammer(title = "True Causal Structure")
+
+model <- LiNGAM_sample_1000$data |>
   direct_lingam()
 
 model$adjacency_matrix |>

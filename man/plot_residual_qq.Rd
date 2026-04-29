@@ -23,7 +23,7 @@ plot QQ
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000)
+result <- direct_lingam(LiNGAM_sample_1000$data)
 
-plot_residual_qq(LiNGAM_sample_1000, result)
+plot_residual_qq(LiNGAM_sample_1000$data, result)
 }

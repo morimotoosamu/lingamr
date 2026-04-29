@@ -29,7 +29,7 @@ DAG カウントを取得
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- LiNGAM_sample_1000 |>
+bs_model <- LiNGAM_sample_1000$data |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)
 
 bs_model |>

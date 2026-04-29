@@ -24,9 +24,9 @@ estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-model <- LiNGAM_sample_1000 |>
+model <- LiNGAM_sample_1000$data |>
   direct_lingam()
 
-LiNGAM_sample_1000 |>
+LiNGAM_sample_1000$data |>
   estimate_all_total_effects(model)
 }

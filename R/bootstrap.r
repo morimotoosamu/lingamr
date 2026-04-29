@@ -87,7 +87,7 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Fast example with OLS
-#' bs <- bootstrap_lingam(LiNGAM_sample_1000,
+#' bs <- bootstrap_lingam(LiNGAM_sample_1000$data,
 #'   n_sampling = 10L,
 #'   reg_method = "ols",
 #'   seed = 42
@@ -96,7 +96,7 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #'
 #' \donttest{
 #' # With LASSO (requires glmnet)
-#' bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000,
+#' bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000$data,
 #'   n_sampling = 30L,
 #'   seed = 42
 #' )
@@ -184,7 +184,7 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
@@ -214,11 +214,11 @@ print.BootstrapResult <- function(x, ...) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
-#'   get_causal_direction_counts(labels = names(LiNGAM_sample_1000))
+#'   get_causal_direction_counts(labels = names(LiNGAM_sample_1000$data))
 get_causal_direction_counts <- function(result,
                                         n_directions = NULL,
                                         min_causal_effect = NULL,
@@ -344,7 +344,7 @@ get_causal_direction_counts <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
@@ -433,7 +433,7 @@ get_directed_acyclic_graph_counts <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
@@ -463,7 +463,7 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
@@ -527,7 +527,7 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #' bs_model |>
 #'   get_paths(1, 6)
@@ -602,7 +602,7 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #' bs_model |>
 #'   plot_bootstrap_probabilities()
@@ -671,7 +671,7 @@ plot_bootstrap_probabilities <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000 |>
+#' bs_model <- LiNGAM_sample_1000$data |>
 #'   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #' bs_model |>
 #'   get_adjacency_matrix_summary()

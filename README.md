@@ -61,11 +61,11 @@ library(DirectLiNGAM)
 ### Sample Data
 
 ``` r
-tam6 <- true_adjacency_matrix_6()
+x1k <- generate_lingam_sample_6(n = 1000)
 
-tam6 |>
+x1k$true_adjacency |>
   plot_adjacency_diagrammer(
-  labels  = colnames(tam6),
+  labels  = colnames(x1k$data),
   title   = "True causal structure",
   rankdir = "TB",
   shape   = "circle"
@@ -74,10 +74,6 @@ tam6 |>
 
 <img src="man/figures/README-sample1_matrix6-1.png" alt="" width="100%" />
 
-``` r
-x1k <- generate_lingam_sample_6(n = 1000)
-```
-
 ### Causal Discovery
 
 独立性の評価はデフォルトでは相互情報量(mutual infomation)を用います。
@@ -85,7 +81,7 @@ x1k <- generate_lingam_sample_6(n = 1000)
 パス係数の算出には適応的LASSO回帰が使われます。
 
 ``` r
-model <- x1k |> direct_lingam()
+model <- x1k$data |> direct_lingam()
 ```
 
 ### Causal Order
@@ -98,7 +94,7 @@ model$causal_order
 #> [1] 4 3 1 5 6 2
 
 # variable name
-colnames(x1k)[model$causal_order]
+colnames(x1k$data)[model$causal_order]
 #> [1] "x3" "x2" "x0" "x4" "x5" "x1"
 ```
 
@@ -139,7 +135,7 @@ model$adjacency_matrix |>
 推定されたすべての総合効果を算出します。
 
 ``` r
-x1k |>
+x1k$data |>
   estimate_all_total_effects(model) |>
   round(3)
 #>       x0 x1     x2     x3    x4    x5
@@ -184,10 +180,10 @@ Direct LiNGAM を実行する際に、引数 `prior_knowledge`
 に事前知識を指定します。
 
 ``` r
-model_pk1 <- x1k |>
+model_pk1 <- x1k$data |>
   direct_lingam(prior_knowledge = pk1, lambda = "BIC")
 
-cat("Causal Order: ", colnames(x1k)[model_pk1$causal_order], "\n")
+cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
 #> Causal Order:  x3 x2 x0 x4 x5 x1
 ```
 
@@ -224,10 +220,10 @@ get_error_independence_p_values関数は残差間の独立性の検定のp値を
 Calculation of the p-value (default: Spearman)
 
 ``` r
-result <- x1k |>
+result <- x1k$data |>
   direct_lingam()
 
-p_vals <- x1k |>
+p_vals <- x1k$data |>
   get_error_independence_p_values(result)
 
 round(p_vals, 3)
@@ -246,7 +242,7 @@ round(p_vals, 3)
 
 ``` r
 # Shapiro-Wilk (default)
-x1k |>
+x1k$data |>
   test_residual_normality(result)
 #> === Residual Normality Test ===
 #> Method:         shapiro
@@ -272,7 +268,7 @@ x1k |>
 QQプロットでも残差の正規性を確認する
 
 ``` r
-x1k |>
+x1k$data |>
   plot_residual_qq(result)
 ```
 
@@ -281,14 +277,14 @@ x1k |>
 ### Bootstrap Direct LiNGAM
 
 ``` r
-bs_model <- x1k |>
+bs_model <- x1k$data |>
   bootstrap_lingam(n_sampling = 30L, seed = 42)
 #> Bootstrap: 30 iterations, method=adaptive_lasso
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 7.3 seconds.
+#> Completed in 6.1 seconds.
 
 bs_model
 #> BootstrapResult: 30 samplings, 6 features
@@ -298,7 +294,7 @@ bs_model
 
 ``` r
 bs_model |>
-  get_causal_direction_counts(labels = names(x1k))
+  get_causal_direction_counts(labels = names(x1k$data))
 #>    from to count proportion mean_effect median_effect   sd_effect    ci_lower
 #> 1     1  6    30 1.00000000  4.02010918    4.01886128 0.009510235  4.00298581
 #> 2     1  2    29 0.96666667  2.98872289    2.98691378 0.029595289  2.94808621
@@ -352,7 +348,7 @@ bs_adjacency_matrix |>
 bs_adjacency_matrix |>
   plot_adjacency_diagrammer(
     threshold = 0.5,
-    labels      = colnames(x1k),
+    labels      = colnames(x1k$data),
     title = "Estimated (with Bootstrap)",
     rankdir     = "TB",
     shape       = "circle",
@@ -421,11 +417,11 @@ bs_model |>
 大きめのデータセット。10変数、1万行。
 
 ``` r
-tam10 <- true_adjacency_matrix_10()
+x10k <- generate_lingam_sample_10(n = 10000)
 
-tam10 |>
+x10k$data |>
   plot_adjacency_diagrammer(
-  labels  = colnames(tam6),
+  labels  = colnames(x10k$data),
   title   = "True causal structure",
   rankdir = "TB",
   shape   = "circle"
@@ -433,10 +429,6 @@ tam10 |>
 ```
 
 <img src="man/figures/README-sample1_matrix10-1.png" alt="" width="100%" />
-
-``` r
-x10k <- generate_lingam_sample_10(n = 10000)
-```
 
 ## Licence
 
