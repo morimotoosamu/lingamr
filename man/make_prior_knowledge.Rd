@@ -33,7 +33,7 @@ list(c(from, to), ...) の形式。インデックスまたは変数名で指定
 }
 \value{
 事前知識行列 (n_variables x n_variables)
-  -1: 不明, 0: パスなし, 1: パスあり
+-1: 不明, 0: パスなし, 1: パスあり
 }
 \description{
 事前知識行列を作成

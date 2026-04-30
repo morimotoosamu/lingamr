@@ -18,8 +18,8 @@ direct_lingam(
 \item{X}{数値行列 (n_samples x n_features), data frame or matrix}
 
 \item{prior_knowledge}{事前知識行列 (n_features x n_features) または NULL。
- 0: x_i から x_j への有向パスなし
- 1: x_i から x_j への有向パスあり
+0: x_i から x_j への有向パスなし
+1: x_i から x_j への有向パスあり
 -1: 不明}
 
 \item{apply_prior_knowledge_softly}{事前知識をソフトに適用するか (logical)}

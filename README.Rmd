@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 ```
 
 
-# DirectLiNGAM
+# lingamr
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
@@ -27,7 +27,7 @@ This package is a port of the Python lingam package to R.
 - [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 - [lingam](https://github.com/cdt15/lingam)
 
-`DirectLiNGAM` is a port to R of the [LiNGAM](https://github.com/cdt15/lingam) package (LiNGAM: Linear Non-Gaussian Acyclic Model), which is available in Python.
+`lingamr` is a port to R of the [LiNGAM](https://github.com/cdt15/lingam) package (LiNGAM: Linear Non-Gaussian Acyclic Model), which is available in Python.
 
 This is currently an alpha version under development, and we are releasing it for the purpose of testing and gathering feedback.
 
@@ -51,7 +51,7 @@ You can install the development version of DirectLiNGAM from [GitHub](https://gi
 
 ``` r
 # install.packages("pak")
-pak::pak("morimotoosamu/DirectLiNGAM")
+pak::pak("morimotoosamu/lingamr")
 ```
 
 
@@ -63,7 +63,7 @@ pak::pak("morimotoosamu/DirectLiNGAM")
 ## Usage
 
 ```{r library}
-library(DirectLiNGAM)
+library(lingamr)
 ```
 
 ### Sample Data
@@ -88,7 +88,8 @@ x1k$true_adjacency |>
 パス係数の算出には適応的LASSO回帰が使われます。
 
 ```{r direct_lingam}
-model <- x1k$data |> direct_lingam()
+model <- x1k$data |>
+  direct_lingam()
 ```
 
 
@@ -109,7 +110,8 @@ colnames(x1k$data)[model$causal_order]
 推定された効果の量を確認します。
 
 ```{r adjacency_matrix}
-round(model$adjacency_matrix, 3)
+model$adjacency_matrix |>
+  round(3)
 ```
 
 
@@ -173,7 +175,8 @@ cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
 結果の隣接行列に基づいて因果グラフを描きます。
 
 ```{r LiNGAM_with_pk_2}
-round(model_pk1$adjacency_matrix, 3)
+model_pk1$adjacency_matrix |>
+  round(3)
 
 model_pk1$adjacency_matrix |>
   plot_adjacency_diagrammer(

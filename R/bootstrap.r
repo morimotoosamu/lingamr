@@ -207,8 +207,16 @@ print.BootstrapResult <- function(x, ...) {
 #' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
 #' @param split_by_causal_effect_sign 因果効果の符号で分割するか
 #' @param labels 変数名ベクトル (NULL可。指定するとfrom_name, to_name列を追加)
-#' @return data.frame (from, to, count, proportion, mean_effect, median_effect,
-#'                     sd_effect, ci_lower, ci_upper [, sign] [, from_name, to_name])
+#' @return A data frame containing the following columns:
+#' * `from`, `to`: 1-based indices of the causal (from) and effect (to) variables.
+#' * `count`: Number of bootstrap samples in which this specific causal direction was identified.
+#' * `proportion`: The frequency of the direction's occurrence (count / n_sampling), representing its bootstrap probability.
+#' * `mean_effect`: The average value of the estimated causal effects across samples where this direction was identified.
+#' * `median_effect`: The median value of the estimated causal effects, providing a robust estimate of the effect size.
+#' * `sd_effect`: The standard deviation of the causal effect estimates, indicating the stability of the effect size.
+#' * `ci_lower`, `ci_upper`: The lower (2.5%) and upper (97.5%) bounds of the bootstrap confidence interval for the causal effect.
+#' * `sign` (optional): The sign of the causal effect (1 for positive, -1 for negative), included if `split_by_causal_effect_sign = TRUE`.
+#' * `from_name`, `to_name` (optional): Character labels for the variables, included if `labels` were provided.
 #' @importFrom stats sd median quantile
 #' @export
 #' @examples

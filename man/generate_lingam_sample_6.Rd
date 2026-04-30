@@ -24,13 +24,13 @@ list(data, true_adjacency)
 \description{
 Generates a sample dataset with a known causal structure.
 The true causal structure is:
-  x3 -> x0 (coef = 3.0)
-  x3 -> x2 (coef = 6.0)
-  x0 -> x1 (coef = 3.0)
-  x2 -> x1 (coef = 2.0)
-  x0 -> x5 (coef = 4.0)
-  x0 -> x4 (coef = 8.0)
-  x2 -> x4 (coef = -1.0)
+x3 -> x0 (coef = 3.0)
+x3 -> x2 (coef = 6.0)
+x0 -> x1 (coef = 3.0)
+x2 -> x1 (coef = 2.0)
+x0 -> x5 (coef = 4.0)
+x0 -> x4 (coef = 8.0)
+x2 -> x4 (coef = -1.0)
 }
 \examples{
 # Non-Gaussian (LiNGAM works well)

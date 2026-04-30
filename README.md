@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# DirectLiNGAM
+# lingamr
 
 <!-- badges: start -->
 
@@ -18,7 +18,7 @@ This package is a port of the Python lingam package to R.
 - [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 - [lingam](https://github.com/cdt15/lingam)
 
-`DirectLiNGAM` is a port to R of the
+`lingamr` is a port to R of the
 [LiNGAM](https://github.com/cdt15/lingam) package (LiNGAM: Linear
 Non-Gaussian Acyclic Model), which is available in Python.
 
@@ -44,7 +44,7 @@ You can install the development version of DirectLiNGAM from
 
 ``` r
 # install.packages("pak")
-pak::pak("morimotoosamu/DirectLiNGAM")
+pak::pak("morimotoosamu/lingamr")
 ```
 
 ## Requirements
@@ -55,7 +55,7 @@ pak::pak("morimotoosamu/DirectLiNGAM")
 ## Usage
 
 ``` r
-library(DirectLiNGAM)
+library(lingamr)
 ```
 
 ### Sample Data
@@ -81,7 +81,8 @@ x1k$true_adjacency |>
 パス係数の算出には適応的LASSO回帰が使われます。
 
 ``` r
-model <- x1k$data |> direct_lingam()
+model <- x1k$data |>
+  direct_lingam()
 ```
 
 ### Causal Order
@@ -103,7 +104,8 @@ colnames(x1k$data)[model$causal_order]
 推定された効果の量を確認します。
 
 ``` r
-round(model$adjacency_matrix, 3)
+model$adjacency_matrix |>
+  round(3)
 #>       x0 x1     x2    x3 x4 x5
 #> x0 0.000  0  0.000 3.033  0  0
 #> x1 2.988  0  2.002 0.000  0  0
@@ -190,7 +192,8 @@ cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
 結果の隣接行列に基づいて因果グラフを描きます。
 
 ``` r
-round(model_pk1$adjacency_matrix, 3)
+model_pk1$adjacency_matrix |>
+  round(3)
 #>       x0 x1     x2    x3 x4 x5
 #> x0 0.000  0  0.000 3.033  0  0
 #> x1 2.988  0  2.002 0.000  0  0
@@ -284,7 +287,7 @@ bs_model <- x1k$data |>
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 6.1 seconds.
+#> Completed in 6.4 seconds.
 
 bs_model
 #> BootstrapResult: 30 samplings, 6 features

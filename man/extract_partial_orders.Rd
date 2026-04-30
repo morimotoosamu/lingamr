@@ -10,7 +10,7 @@ extract_partial_orders(pk)
 \item{pk}{事前知識行列 (NaN = 不明)}
 }
 \value{
-matrix (n x 2), 各行は [from, to] の部分順序
+matrix (n x 2), 各行は (from, to) の部分順序
 }
 \description{
 事前知識から部分順序を抽出

@@ -18,9 +18,11 @@ list(data, true_adjacency)
 }
 \description{
 Generates a dataset with conditions that make causal estimation difficult:
-  1. High multicollinearity among predictors
-  2. Moderate sample size relative to variables
-  3. True coefficients of similar magnitude
+\enumerate{
+\item High multicollinearity among predictors
+\item Moderate sample size relative to variables
+\item True coefficients of similar magnitude
+}
 }
 \details{
 These conditions destabilize OLS initial estimates in Adaptive LASSO,

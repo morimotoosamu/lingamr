@@ -24,8 +24,18 @@ get_causal_direction_counts(
 \item{labels}{変数名ベクトル (NULL可。指定するとfrom_name, to_name列を追加)}
 }
 \value{
-data.frame (from, to, count, proportion, mean_effect, median_effect,
-                    sd_effect, ci_lower, ci_upper [, sign] [, from_name, to_name])
+A data frame containing the following columns:
+\itemize{
+\item \code{from}, \code{to}: 1-based indices of the causal (from) and effect (to) variables.
+\item \code{count}: Number of bootstrap samples in which this specific causal direction was identified.
+\item \code{proportion}: The frequency of the direction's occurrence (count / n_sampling), representing its bootstrap probability.
+\item \code{mean_effect}: The average value of the estimated causal effects across samples where this direction was identified.
+\item \code{median_effect}: The median value of the estimated causal effects, providing a robust estimate of the effect size.
+\item \code{sd_effect}: The standard deviation of the causal effect estimates, indicating the stability of the effect size.
+\item \code{ci_lower}, \code{ci_upper}: The lower (2.5\%) and upper (97.5\%) bounds of the bootstrap confidence interval for the causal effect.
+\item \code{sign} (optional): The sign of the causal effect (1 for positive, -1 for negative), included if \code{split_by_causal_effect_sign = TRUE}.
+\item \code{from_name}, \code{to_name} (optional): Character labels for the variables, included if \code{labels} were provided.
+}
 }
 \description{
 因果方向のカウント・割合・因果効果を取得
