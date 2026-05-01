@@ -1,7 +1,7 @@
 #' 指定した2変数間の総合因果効果を推定
 #'
 #' @param X 元データ (matrix or data.frame)
-#' @param lingam_result direct_lingam() の返り値
+#' @param lingam_result lingam_direct() の返り値
 #' @param from_index 原因変数 (1-based index or 変数名)
 #' @param to_index 結果変数 (1-based index or 変数名)
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはadaptive_lasso
@@ -13,7 +13,7 @@
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000$data |>
-#'   direct_lingam()
+#'   lingam_direct()
 #'
 #' LiNGAM_sample_1000$data |>
 #'   estimate_total_effect(model, 4, 1)
@@ -96,7 +96,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' 全変数間の総合因果効果を一括推定
 #'
 #' @param X 元データ (n_samples x n_features)
-#' @param lingam_result direct_lingam() の返り値
+#' @param lingam_result lingam_direct() の返り値
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
 #' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
 #' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
@@ -106,7 +106,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000$data |>
-#'   direct_lingam()
+#'   lingam_direct()
 #'
 #' LiNGAM_sample_1000$data |>
 #'   estimate_all_total_effects(model)

@@ -87,7 +87,7 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Fast example with OLS
-#' bs <- bootstrap_lingam(LiNGAM_sample_1000$data,
+#' bs <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #'   n_sampling = 10L,
 #'   reg_method = "ols",
 #'   seed = 42
@@ -96,12 +96,12 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
 #'
 #' \donttest{
 #' # With LASSO (requires glmnet)
-#' bs_lasso <- bootstrap_lingam(LiNGAM_sample_1000$data,
+#' bs_lasso <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #'   n_sampling = 30L,
 #'   seed = 42
 #' )
 #' }
-bootstrap_lingam <- function(X,
+lingam_direct_bootstrap <- function(X,
                              n_sampling,
                              prior_knowledge = NULL,
                              apply_prior_knowledge_softly = FALSE,
@@ -131,7 +131,7 @@ bootstrap_lingam <- function(X,
     idx <- sample(n_samples, replace = TRUE)
     resampled_X <- X[idx, , drop = FALSE]
     resampled_indices[[i]] <- idx
-    result <- direct_lingam(
+    result <- lingam_direct(
       resampled_X,
       prior_knowledge = prior_knowledge,
       apply_prior_knowledge_softly = apply_prior_knowledge_softly,
@@ -185,7 +185,7 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
 #'   print()
@@ -223,7 +223,7 @@ print.BootstrapResult <- function(x, ...) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
 #'   get_causal_direction_counts(labels = names(LiNGAM_sample_1000$data))
@@ -353,7 +353,7 @@ get_causal_direction_counts <- function(result,
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
 #'   get_directed_acyclic_graph_counts()
@@ -442,7 +442,7 @@ get_directed_acyclic_graph_counts <- function(result,
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
 #'   get_probabilities()
@@ -472,7 +472,7 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #'
 #' bs_model |>
 #'   get_total_causal_effects()
@@ -536,7 +536,7 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #' bs_model |>
 #'   get_paths(1, 6)
 get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
@@ -611,7 +611,7 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #' bs_model |>
 #'   plot_bootstrap_probabilities()
 plot_bootstrap_probabilities <- function(result,
@@ -680,7 +680,7 @@ plot_bootstrap_probabilities <- function(result,
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' bs_model <- LiNGAM_sample_1000$data |>
-#'   bootstrap_lingam(n_sampling = 30L, seed = 42)
+#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #' bs_model |>
 #'   get_adjacency_matrix_summary()
 get_adjacency_matrix_summary <- function(result,

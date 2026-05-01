@@ -44,15 +44,15 @@
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # OLS (no additional packages required)
-#' result <- direct_lingam(LiNGAM_sample_1000$data, reg_method = "ols")
+#' result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
 #' round(result$adjacency_matrix, 3)
 #'
 #' \donttest{
 #' # LASSO (requires glmnet)
-#' result_lasso <- direct_lingam(LiNGAM_sample_1000$data)
+#' result_lasso <- lingam_direct(LiNGAM_sample_1000$data)
 #' round(result_lasso$adjacency_matrix, 3)
 #' }
-direct_lingam <- function(X,
+lingam_direct <- function(X,
                           prior_knowledge = NULL,
                           apply_prior_knowledge_softly = FALSE,
                           measure = "pwling",

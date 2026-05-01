@@ -1,7 +1,7 @@
 #' 誤差の独立性検定の p 値を計算
 #'
 #' @param X 元データ (matrix or data.frame)
-#' @param lingam_result direct_lingam() の返り値
+#' @param lingam_result lingam_direct() の返り値
 #' @param method 相関係数の種類 ("spearman", "pearson", "kendall")
 #' @return p 値の行列 (n_features x n_features)
 #' @importFrom stats cor.test
@@ -12,7 +12,7 @@
 #'
 #' # Direct LiNGAM の実行
 #' result <- LiNGAM_sample_1000$data |>
-#'   direct_lingam()
+#'   lingam_direct()
 #'
 #' # p 値の計算（デフォルト: Spearman）
 #' p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
@@ -55,7 +55,7 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 #' rejecting normality (small p-value) supports the LiNGAM model assumption.
 #'
 #' @param X original data matrix or data.frame
-#' @param lingam_result result from direct_lingam()
+#' @param lingam_result result from lingam_direct()
 #' @param method normality test method
 #'   "shapiro"      : Shapiro-Wilk test (default, n <= 5000)
 #'   "ks"           : Kolmogorov-Smirnov test (n > 5000)
@@ -70,7 +70,7 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
-#' result <- direct_lingam(LiNGAM_sample_1000$data)
+#' result <- lingam_direct(LiNGAM_sample_1000$data)
 #'
 #' # Shapiro-Wilk (default)
 #' test_residual_normality(LiNGAM_sample_1000$data, result)
@@ -247,7 +247,7 @@ print.lingam_normality_test <- function(x, ...) {
 
 #' plot QQ
 #' @param X 元データ (matrix or data.frame)
-#' @param lingam_result direct_lingam() の返り値
+#' @param lingam_result lingam_direct() の返り値
 #' @param ncol Number of columns.
 #' @param nrow Number of rows.
 #' @export
@@ -256,7 +256,7 @@ print.lingam_normality_test <- function(x, ...) {
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Direct LiNGAM の実行
-#' result <- direct_lingam(LiNGAM_sample_1000$data)
+#' result <- lingam_direct(LiNGAM_sample_1000$data)
 #'
 #' plot_residual_qq(LiNGAM_sample_1000$data, result)
 plot_residual_qq <- function(X, lingam_result, ncol = 3, nrow = NULL) {

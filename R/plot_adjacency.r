@@ -31,14 +31,14 @@
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' LiNGAM_sample_1000$true_adjacency |>
-#'   plot_adjacency_diagrammer(title = "True Causal Structure")
+#'   plot_adjacency(title = "True Causal Structure")
 #'
 #' model <- LiNGAM_sample_1000$data |>
-#'   direct_lingam()
+#'   lingam_direct()
 #'
 #' model$adjacency_matrix |>
-#'   plot_adjacency_diagrammer()
-plot_adjacency_diagrammer <- function(B,
+#'   plot_adjacency()
+plot_adjacency <- function(B,
                                       labels = NULL,
                                       threshold = 0,
                                       rankdir = "TB",
