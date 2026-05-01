@@ -16,7 +16,7 @@ estimate_total_effect(
 \arguments{
 \item{X}{元データ (matrix or data.frame)}
 
-\item{lingam_result}{direct_lingam() の返り値}
+\item{lingam_result}{lingam_direct() の返り値}
 
 \item{from_index}{原因変数 (1-based index or 変数名)}
 
@@ -36,7 +36,7 @@ estimate_total_effect(
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000$data |>
-  direct_lingam()
+  lingam_direct()
 
 LiNGAM_sample_1000$data |>
   estimate_total_effect(model, 4, 1)

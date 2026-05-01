@@ -35,12 +35,12 @@ x2 -> x4 (coef = -1.0)
 \examples{
 # Non-Gaussian (LiNGAM works well)
 X_nongauss <- generate_lingam_sample_6(noise_dist = "uniform")
-result <- direct_lingam(X_nongauss$data)
+result <- lingam_direct(X_nongauss$data)
 result$causal_order
 
 # Gaussian (LiNGAM may fail)
 X_gauss <- generate_lingam_sample_6(noise_dist = "gaussian")
-result <- direct_lingam(X_gauss$data)
+result <- lingam_direct(X_gauss$data)
 result$causal_order
 
 }

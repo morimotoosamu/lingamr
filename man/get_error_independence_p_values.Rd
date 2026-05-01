@@ -9,7 +9,7 @@ get_error_independence_p_values(X, lingam_result, method = "spearman")
 \arguments{
 \item{X}{元データ (matrix or data.frame)}
 
-\item{lingam_result}{direct_lingam() の返り値}
+\item{lingam_result}{lingam_direct() の返り値}
 
 \item{method}{相関係数の種類 ("spearman", "pearson", "kendall")}
 }
@@ -25,7 +25,7 @@ LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Direct LiNGAM の実行
 result <- LiNGAM_sample_1000$data |>
-  direct_lingam()
+  lingam_direct()
 
 # p 値の計算（デフォルト: Spearman）
 p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)

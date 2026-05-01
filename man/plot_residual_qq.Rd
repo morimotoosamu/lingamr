@@ -9,7 +9,7 @@ plot_residual_qq(X, lingam_result, ncol = 3, nrow = NULL)
 \arguments{
 \item{X}{元データ (matrix or data.frame)}
 
-\item{lingam_result}{direct_lingam() の返り値}
+\item{lingam_result}{lingam_direct() の返り値}
 
 \item{ncol}{Number of columns.}
 
@@ -23,7 +23,7 @@ plot QQ
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Direct LiNGAM の実行
-result <- direct_lingam(LiNGAM_sample_1000$data)
+result <- lingam_direct(LiNGAM_sample_1000$data)
 
 plot_residual_qq(LiNGAM_sample_1000$data, result)
 }

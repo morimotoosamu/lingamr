@@ -9,7 +9,7 @@ estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
 \arguments{
 \item{X}{元データ (n_samples x n_features)}
 
-\item{lingam_result}{direct_lingam() の返り値}
+\item{lingam_result}{lingam_direct() の返り値}
 
 \item{method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
 
@@ -25,7 +25,7 @@ estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000$data |>
-  direct_lingam()
+  lingam_direct()
 
 LiNGAM_sample_1000$data |>
   estimate_all_total_effects(model)
