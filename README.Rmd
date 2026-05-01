@@ -227,6 +227,8 @@ x1k$data |>
 
 ### Bootstrap Direct LiNGAM
 
+まだマルチコア処理に対応していないので遅いです。
+
 ```{r lingam_direct_bootstrap}
 bs_model <- x1k$data |>
   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)

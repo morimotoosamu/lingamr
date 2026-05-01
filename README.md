@@ -64,7 +64,7 @@ library(lingamr)
 x1k <- generate_lingam_sample_6(n = 1000)
 
 x1k$true_adjacency |>
-  plot_adjacency_diagrammer(
+  plot_adjacency(
   labels  = colnames(x1k$data),
   title   = "True causal structure",
   rankdir = "TB",
@@ -82,7 +82,7 @@ x1k$true_adjacency |>
 
 ``` r
 model <- x1k$data |>
-  direct_lingam()
+  lingam_direct()
 ```
 
 ### Causal Order
@@ -121,7 +121,7 @@ model$adjacency_matrix |>
 
 ``` r
 model$adjacency_matrix |>
-  plot_adjacency_diagrammer(
+  plot_adjacency(
       labels = colnames(model$adjacency_matrix),
       title = "Estimated Causal Structure (Direct LiNGAM)",
       rankdir = "TB",
@@ -183,7 +183,7 @@ Direct LiNGAM を実行する際に、引数 `prior_knowledge`
 
 ``` r
 model_pk1 <- x1k$data |>
-  direct_lingam(prior_knowledge = pk1, lambda = "BIC")
+  lingam_direct(prior_knowledge = pk1, lambda = "BIC")
 
 cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
 #> Causal Order:  x3 x2 x0 x4 x5 x1
@@ -203,7 +203,7 @@ model_pk1$adjacency_matrix |>
 #> x5 4.015  0  0.000 0.000  0  0
 
 model_pk1$adjacency_matrix |>
-  plot_adjacency_diagrammer(
+  plot_adjacency(
     labels      = colnames(model_pk1$adjacency_matrix),
     title = "Estimated (with Prior Knowledge)",
     rankdir     = "TB",
@@ -224,7 +224,7 @@ Calculation of the p-value (default: Spearman)
 
 ``` r
 result <- x1k$data |>
-  direct_lingam()
+  lingam_direct()
 
 p_vals <- x1k$data |>
   get_error_independence_p_values(result)
@@ -279,15 +279,17 @@ x1k$data |>
 
 ### Bootstrap Direct LiNGAM
 
+まだマルチコア処理に対応していないので遅いです。
+
 ``` r
 bs_model <- x1k$data |>
-  bootstrap_lingam(n_sampling = 30L, seed = 42)
+  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
 #> Bootstrap: 30 iterations, method=adaptive_lasso
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 7.2 seconds.
+#> Completed in 8.4 seconds.
 
 bs_model
 #> BootstrapResult: 30 samplings, 6 features
@@ -349,7 +351,7 @@ bs_adjacency_matrix |>
 
 ``` r
 bs_adjacency_matrix |>
-  plot_adjacency_diagrammer(
+  plot_adjacency(
     threshold = 0.5,
     labels      = colnames(x1k$data),
     title = "Estimated (with Bootstrap)",
@@ -423,7 +425,7 @@ bs_model |>
 x10k <- generate_lingam_sample_10(n = 10000)
 
 x10k$true_adjacency |>
-  plot_adjacency_diagrammer(
+  plot_adjacency(
   labels  = colnames(x10k$data),
   title   = "True causal structure",
   rankdir = "TB",
