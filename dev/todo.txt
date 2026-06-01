@@ -1,0 +1,8 @@
+# 済み
+* 関数名を揃える、接頭辞を揃える
+direct_lingam() -> lingam_direct()
+bootstrap_lingam() -> lingam_bootstrap()
+plot_adjacency_diagrammer() -> plot_adjacency()
+
+# まだ
+英語化

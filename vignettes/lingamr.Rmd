@@ -1,0 +1,381 @@
+---
+title: "Causal Discovery with lingamr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Causal Discovery with lingamr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+このビニェットでは、`lingamr` を使った因果探索の一連のワークフローを、
+サンプルデータを用いて順に解説します。
+
+```{r setup}
+library(lingamr)
+```
+
+
+## サンプルデータ
+
+`generate_lingam_sample_6()` は 6 変数の LiNGAM モデルに従う人工データと、
+その真の隣接行列を返します。
+
+```{r sample1_matrix6}
+x1k <- generate_lingam_sample_6(n = 1000)
+
+x1k$true_adjacency |>
+  plot_adjacency(
+    labels  = colnames(x1k$data),
+    title   = "True causal structure",
+    rankdir = "TB",
+    shape   = "circle"
+  )
+```
+
+
+## 因果探索 (Causal Discovery)
+
+`lingam_direct()` で Direct LiNGAM を実行します。独立性の評価はデフォルトでは
+相互情報量 (mutual information) を用い、パス係数の算出には適応的 LASSO 回帰が
+使われます。
+
+```{r lingam_direct}
+model <- x1k$data |>
+  lingam_direct()
+```
+
+
+### 因果の順序 (Causal Order)
+
+推定された因果の順序を確認します。
+
+```{r causal_order}
+# index number
+model$causal_order
+
+# variable name
+colnames(x1k$data)[model$causal_order]
+```
+
+
+### 推定された隣接行列 (Estimated Adjacency Matrix)
+
+推定された効果の量を確認します。
+
+```{r adjacency_matrix}
+model$adjacency_matrix |>
+  round(3)
+```
+
+
+### 因果グラフの描画
+
+推定された隣接行列に基づいて、因果グラフを描きます。
+
+```{r plot_adjacency}
+model$adjacency_matrix |>
+  plot_adjacency(
+    labels    = colnames(model$adjacency_matrix),
+    title     = "Estimated Causal Structure (Direct LiNGAM)",
+    rankdir   = "TB",
+    shape     = "ellipse",
+    fillcolor = "lightgreen"
+  )
+```
+
+
+## 総合因果効果 (Total Causal Effect)
+
+推定されたすべての総合効果を算出します。
+
+```{r total_effects}
+x1k$data |>
+  estimate_all_total_effects(model) |>
+  round(3)
+```
+
+
+## 事前知識を用いた推論 (Prior Knowledge)
+
+事前知識を用いた実行例です。
+
+### インデックスでの指定
+
+- 変数の数は 6 個
+- x3 is an exogenous variable.
+- x1, x4, and x5 are sink variables.
+- x0 to x2 are no path.
+
+```{r make_prior_knowledge1_index}
+pk1 <- make_prior_knowledge(
+  n_variables         = 6,
+  exogenous_variables = 4,
+  sink_variables      = c(2, 5, 6),
+  no_paths            = list(c(3, 1), c(1, 3))
+)
+
+pk1
+```
+
+Direct LiNGAM を実行する際に、引数 `prior_knowledge` に事前知識を指定します。
+
+```{r LiNGAM_with_pk_1}
+model_pk1 <- x1k$data |>
+  lingam_direct(prior_knowledge = pk1, lambda = "BIC")
+
+cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
+```
+
+結果の隣接行列に基づいて因果グラフを描きます。
+
+```{r LiNGAM_with_pk_2}
+model_pk1$adjacency_matrix |>
+  round(3)
+
+model_pk1$adjacency_matrix |>
+  plot_adjacency(
+    labels    = colnames(model_pk1$adjacency_matrix),
+    title     = "Estimated (with Prior Knowledge)",
+    rankdir   = "TB",
+    shape     = "circle",
+    fillcolor = "lightgreen"
+  )
+```
+
+
+## 誤差変数間の独立性 (Independence between error variables)
+
+LiNGAM では残差が独立であることを仮定しています。
+`get_error_independence_p_values()` は残差間の独立性の検定の p 値を返します
+(default: Spearman)。
+
+```{r Independence_between_error_variables1}
+result <- x1k$data |>
+  lingam_direct()
+
+p_vals <- x1k$data |>
+  get_error_independence_p_values(result)
+
+round(p_vals, 3)
+```
+
+
+## 残差の正規性の検定
+
+残差の正規性の検定を行います。
+
+```{r nortest}
+# Shapiro-Wilk (default)
+x1k$data |>
+  test_residual_normality(result)
+```
+
+QQ プロットでも残差の正規性を確認します。
+
+```{r qqplot}
+x1k$data |>
+  plot_residual_qq(result)
+```
+
+
+## ブートストラップ (Bootstrap Direct LiNGAM)
+
+```{r lingam_direct_bootstrap}
+bs_model <- x1k$data |>
+  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+
+bs_model
+```
+
+反復回数や変数が多い場合は、`parallel = TRUE` を指定するとマルチコアで高速に
+実行できます。使用コア数は `n_cores` で指定します（未指定時は安全のため最大 2
+コア）。
+
+```{r lingam_direct_bootstrap_parallel, eval = FALSE}
+bs_model <- x1k$data |>
+  lingam_direct_bootstrap(
+    n_sampling = 100L,
+    seed       = 42,
+    parallel   = TRUE,
+    n_cores    = 4L
+  )
+```
+
+なお並列実行時は L'Ecuyer の並列乱数ストリームを使用するため、同じ `seed`・同じ
+`n_cores` であれば結果は再現しますが、逐次実行（`parallel = FALSE`）の結果とは
+数値的に一致しません。
+
+
+### 因果方向のカウント
+
+```{r get_causal_direction_counts}
+bs_model |>
+  get_causal_direction_counts(labels = names(x1k$data))
+```
+
+
+### 平均因果効果の隣接行列
+
+```{r get_adjacency_matrix_summary}
+bs_adjacency_matrix <- bs_model |>
+  get_adjacency_matrix_summary(stat = "median")
+
+bs_adjacency_matrix |>
+  round(3)
+```
+
+係数の可視化（係数 0.5 以上のパスを描画）。
+
+```{r plot_bootstrap}
+bs_adjacency_matrix |>
+  plot_adjacency(
+    threshold = 0.5,
+    labels    = colnames(x1k$data),
+    title     = "Estimated (with Bootstrap)",
+    rankdir   = "TB",
+    shape     = "circle",
+    fillcolor = "lightgreen"
+  )
+```
+
+
+### ブートストラップ確率の行列
+
+```{r get_probabilities}
+bs_model |>
+  get_probabilities()
+```
+
+
+### 平均総合効果
+
+```{r get_total_causal_effects}
+bs_model |>
+  get_total_causal_effects()
+```
+
+ブートストラップの結果を因果グラフにします。デフォルトでは 50% 以上出現している
+パスを表示します。
+
+```{r plot_bootstrap_probabilities}
+bs_model |>
+  plot_bootstrap_probabilities()
+```
+
+
+## より大きなデータセット（10 変数）
+
+10 変数・1 万行の大きめのデータセットの例です。
+
+```{r sample1_matrix10}
+x10k <- generate_lingam_sample_10(n = 10000)
+
+x10k$true_adjacency |>
+  plot_adjacency(
+    labels  = colnames(x10k$data),
+    title   = "True causal structure",
+    rankdir = "TB",
+    shape   = "circle"
+  )
+```
+
+
+## DirectLiNGAM が苦戦する例：測定誤差のパラドックス
+
+因果探索の手法には前提があり、それが破られると正しい構造を復元できないことが
+あります。`generate_lingam_paradox_data()` は、そのような難しいケースを意図的に
+作り出すデータセットです。他のサンプル生成関数と同様に、`data` と
+`true_adjacency` を含むリストを返します。
+
+このデータの真の構造は、単純な直列チェーン **x0 → x1 → x2 → x3**（各係数 0.8）
+です。ただし次の 2 点に特徴があります。
+
+- **根の変数 x0 に重い測定誤差**が加えられている。これが DirectLiNGAM の初手で
+  行われる独立性の評価を狂わせ、根の選択を誤らせて誤りが連鎖（error
+  propagation）しやすくなる。
+- すべての変数が `scale()` で**標準化**されている（スケール差が無い）。
+
+```{r paradox_generate}
+paradox <- generate_lingam_paradox_data(n = 2000L, seed = 42)
+
+head(paradox$data)
+
+# すべての変数が標準化されている（sd = 1）
+sapply(paradox$data, sd)
+```
+
+真の（データ生成過程の）因果チェーンを図示します。係数 0.8 は標準化前の
+潜在スケールでの構造係数です。
+
+```{r paradox_true}
+paradox$true_adjacency |>
+  plot_adjacency(
+    labels  = colnames(paradox$true_adjacency),
+    title   = "True causal chain (x0 -> x1 -> x2 -> x3)",
+    rankdir = "LR",
+    shape   = "circle"
+  )
+```
+
+では Direct LiNGAM を適用してみます。
+
+```{r paradox_fit}
+model_p <- lingam_direct(paradox$data)
+
+# 推定された因果順序
+colnames(paradox$data)[model_p$causal_order]
+```
+
+推定された因果順序の**先頭が真の根 x0 ではなく x1** になっていることに注目して
+ください。根に乗った測定誤差のせいで、DirectLiNGAM は x0 を最初の外生変数として
+選び損ねています。
+
+```{r paradox_adjacency}
+model_p$adjacency_matrix |>
+  round(3)
+
+model_p$adjacency_matrix |>
+  plot_adjacency(
+    labels    = colnames(model_p$adjacency_matrix),
+    title     = "Estimated structure (paradox data)",
+    rankdir   = "LR",
+    shape     = "circle",
+    fillcolor = "lightpink"
+  )
+```
+
+下流の **x1 → x2 → x3** は正しく復元される一方で、**x0 と x1 の間の向きが逆転**
+し（真は x0 → x1 だが、推定では x1 → x0）、x0 がほぼ末端（sink）のように扱われて
+しまいます。
+
+この誤りがたまたま起きたものなのか、それとも系統的なものなのかを、ブートストラップ
+で確認します。
+
+```{r paradox_bootstrap}
+bs_paradox <- paradox$data |>
+  lingam_direct_bootstrap(n_sampling = 100L, seed = 42)
+
+# 各方向の出現確率（行 = to, 列 = from）
+bs_paradox |>
+  get_probabilities() |>
+  round(2)
+```
+
+誤った向き **x1 → x0** がほぼ 100% の確率で再現されている点が重要です。つまり
+この誤りは偶然ではなく**系統的**であり、ブートストラップで安定して出現します。
+
+> **教訓:** ブートストラップによる安定性（高い再現確率）は、推定結果の*正しさ*を
+> 保証するものではありません。モデルの前提（ここでは「上流変数に測定誤差が無い」
+> という仮定）が破られている場合、手法は誤った構造を**安定的に**復元してしまう
+> ことがあります。残差の独立性・正規性の検定や、データ生成過程についての
+> ドメイン知識と併せて、結果を批判的に評価することが重要です。
