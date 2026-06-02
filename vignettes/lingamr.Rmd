@@ -29,10 +29,21 @@ library(lingamr)
 
 `generate_lingam_sample_6()` は 6 変数の LiNGAM モデルに従う人工データと、
 その真の隣接行列を返します。
+データはdataに、隣接行列はtrue_adjacencyに格納されています。
 
-```{r sample1_matrix6}
+```{r sample1_matrix6_1}
 x1k <- generate_lingam_sample_6(n = 1000)
 
+x1k$data |>
+  head()
+```
+
+```{r sample1_matrix6_2}
+x1k$true_adjacency 
+```
+
+plot_adjacency関数を使うと、隣接行列に基づいた因果グラフを描画できます。
+```{r sample1_matrix6_3}
 x1k$true_adjacency |>
   plot_adjacency(
     labels  = colnames(x1k$data),
@@ -49,6 +60,9 @@ x1k$true_adjacency |>
 相互情報量 (mutual information) を用い、パス係数の算出には適応的 LASSO 回帰が
 使われます。
 
+独立性の評価にHSICを使うには 引数measure に "kernel" を指定します。
+処理に大変時間がかかることに注意が必要です。
+
 ```{r lingam_direct}
 model <- x1k$data |>
   lingam_direct()
@@ -57,8 +71,7 @@ model <- x1k$data |>
 
 ### 因果の順序 (Causal Order)
 
-推定された因果の順序を確認します。
-
+推定された因果の順序は causal_order にインデックス番号として格納されています。
 ```{r causal_order}
 # index number
 model$causal_order
@@ -70,7 +83,7 @@ colnames(x1k$data)[model$causal_order]
 
 ### 推定された隣接行列 (Estimated Adjacency Matrix)
 
-推定された効果の量を確認します。
+推定された効果の量を確認します。デフォルトでは適応的LASSO回帰の回帰係数が用いられます。
 
 ```{r adjacency_matrix}
 model$adjacency_matrix |>
@@ -170,9 +183,61 @@ round(p_vals, 3)
 ```
 
 
+## 非ガウス性という前提
+
+LiNGAM の理論的な核心は、**誤差項が非ガウス分布に従う**という仮定です。誤差が
+ガウス分布の場合、因果の**向き**は原理的に識別できなくなり（同じ分布を説明する
+逆向きのモデルが存在してしまう）、推定結果は信頼できません。
+
+`generate_lingam_sample_6()` の `noise_dist` 引数で誤差分布を切り替え、この違いを
+実際に確かめてみます。真の構造は次のとおりです（根は x3）。
+
+```{r nongauss_true}
+set.seed(0)
+truth <- generate_lingam_sample_6(noise_dist = "uniform")
+
+truth$true_adjacency |>
+  round(1)
+```
+
+### 非ガウス誤差（一様分布）— うまくいく場合
+
+```{r nongauss_uniform}
+fit_uniform <- lingam_direct(truth$data)
+
+# 推定された因果順序（真の根 x3 が先頭に来る）
+colnames(truth$data)[fit_uniform$causal_order]
+
+# 推定隣接行列は真の構造をほぼ完全に復元する
+fit_uniform$adjacency_matrix |>
+  round(1)
+```
+
+### ガウス誤差 — 失敗する場合
+
+同じ因果構造でも、誤差をガウス分布にすると結果が崩れます。
+
+```{r nongauss_gaussian}
+gauss <- generate_lingam_sample_6(noise_dist = "gaussian")
+fit_gauss <- lingam_direct(gauss$data)
+
+# 因果順序が真の構造と一致しない（根 x3 が先頭に来ない）
+colnames(gauss$data)[fit_gauss$causal_order]
+
+fit_gauss$adjacency_matrix |>
+  round(1)
+```
+
+非ガウス誤差では真の隣接行列がそのまま復元されるのに対し、ガウス誤差では因果順序も
+係数も真の構造から大きく外れます。これが「LiNGAM はデータの非ガウス性を利用して
+因果の向きを決める」と言われる所以です。実データに適用する際は、次節のように
+**残差の正規性を検定**して、この前提が成り立っているかを確認することが重要です。
+
+
 ## 残差の正規性の検定
 
-残差の正規性の検定を行います。
+残差の正規性の検定を行います。LiNGAM は非ガウス性を仮定するため、正規性が
+**棄却される**（p 値が小さい）ほうがモデルの前提に合致します。
 
 ```{r nortest}
 # Shapiro-Wilk (default)
@@ -189,10 +254,11 @@ x1k$data |>
 
 
 ## ブートストラップ (Bootstrap Direct LiNGAM)
+ブートストラップ法でモデルの確からしさを確認します。
 
 ```{r lingam_direct_bootstrap}
 bs_model <- x1k$data |>
-  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+  lingam_direct_bootstrap(n_sampling = 100L, seed = 42)
 
 bs_model
 ```
@@ -216,7 +282,9 @@ bs_model <- x1k$data |>
 数値的に一致しません。
 
 
-### 因果方向のカウント
+### ブートストラップの結果確認
+
+ブートストラップ法の結果から各パスの出現割合や係数の平均値を算出します。
 
 ```{r get_causal_direction_counts}
 bs_model |>
@@ -226,6 +294,8 @@ bs_model |>
 
 ### 平均因果効果の隣接行列
 
+ブートストラップの結果から隣接行列を作成します。
+
 ```{r get_adjacency_matrix_summary}
 bs_adjacency_matrix <- bs_model |>
   get_adjacency_matrix_summary(stat = "median")
@@ -234,12 +304,10 @@ bs_adjacency_matrix |>
   round(3)
 ```
 
-係数の可視化（係数 0.5 以上のパスを描画）。
-
+推定された隣接行列の可視化します。
 ```{r plot_bootstrap}
 bs_adjacency_matrix |>
   plot_adjacency(
-    threshold = 0.5,
     labels    = colnames(x1k$data),
     title     = "Estimated (with Bootstrap)",
     rankdir   = "TB",
@@ -249,7 +317,9 @@ bs_adjacency_matrix |>
 ```
 
 
-### ブートストラップ確率の行列
+### 各パスの出現割合の行列
+
+各パスの出現割合の行列を算出します。
 
 ```{r get_probabilities}
 bs_model |>
@@ -258,6 +328,8 @@ bs_model |>
 
 
 ### 平均総合効果
+
+各パスの平均総合効果を算出します。
 
 ```{r get_total_causal_effects}
 bs_model |>
@@ -314,7 +386,7 @@ head(paradox$data)
 sapply(paradox$data, sd)
 ```
 
-真の（データ生成過程の）因果チェーンを図示します。係数 0.8 は標準化前の
+真の因果グラフを可視化します。係数 0.8 は標準化前の
 潜在スケールでの構造係数です。
 
 ```{r paradox_true}
