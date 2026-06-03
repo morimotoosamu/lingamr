@@ -4,7 +4,12 @@
 \alias{estimate_all_total_effects}
 \title{全変数間の総合因果効果を一括推定}
 \usage{
-estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
+estimate_all_total_effects(
+  X,
+  lingam_result,
+  method = "adaptive_lasso",
+  lambda = "BIC"
+)
 }
 \arguments{
 \item{X}{元データ (n_samples x n_features)}
@@ -16,7 +21,9 @@ estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
 \item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")}
 }
 \value{
-総合因果効果の行列 (行: 結果変数, 列: 原因変数)
+総合因果効果の行列 (n_features x n_features)。
+\strong{規則: \code{TE[i, j]} は変数 j から変数 i への総合因果効果（j → i）。}
+隣接行列 \code{adjacency_matrix} と同じ添字規則。直接効果と間接効果の合計。
 }
 \description{
 全変数間の総合因果効果を一括推定

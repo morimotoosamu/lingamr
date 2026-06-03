@@ -24,8 +24,6 @@ data.frame (path, effect, probability)
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- LiNGAM_sample_1000$data |>
-  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
-bs_model |>
-  get_paths(1, 6)
+bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+get_paths(bs_model, 1, 6)
 }

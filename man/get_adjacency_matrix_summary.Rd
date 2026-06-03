@@ -24,7 +24,9 @@ get_adjacency_matrix_summary(
 \item{labels}{変数名ベクトル (NULL可)}
 }
 \value{
-隣接行列 (n_features x n_features)
+隣接行列 (n_features x n_features)。
+\strong{規則: \code{B[i, j]} は変数 j から変数 i への因果係数（j → i）。}
+\code{lingam_direct()} の \code{adjacency_matrix} と同じ規則。
 }
 \description{
 ブートストラップ結果から因果効果の代表値の隣接行列を作成
@@ -32,8 +34,6 @@ get_adjacency_matrix_summary(
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- LiNGAM_sample_1000$data |>
-  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
-bs_model |>
-  get_adjacency_matrix_summary()
+bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+get_adjacency_matrix_summary(bs_model)
 }

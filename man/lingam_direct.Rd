@@ -44,7 +44,14 @@ lingam_direct(
 多重共線性が疑われる場合はRidege回帰がおすすめ。}
 }
 \value{
-list(adjacency_matrix, causal_order)
+\code{LingamResult} オブジェクト（リスト）。以下の要素を含む：
+\itemize{
+\item \code{adjacency_matrix}: 隣接行列 B (n_features x n_features)。
+\strong{規則: \code{B[i, j]} は変数 j から変数 i への因果係数（j → i）。}
+ゼロ要素は因果関係なしを意味する。
+\item \code{causal_order}: 推定された因果順序（1-based インデックスの整数ベクトル）。
+先頭ほど上流（外生変数に近い）。
+}
 }
 \description{
 Direct LiNGAM

@@ -37,7 +37,12 @@
 #' "AIC": AIC最小。高速。
 #' "BIC": BIC最小。高速、最もスパース。デフォルト。
 #' "oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλを選択。高速。
-#' @return list(adjacency_matrix, causal_order)
+#' @return `LingamResult` オブジェクト（リスト）。以下の要素を含む：
+#' * `adjacency_matrix`: 隣接行列 B (n_features x n_features)。
+#'   **規則: `B[i, j]` は変数 j から変数 i への因果係数（j → i）。**
+#'   ゼロ要素は因果関係なしを意味する。
+#' * `causal_order`: 推定された因果順序（1-based インデックスの整数ベクトル）。
+#'   先頭ほど上流（外生変数に近い）。
 #' @importFrom stats sd lm.fit cov median quantile
 #' @export
 #' @examples
@@ -59,8 +64,22 @@ lingam_direct <- function(X,
                           reg_method = "adaptive_lasso",
                           lambda = "BIC",
                           init_method = "ols") {
+  col_names <- if (is.data.frame(X)) names(X) else colnames(X)
   X <- as.matrix(X)
-  if (!is.numeric(X)) stop("X must be a numeric matrix.")
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
+  if (ncol(X) < 2) stop("X must have at least 2 variables (columns).", call. = FALSE)
+  if (nrow(X) < 2) stop("X must have at least 2 observations (rows).", call. = FALSE)
+  if (!is.null(col_names)) colnames(X) <- col_names
+
+  measure <- match.arg(measure, c("pwling", "kernel"))
+  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols"))
+  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+  init_method <- match.arg(init_method, c("ols", "ridge"))
+
+  if (!is.logical(apply_prior_knowledge_softly) || length(apply_prior_knowledge_softly) != 1) {
+    stop("apply_prior_knowledge_softly must be a single logical value (TRUE or FALSE).", call. = FALSE)
+  }
+
   n_samples <- nrow(X)
   n_features <- ncol(X)
   # --- 事前知識の前処理 ---
@@ -111,13 +130,46 @@ lingam_direct <- function(X,
     init_method = init_method
   )
   colnames(B) <- rownames(B) <- colnames(X)
-  list(adjacency_matrix = B, causal_order = K)
+  result <- list(adjacency_matrix = B, causal_order = K)
+  class(result) <- "LingamResult"
+  result
+}
+
+
+#' LingamResult の print メソッド
+#'
+#' @param x LingamResult オブジェクト
+#' @param digits 表示桁数
+#' @param ... 追加引数（未使用）
+#' @export
+print.LingamResult <- function(x, digits = 3, ...) {
+  n <- length(x$causal_order)
+  var_names <- colnames(x$adjacency_matrix)
+  order_labels <- if (!is.null(var_names)) {
+    var_names[x$causal_order]
+  } else {
+    paste0("x", x$causal_order - 1L)
+  }
+  cat("Direct LiNGAM Result\n")
+  cat(sprintf("  Variables : %d\n", n))
+  cat(sprintf("  Causal order: %s\n", paste(order_labels, collapse = " -> ")))
+  cat("\nAdjacency matrix (row = to, col = from):\n")
+  print(round(x$adjacency_matrix, digits = digits))
+  invisible(x)
 }
 
 
 # =============================================================================
 # 内部関数群
 # =============================================================================
+
+#' lingam_direct() の返り値を検証する
+#' @keywords internal
+validate_lingam_result <- function(x) {
+  if (!inherits(x, "LingamResult")) {
+    stop("lingam_result must be the return value of lingam_direct().", call. = FALSE)
+  }
+}
 
 #' Population standard deviation (n割り)
 #' @keywords internal
@@ -465,7 +517,7 @@ estimate_adjacency_matrix <- function(X,
 
   # glmnet の確認
   if (!requireNamespace("glmnet", quietly = TRUE)) {
-    stop("Package '' is required. Please install it.", call. = FALSE)
+    stop("Package 'glmnet' is required. Please install it.", call. = FALSE)
   }
 
   n_features <- ncol(X)
@@ -568,7 +620,7 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
 
   # glmnet の確認
   if (!requireNamespace("glmnet", quietly = TRUE)) {
-    stop("Package '' is required. Please install it.", call. = FALSE)
+    stop("Package 'glmnet' is required. Please install it.", call. = FALSE)
   }
 
   Xp_mat <- as.matrix(Xp)
@@ -676,4 +728,61 @@ fit_adaptive_lasso <- function(y, Xp,
   coef_vec <- as.numeric(stats::coef(fit, s = lambda_val))[-1]
 
   return(coef_vec)
+}
+
+
+#' DAG 中の全パスを深さ優先探索で列挙する
+#'
+#' `B[i, j]` が j → i を表す隣接行列を受け取り、`from_index` から
+#' `to_index` に至る全パスとそれぞれの経路効果（係数の積）を返す。
+#'
+#' @param adjacency_matrix 隣接行列 (n x n)。`B[i,j]` は j → i の係数。
+#' @param from_index 始点インデックス (1-based)
+#' @param to_index 終点インデックス (1-based)
+#' @param min_causal_effect このしきい値以下の係数は存在しないエッジとみなす
+#' @return list(paths, effects)
+#' @keywords internal
+find_all_paths <- function(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0) {
+  B <- adjacency_matrix
+  B[is.na(B)] <- 0
+  B[abs(B) <= min_causal_effect] <- 0
+
+  p <- ncol(B)
+  paths <- list()
+  effects <- c()
+
+  dfs <- function(current, target, visited, path, effect) {
+    if (current == target && length(path) > 1) {
+      paths[[length(paths) + 1]] <<- path
+      effects[length(effects) + 1] <<- effect
+      return()
+    }
+    for (next_node in seq_len(p)) {
+      if (next_node %in% visited) next
+      if (B[next_node, current] == 0) next
+      dfs(
+        next_node, target, c(visited, next_node),
+        c(path, next_node), effect * B[next_node, current]
+      )
+    }
+  }
+
+  dfs(from_index, to_index, c(from_index), c(from_index), 1.0)
+  list(paths = paths, effects = effects)
+}
+
+
+#' 隣接行列から2変数間の総合因果効果を計算する
+#'
+#' `find_all_paths()` で列挙した全経路効果の総和を返す。
+#' パスが存在しない場合は 0 を返す。
+#'
+#' @param adjacency_matrix 隣接行列 (n x n)。`B[i,j]` は j → i の係数。
+#' @param from_index 原因変数のインデックス (1-based)
+#' @param to_index 結果変数のインデックス (1-based)
+#' @return 総合因果効果（スカラー）
+#' @keywords internal
+calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
+  result <- find_all_paths(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0)
+  if (length(result$effects) == 0) 0.0 else sum(result$effects)
 }

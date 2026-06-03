@@ -13,6 +13,7 @@ BugReports: https://github.com/morimotoosamu/lingamr/issues
 Depends: 
     R (>= 3.5)
 Imports:
+    generics,
     grDevices,
     parallel,
     stats,
@@ -25,6 +26,7 @@ Suggests:
     nortest,
     rmarkdown,
     spelling,
+    testthat (>= 3.0.0),
     tseries
 VignetteBuilder: knitr
 Encoding: UTF-8

@@ -19,6 +19,10 @@
 #'   estimate_total_effect(model, 4, 1)
 estimate_total_effect <- function(X, lingam_result, from_index, to_index,
                                   method = "adaptive_lasso", lambda = "BIC") {
+  validate_lingam_result(lingam_result)
+  method <- match.arg(method, c("adaptive_lasso", "lasso", "ols"))
+  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+
   if (is.data.frame(X)) {
     col_names <- colnames(X)
     X <- as.matrix(X)
@@ -26,9 +30,16 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
     X <- as.matrix(X)
     col_names <- colnames(X)
   }
-  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.")
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.", call. = FALSE)
 
   n_features <- ncol(X)
+  if (ncol(lingam_result$adjacency_matrix) != n_features) {
+    stop(
+      "X has ", n_features, " variables but lingam_result was estimated from ",
+      ncol(lingam_result$adjacency_matrix), " variables.",
+      call. = FALSE
+    )
+  }
 
   # --- 変数名 → インデックス変換 ---
   resolve_index <- function(idx, arg_name) {
@@ -99,7 +110,9 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @param lingam_result lingam_direct() の返り値
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
 #' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
-#' @return 総合因果効果の行列 (行: 結果変数, 列: 原因変数)
+#' @return 総合因果効果の行列 (n_features x n_features)。
+#'   **規則: `TE[i, j]` は変数 j から変数 i への総合因果効果（j → i）。**
+#'   隣接行列 `adjacency_matrix` と同じ添字規則。直接効果と間接効果の合計。
 #' @importFrom stats cov
 #' @export
 #' @examples
@@ -112,10 +125,22 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #'   estimate_all_total_effects(model)
 estimate_all_total_effects <- function(X,
                                        lingam_result,
-                                       method = "lasso",
-                                       lambda = "AIC") {
+                                       method = "adaptive_lasso",
+                                       lambda = "BIC") {
+  validate_lingam_result(lingam_result)
+  method <- match.arg(method, c("adaptive_lasso", "lasso", "ols"))
+  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+
   X <- as.matrix(X)
   n_features <- ncol(X)
+  if (ncol(lingam_result$adjacency_matrix) != n_features) {
+    stop(
+      "X has ", n_features, " variables but lingam_result was estimated from ",
+      ncol(lingam_result$adjacency_matrix), " variables.",
+      call. = FALSE
+    )
+  }
+
   causal_order <- lingam_result$causal_order
   adj_matrix <- lingam_result$adjacency_matrix
 

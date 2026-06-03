@@ -5,73 +5,6 @@
 # https://github.com/cdt15/lingam
 # =============================================================================
 
-# 並列化の方針（CRAN ポリシー準拠）:
-#   - parallel = FALSE をデフォルトとし、全コアの自動フル稼働は行わない
-#     （n_cores 未指定時は最大 2 コアに制限）
-#   - parallel / n_cores 引数でユーザーが制御できるようにする
-#   - parallel::makePSOCKcluster() は on.exit() で必ず stopCluster() する
-
-# =============================================================================
-# ユーティリティ関数
-# =============================================================================
-
-#' DAG中の全パスを探索（from_index → to_index）
-#' @param adjacency_matrix 隣接行列
-#' @param from_index 始点インデックス (1-based)
-#' @param to_index 終点インデックス (1-based)
-#' @param min_causal_effect 最小因果効果の閾値
-#' @return list(paths, effects)
-#' @keywords internal
-find_all_paths <- function(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0) {
-  B <- adjacency_matrix
-  B[is.na(B)] <- 0
-
-  # 有効なエッジのみ残す
-  B[abs(B) <= min_causal_effect] <- 0
-
-  p <- ncol(B)
-  paths <- list()
-  effects <- c()
-
-  # DFS で全パスを探索
-  # B[i, j] != 0 は j → i を意味する
-  dfs <- function(current, target, visited, path, effect) {
-    if (current == target && length(path) > 1) {
-      paths[[length(paths) + 1]] <<- path
-      effects[length(effects) + 1] <<- effect
-      return()
-    }
-    for (next_node in 1:p) {
-      if (next_node %in% visited) next
-      if (B[next_node, current] == 0) next
-      dfs(
-        next_node, target, c(visited, next_node),
-        c(path, next_node), effect * B[next_node, current]
-      )
-    }
-  }
-
-  dfs(from_index, to_index, c(from_index), c(from_index), 1.0)
-
-  return(list(paths = paths, effects = effects))
-}
-
-
-#' 総合因果効果を計算
-#' @param adjacency_matrix 隣接行列
-#' @param from_index 原因変数のインデックス (1-based)
-#' @param to_index 結果変数のインデックス (1-based)
-#' @return 総合因果効果
-#' @keywords internal
-calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
-  result <- find_all_paths(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0)
-  if (length(result$effects) == 0) {
-    return(0.0)
-  }
-  return(sum(result$effects))
-}
-
-
 # =============================================================================
 # ブートストラップ実行関数
 # =============================================================================
@@ -287,11 +220,9 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #'
-#' bs_model |>
-#'   print()
+#' print(bs_model)
 print.BootstrapResult <- function(x, ...) {
   n_sampling <- dim(x$adjacency_matrices)[1]
   n_features <- dim(x$adjacency_matrices)[2]
@@ -325,11 +256,9 @@ print.BootstrapResult <- function(x, ...) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #'
-#' bs_model |>
-#'   get_causal_direction_counts(labels = names(LiNGAM_sample_1000$data))
+#' get_causal_direction_counts(bs_model, labels = names(LiNGAM_sample_1000$data))
 get_causal_direction_counts <- function(result,
                                         n_directions = NULL,
                                         min_causal_effect = NULL,
@@ -356,15 +285,15 @@ get_causal_direction_counts <- function(result,
 
     if (split_by_causal_effect_sign) {
       directions_list[[length(directions_list) + 1]] <- data.frame(
-        to     = idx[, 1],
         from   = idx[, 2],
+        to     = idx[, 1],
         sign   = as.integer(sign(effects)),
         effect = effects
       )
     } else {
       directions_list[[length(directions_list) + 1]] <- data.frame(
-        to     = idx[, 1],
         from   = idx[, 2],
+        to     = idx[, 1],
         effect = effects
       )
     }
@@ -455,11 +384,9 @@ get_causal_direction_counts <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #'
-#' bs_model |>
-#'   get_directed_acyclic_graph_counts()
+#' get_directed_acyclic_graph_counts(bs_model)
 get_directed_acyclic_graph_counts <- function(result,
                                               n_dags = NULL,
                                               min_causal_effect = NULL,
@@ -544,11 +471,9 @@ get_directed_acyclic_graph_counts <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #'
-#' bs_model |>
-#'   get_probabilities()
+#' get_probabilities(bs_model)
 get_probabilities <- function(result, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -574,11 +499,9 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #'
-#' bs_model |>
-#'   get_total_causal_effects()
+#' get_total_causal_effects(bs_model)
 get_total_causal_effects <- function(result, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -638,10 +561,8 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
-#' bs_model |>
-#'   get_paths(1, 6)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' get_paths(bs_model, 1, 6)
 get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
 
@@ -713,10 +634,8 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
-#' bs_model |>
-#'   plot_bootstrap_probabilities()
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' plot_bootstrap_probabilities(bs_model)
 plot_bootstrap_probabilities <- function(result,
                                          labels = NULL,
                                          min_causal_effect = NULL,
@@ -777,15 +696,15 @@ plot_bootstrap_probabilities <- function(result,
 #' @param min_causal_effect 因果効果の最小閾値（これ以下はゼロ扱い）(NULL = 0)
 #' @param min_probability この確率未満のエッジはゼロにする (NULL = 0)
 #' @param labels 変数名ベクトル (NULL可)
-#' @return 隣接行列 (n_features x n_features)
+#' @return 隣接行列 (n_features x n_features)。
+#'   **規則: `B[i, j]` は変数 j から変数 i への因果係数（j → i）。**
+#'   `lingam_direct()` の `adjacency_matrix` と同じ規則。
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
-#' bs_model |>
-#'   get_adjacency_matrix_summary()
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' get_adjacency_matrix_summary(bs_model)
 get_adjacency_matrix_summary <- function(result,
                                          stat = "median",
                                          min_causal_effect = NULL,

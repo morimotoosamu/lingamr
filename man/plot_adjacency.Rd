@@ -17,11 +17,17 @@ plot_adjacency(
   fontsize_edge = 10,
   edge_color = "gray40",
   edge_label_color = "red",
+  true_B = NULL,
+  color_tp = "forestgreen",
+  color_fp = "firebrick",
+  color_fn = "darkorange",
   debug = FALSE
 )
 }
 \arguments{
-\item{B}{隣接行列}
+\item{B}{隣接行列 (n_features x n_features)。
+\strong{規則: \code{B[i, j]} は変数 j から変数 i への因果係数（j → i）。}
+\code{lingam_direct()} の \code{adjacency_matrix} をそのまま渡せる。}
 
 \item{labels}{変数名ベクトル (NULL の場合は x0, x1, ... を自動生成)}
 
@@ -44,9 +50,22 @@ plot_adjacency(
 
 \item{fontsize_edge}{エッジラベルのフォントサイズ (default: 10)}
 
-\item{edge_color}{エッジの色 (default: "gray40")}
+\item{edge_color}{エッジの色 (default: "gray40")。\code{true_B} 指定時は未使用。}
 
-\item{edge_label_color}{エッジラベルの色 (default: "red")}
+\item{edge_label_color}{エッジラベルの色 (default: "red")。\code{true_B} 指定時は未使用。}
+
+\item{true_B}{真の隣接行列 (NULL 可)。指定するとエッジを3色で分類する：
+\itemize{
+\item 正解エッジ（推定あり・真あり）: \code{color_tp} の実線
+\item 過検出（推定あり・真なし）: \code{color_fp} の実線
+\item 見逃し（推定なし・真あり）: \code{color_fn} の破線（真の係数を表示）
+}}
+
+\item{color_tp}{正解エッジの色 (default: "forestgreen")}
+
+\item{color_fp}{過検出エッジの色 (default: "firebrick")}
+
+\item{color_fn}{見逃しエッジの色 (default: "darkorange")}
 
 \item{debug}{デバッグモードの有効化 (logical)}
 }
@@ -67,4 +86,10 @@ model <- LiNGAM_sample_1000$data |>
 
 model$adjacency_matrix |>
   plot_adjacency()
+
+\donttest{
+# 真の構造と比較（正解=緑, 過検出=赤, 見逃し=オレンジ破線）
+model$adjacency_matrix |>
+  plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
+}
 }

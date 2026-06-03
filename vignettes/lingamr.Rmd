@@ -107,6 +107,28 @@ model$adjacency_matrix |>
 ```
 
 
+### 推定構造と真の構造の比較
+
+サンプルデータのように真の構造が分かっている場合は、`plot_adjacency()` の
+`true_B` 引数に真の隣接行列を渡すことで、推定されたエッジを真の構造と照合して
+色分けできます。推定精度を一目で確認できるため、手法の検証や教育用途に便利です。
+
+- **緑（実線）**: 正しく検出されたエッジ（推定あり・真あり）
+- **赤（実線）**: 過検出されたエッジ（推定あり・真なし）
+- **オレンジ（破線）**: 見逃したエッジ（推定なし・真あり、真の係数を表示）
+
+```{r plot_adjacency_compare}
+model$adjacency_matrix |>
+  plot_adjacency(
+    labels  = colnames(model$adjacency_matrix),
+    true_B  = x1k$true_adjacency,
+    title   = "Estimated vs. True Structure",
+    rankdir = "TB",
+    shape   = "ellipse"
+  )
+```
+
+
 ## 総合因果効果 (Total Causal Effect)
 
 推定されたすべての総合効果を算出します。
