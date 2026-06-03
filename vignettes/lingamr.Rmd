@@ -336,7 +336,7 @@ bs_model |>
 ```
 
 ブートストラップの結果を因果グラフにします。デフォルトでは 50% 以上出現している
-パスを表示します。
+パスのみを表示します。
 
 ```{r plot_bootstrap_probabilities}
 bs_model |>
