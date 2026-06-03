@@ -1,6 +1,7 @@
-# 総合因果効果を計算
+# 隣接行列から2変数間の総合因果効果を計算する
 
-総合因果効果を計算
+[`find_all_paths()`](https://morimotoosamu.github.io/lingamr/reference/find_all_paths.md)
+で列挙した全経路効果の総和を返す。 パスが存在しない場合は 0 を返す。
 
 ## Usage
 
@@ -12,7 +13,7 @@ calculate_total_effect(adjacency_matrix, from_index, to_index)
 
 - adjacency_matrix:
 
-  隣接行列
+  隣接行列 (n x n)。`B[i,j]` は j → i の係数。
 
 - from_index:
 
@@ -24,4 +25,4 @@ calculate_total_effect(adjacency_matrix, from_index, to_index)
 
 ## Value
 
-総合因果効果
+総合因果効果（スカラー）

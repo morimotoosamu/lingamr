@@ -56,7 +56,14 @@ lingam_direct(
 
 ## Value
 
-list(adjacency_matrix, causal_order)
+`LingamResult` オブジェクト（リスト）。以下の要素を含む：
+
+- `adjacency_matrix`: 隣接行列 B (n_features x n_features)。 **規則:
+  `B[i, j]` は変数 j から変数 i への因果係数（j → i）。**
+  ゼロ要素は因果関係なしを意味する。
+
+- `causal_order`: 推定された因果順序（1-based
+  インデックスの整数ベクトル）。 先頭ほど上流（外生変数に近い）。
 
 ## Examples
 

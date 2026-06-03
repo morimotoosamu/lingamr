@@ -162,22 +162,71 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <div class="grViz html-widget html-fill-item" id="htmlwidget-e5c8c404fe174e4c81bd" style="width:576px;height:480px;"></div>
 <script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated Causal Structure (Direct LiNGAM)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"ellipse\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.03\"]\n  x0 -> x1 [label = \" 2.99\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 5.99\"]\n  x0 -> x4 [label = \" 8.02\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
+<div class="section level3">
+<h3 id="推定構造と真の構造の比較">推定構造と真の構造の比較<a class="anchor" aria-label="anchor" href="#%E6%8E%A8%E5%AE%9A%E6%A7%8B%E9%80%A0%E3%81%A8%E7%9C%9F%E3%81%AE%E6%A7%8B%E9%80%A0%E3%81%AE%E6%AF%94%E8%BC%83"></a>
+</h3>
+<p>サンプルデータのように真の構造が分かっている場合は、<code><a href="../reference/plot_adjacency.html">plot_adjacency()</a></code>
+の <code>true_B</code>
+引数に真の隣接行列を渡すことで、推定されたエッジを真の構造と照合して
+色分けできます。推定精度を一目で確認できるため、手法の検証や教育用途に便利です。</p>
+<ul>
+<li>
+<strong>緑（実線）</strong>:
+正しく検出されたエッジ（推定あり・真あり）</li>
+<li>
+<strong>赤（実線）</strong>:
+過検出されたエッジ（推定あり・真なし）</li>
+<li>
+<strong>オレンジ（破線）</strong>:
+見逃したエッジ（推定なし・真あり、真の係数を表示）</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
+<span>    labels  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span>,</span>
+<span>    true_B  <span class="op">=</span> <span class="va">x1k</span><span class="op">$</span><span class="va">true_adjacency</span>,</span>
+<span>    title   <span class="op">=</span> <span class="st">"Estimated vs. True Structure"</span>,</span>
+<span>    rankdir <span class="op">=</span> <span class="st">"TB"</span>,</span>
+<span>    shape   <span class="op">=</span> <span class="st">"ellipse"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-36aa3d2a04d42bbc2145" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated vs. True Structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"ellipse\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#888888\",\n        color = \"#888888\"]\n\n  x3 -> x0 [label = \" 3.03\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x1 [label = \" 2.99\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x2 -> x1 [label = \" 2.00\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x3 -> x2 [label = \" 5.99\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x4 [label = \" 8.02\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x2 -> x4 [label = \" -1.01\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x5 [label = \" 4.02\", color = \"#228B22\", fontcolor = \"#228B22\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div class="section level3">
+<h3 id="ggplot2-による静的な描画">ggplot2 による静的な描画<a class="anchor" aria-label="anchor" href="#ggplot2-%E3%81%AB%E3%82%88%E3%82%8B%E9%9D%99%E7%9A%84%E3%81%AA%E6%8F%8F%E7%94%BB"></a>
+</h3>
+<p><code><a href="../reference/plot_adjacency.html">plot_adjacency()</a></code> は DiagrammeR による対話的な HTML
+図を返しますが、 <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> を使うと同じ因果構造を ggplot2
+ベースの静的な図として描けます。 RMarkdown / Quarto での画像・PDF
+出力で安定し、ggplot2 の関数でテーマや
+タイトルを後から重ねられます。ノード配置は <code>igraph</code>
+の階層レイアウトで計算され、
+因果の流れがおおむね上から下へ並びます。</p>
+<p><code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> は ggplot2
+のジェネリックなので、<code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">ggplot2::autoplot()</a></code> として
+呼び出すか、事前に <code><a href="https://ggplot2.tidyverse.org" class="external-link">library(ggplot2)</a></code>
+で読み込みます（描画には <code>ggplot2</code> と <code>igraph</code>
+が必要です）。</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lingamr_files/figure-html/autoplot-1.png" class="r-plt" alt="" width="576"></p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="総合因果効果-total-causal-effect">総合因果効果 (Total Causal Effect)<a class="anchor" aria-label="anchor" href="#%E7%B7%8F%E5%90%88%E5%9B%A0%E6%9E%9C%E5%8A%B9%E6%9E%9C-total-causal-effect"></a>
 </h2>
 <p>推定されたすべての総合効果を算出します。</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/estimate_all_total_effects.html">estimate_all_total_effects</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       x0 x1     x2     x3    x4    x5</span></span>
-<span><span class="co">#&gt; x0 0.000  0  0.000  3.033 0.000 0.000</span></span>
-<span><span class="co">#&gt; x1 2.909  0  1.889 21.059 0.000 0.155</span></span>
-<span><span class="co">#&gt; x2 0.000  0  0.000  5.993 0.000 0.000</span></span>
-<span><span class="co">#&gt; x3 0.000  0  0.000  0.000 0.000 0.000</span></span>
-<span><span class="co">#&gt; x4 8.001  0 -1.309 18.276 0.000 0.000</span></span>
-<span><span class="co">#&gt; x5 4.014  0  0.000 12.179 0.003 0.000</span></span></code></pre></div>
+<span><span class="co">#&gt;       x0 x1     x2     x3 x4 x5</span></span>
+<span><span class="co">#&gt; x0 0.000  0  0.000  3.033  0  0</span></span>
+<span><span class="co">#&gt; x1 2.897  0  1.910 21.059  0  0</span></span>
+<span><span class="co">#&gt; x2 0.000  0  0.000  5.993  0  0</span></span>
+<span><span class="co">#&gt; x3 0.000  0  0.000  0.000  0  0</span></span>
+<span><span class="co">#&gt; x4 8.001  0 -1.308 18.276  0  0</span></span>
+<span><span class="co">#&gt; x5 4.015  0  0.000 12.179  0  0</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="事前知識を用いた推論-prior-knowledge">事前知識を用いた推論 (Prior Knowledge)<a class="anchor" aria-label="anchor" href="#%E4%BA%8B%E5%89%8D%E7%9F%A5%E8%AD%98%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E6%8E%A8%E8%AB%96-prior-knowledge"></a>
@@ -192,7 +241,7 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <li>x1, x4, and x5 are sink variables.</li>
 <li>x0 to x2 are no path.</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pk1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_prior_knowledge.html">make_prior_knowledge</a></span><span class="op">(</span></span>
 <span>  n_variables         <span class="op">=</span> <span class="fl">6</span>,</span>
 <span>  exogenous_variables <span class="op">=</span> <span class="fl">4</span>,</span>
@@ -210,14 +259,14 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <span><span class="co">#&gt; [6,]   -1    0   -1   -1    0   -1</span></span></code></pre></div>
 <p>Direct LiNGAM を実行する際に、引数 <code>prior_knowledge</code>
 に事前知識を指定します。</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_pk1</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span>prior_knowledge <span class="op">=</span> <span class="va">pk1</span>, lambda <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Causal Order: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">[</span><span class="va">model_pk1</span><span class="op">$</span><span class="va">causal_order</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Causal Order:  x3 x2 x0 x4 x5 x1</span></span></code></pre></div>
 <p>結果の隣接行列に基づいて因果グラフを描きます。</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_pk1</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       x0 x1     x2    x3 x4 x5</span></span>
@@ -236,8 +285,8 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <span>    shape     <span class="op">=</span> <span class="st">"circle"</span>,</span>
 <span>    fillcolor <span class="op">=</span> <span class="st">"lightgreen"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-36aa3d2a04d42bbc2145" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (with Prior Knowledge)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.03\"]\n  x0 -> x1 [label = \" 2.99\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 5.99\"]\n  x0 -> x4 [label = \" 8.02\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-febe03efa1a2d8d52a86" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (with Prior Knowledge)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.03\"]\n  x0 -> x1 [label = \" 2.99\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 5.99\"]\n  x0 -> x4 [label = \" 8.02\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 <div class="section level2">
@@ -246,7 +295,7 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <p>LiNGAM では残差が独立であることを仮定しています。
 <code><a href="../reference/get_error_independence_p_values.html">get_error_independence_p_values()</a></code> は残差間の独立性の検定の
 p 値を返します。</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -272,7 +321,7 @@ p 値を返します。</p>
 <p><code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code> の <code>noise_dist</code>
 引数で誤差分布を切り替え、この違いを
 実際に確かめてみます。真の構造は次のとおりです（根は x3）。</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>noise_dist <span class="op">=</span> <span class="st">"uniform"</span><span class="op">)</span></span>
 <span></span>
@@ -288,7 +337,7 @@ p 値を返します。</p>
 <div class="section level3">
 <h3 id="非ガウス誤差一様分布-うまくいく場合">非ガウス誤差（一様分布）— うまくいく場合<a class="anchor" aria-label="anchor" href="#%E9%9D%9E%E3%82%AC%E3%82%A6%E3%82%B9%E8%AA%A4%E5%B7%AE%E4%B8%80%E6%A7%98%E5%88%86%E5%B8%83-%E3%81%86%E3%81%BE%E3%81%8F%E3%81%84%E3%81%8F%E5%A0%B4%E5%90%88"></a>
 </h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_uniform</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 推定された因果順序（真の根 x3 が先頭に来る）</span></span>
@@ -310,7 +359,7 @@ p 値を返します。</p>
 <h3 id="ガウス誤差-失敗する場合">ガウス誤差 — 失敗する場合<a class="anchor" aria-label="anchor" href="#%E3%82%AC%E3%82%A6%E3%82%B9%E8%AA%A4%E5%B7%AE-%E5%A4%B1%E6%95%97%E3%81%99%E3%82%8B%E5%A0%B4%E5%90%88"></a>
 </h3>
 <p>同じ因果構造でも、誤差をガウス分布にすると結果が崩れます。</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>noise_dist <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span><span class="va">fit_gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">gauss</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
@@ -340,7 +389,7 @@ p 値を返します。</p>
 <p>残差の正規性の検定を行います。LiNGAM
 は非ガウス性を仮定するため、正規性が <strong>棄却される</strong>（p
 値が小さい）ほうがモデルの前提に合致します。</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Shapiro-Wilk (default)</span></span>
 <span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/test_residual_normality.html">test_residual_normality</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
@@ -364,16 +413,46 @@ p 値を返します。</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; All residuals are non-Gaussian. LiNGAM assumption is supported.</span></span></code></pre></div>
 <p>QQ プロットでも残差の正規性を確認します。</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_residual_qq.html">plot_residual_qq</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lingamr_files/figure-html/qqplot-1.png" class="r-plt" alt="" width="576"></p>
 </div>
 <div class="section level2">
+<h2 id="適合度の一括要約-model-summary">適合度の一括要約 (Model Summary)<a class="anchor" aria-label="anchor" href="#%E9%81%A9%E5%90%88%E5%BA%A6%E3%81%AE%E4%B8%80%E6%8B%AC%E8%A6%81%E7%B4%84-model-summary"></a>
+</h2>
+<p><code><a href="../reference/summary_lingam.html">summary_lingam()</a></code>
+は、残差の独立性検定と正規性検定をまとめて実行し、LiNGAM が
+依拠する2つの前提（残差が互いに独立であること・残差が非ガウスであること）の
+成立度合いを一覧で確認できます。個別に
+<code><a href="../reference/get_error_independence_p_values.html">get_error_independence_p_values()</a></code> や
+<code><a href="../reference/test_residual_normality.html">test_residual_normality()</a></code>
+を呼ぶ代わりに、診断を1か所で見渡せます。</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/summary_lingam.html">summary_lingam</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === Direct LiNGAM Model Summary ===</span></span>
+<span><span class="co">#&gt; Variables:    6</span></span>
+<span><span class="co">#&gt; Observations: 1000</span></span>
+<span><span class="co">#&gt; Edges:        7</span></span>
+<span><span class="co">#&gt; Causal order: x3 -&gt; x2 -&gt; x0 -&gt; x4 -&gt; x5 -&gt; x1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; --- Assumption 1: Independence of residuals ---</span></span>
+<span><span class="co">#&gt; Method:           spearman</span></span>
+<span><span class="co">#&gt; Dependent pairs:  0 / 15  (p &lt; 0.050)</span></span>
+<span><span class="co">#&gt; Min p-value:      0.1002</span></span>
+<span><span class="co">#&gt; =&gt; Residuals appear mutually independent (assumption supported).</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; --- Assumption 2: Non-Gaussianity of residuals ---</span></span>
+<span><span class="co">#&gt; Method:           shapiro</span></span>
+<span><span class="co">#&gt; Non-Gaussian:     6 / 6  (p &lt;= 0.050)</span></span>
+<span><span class="co">#&gt; =&gt; All residuals are non-Gaussian (assumption supported).</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="ブートストラップ-bootstrap-direct-lingam">ブートストラップ (Bootstrap Direct LiNGAM)<a class="anchor" aria-label="anchor" href="#%E3%83%96%E3%83%BC%E3%83%88%E3%82%B9%E3%83%88%E3%83%A9%E3%83%83%E3%83%97-bootstrap-direct-lingam"></a>
 </h2>
 <p>ブートストラップ法でモデルの確からしさを確認します。</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -388,7 +467,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 6.6 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 6.3 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -396,7 +475,7 @@ p 値を返します。</p>
 を指定するとマルチコアで高速に 実行できます。使用コア数は
 <code>n_cores</code> で指定します（未指定時は安全のため最大 2
 コア）。</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span></span>
 <span>    n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
@@ -412,7 +491,7 @@ p 値を返します。</p>
 <h3 id="ブートストラップの結果確認">ブートストラップの結果確認<a class="anchor" aria-label="anchor" href="#%E3%83%96%E3%83%BC%E3%83%88%E3%82%B9%E3%83%88%E3%83%A9%E3%83%83%E3%83%97%E3%81%AE%E7%B5%90%E6%9E%9C%E7%A2%BA%E8%AA%8D"></a>
 </h3>
 <p>ブートストラップ法の結果から各パスの出現割合や係数の平均値を算出します。</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_causal_direction_counts.html">get_causal_direction_counts</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to count proportion mean_effect median_effect  sd_effect    ci_lower</span></span>
@@ -448,7 +527,7 @@ p 値を返します。</p>
 <h3 id="平均因果効果の隣接行列">平均因果効果の隣接行列<a class="anchor" aria-label="anchor" href="#%E5%B9%B3%E5%9D%87%E5%9B%A0%E6%9E%9C%E5%8A%B9%E6%9E%9C%E3%81%AE%E9%9A%A3%E6%8E%A5%E8%A1%8C%E5%88%97"></a>
 </h3>
 <p>ブートストラップの結果から隣接行列を作成します。</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_adjacency_matrix</span> <span class="op">&lt;-</span> <span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_adjacency_matrix_summary.html">get_adjacency_matrix_summary</a></span><span class="op">(</span>stat <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span>
 <span></span>
@@ -462,7 +541,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt; [5,] 8.015 0.907 -1.009 0.000  0.000    0</span></span>
 <span><span class="co">#&gt; [6,] 4.015 0.000  0.000 0.000  0.000    0</span></span></code></pre></div>
 <p>推定された隣接行列の可視化します。</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>,</span>
@@ -471,14 +550,14 @@ p 値を返します。</p>
 <span>    shape     <span class="op">=</span> <span class="st">"circle"</span>,</span>
 <span>    fillcolor <span class="op">=</span> <span class="st">"lightgreen"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-febe03efa1a2d8d52a86" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (with Bootstrap)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x1 -> x0 [label = \" 0.05\"]\n  x3 -> x0 [label = \" 3.04\"]\n  x4 -> x0 [label = \" 0.10\"]\n  x0 -> x1 [label = \" 2.98\"]\n  x2 -> x1 [label = \" 2.01\"]\n  x1 -> x2 [label = \" 0.40\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x4 -> x2 [label = \" -0.14\"]\n  x2 -> x3 [label = \" 0.16\"]\n  x0 -> x4 [label = \" 8.01\"]\n  x1 -> x4 [label = \" 0.91\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (with Bootstrap)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x1 -> x0 [label = \" 0.05\"]\n  x3 -> x0 [label = \" 3.04\"]\n  x4 -> x0 [label = \" 0.10\"]\n  x0 -> x1 [label = \" 2.98\"]\n  x2 -> x1 [label = \" 2.01\"]\n  x1 -> x2 [label = \" 0.40\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x4 -> x2 [label = \" -0.14\"]\n  x2 -> x3 [label = \" 0.16\"]\n  x0 -> x4 [label = \" 8.01\"]\n  x1 -> x4 [label = \" 0.91\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level3">
 <h3 id="各パスの出現割合の行列">各パスの出現割合の行列<a class="anchor" aria-label="anchor" href="#%E5%90%84%E3%83%91%E3%82%B9%E3%81%AE%E5%87%BA%E7%8F%BE%E5%89%B2%E5%90%88%E3%81%AE%E8%A1%8C%E5%88%97"></a>
 </h3>
 <p>各パスの出現割合の行列を算出します。</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6]</span></span>
@@ -493,7 +572,7 @@ p 値を返します。</p>
 <h3 id="平均総合効果">平均総合効果<a class="anchor" aria-label="anchor" href="#%E5%B9%B3%E5%9D%87%E7%B7%8F%E5%90%88%E5%8A%B9%E6%9E%9C"></a>
 </h3>
 <p>各パスの平均総合効果を算出します。</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_total_causal_effects.html">get_total_causal_effects</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to      effect probability</span></span>
@@ -520,18 +599,110 @@ p 値を返します。</p>
 <span><span class="co">#&gt; 21    5  6  0.41846402        0.01</span></span></code></pre></div>
 <p>ブートストラップの結果を因果グラフにします。デフォルトでは 50%
 以上出現している パスのみを表示します。</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_bootstrap_probabilities.html">plot_bootstrap_probabilities</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph bootstrap_result {\n  graph [rankdir = TB, fontsize = 14,\n         label = \"Bootstrap Probabilities\",\n         labelloc = t, fontname = \"Helvetica-Bold\"]\n  node [shape = circle, style = filled, fillcolor = lightyellow,\n        fontname = Helvetica, fontsize = 14, width = 0.6]\n  edge [fontname = Helvetica, fontsize = 10, fontcolor = blue, color = gray40]\n\n  x3 -> x0 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x3 -> x2 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x5 [label = \" 1.00\", penwidth = 3.5]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph bootstrap_result {\n  graph [rankdir = TB, fontsize = 14,\n         label = \"Bootstrap Probabilities\",\n         labelloc = t, fontname = \"Helvetica-Bold\"]\n  node [shape = circle, style = filled, fillcolor = lightyellow,\n        fontname = Helvetica, fontsize = 14, width = 0.6]\n  edge [fontname = Helvetica, fontsize = 10, fontcolor = blue, color = gray40]\n\n  x3 -> x0 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x3 -> x2 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x5 [label = \" 1.00\", penwidth = 3.5]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
+<div class="section level3">
+<h3 id="因果順序の安定性">因果順序の安定性<a class="anchor" aria-label="anchor" href="#%E5%9B%A0%E6%9E%9C%E9%A0%86%E5%BA%8F%E3%81%AE%E5%AE%89%E5%AE%9A%E6%80%A7"></a>
+</h3>
+<p><code><a href="../reference/get_causal_order_stability.html">get_causal_order_stability()</a></code>
+は、各ブートストラップ標本で推定された因果順序を
+集計し、順序がどれだけ安定しているかを数値化します。各変数の順位分布、変数ペアの
+先行確率（<code>P[i, j]</code> = 変数 i が j
+より上流に来た割合）、および全体の安定性スコア （0 = ランダム、1 =
+全標本で一致）を返します。</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/get_causal_order_stability.html">get_causal_order_stability</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === Causal Order Stability ===</span></span>
+<span><span class="co">#&gt; Bootstrap samples:       100</span></span>
+<span><span class="co">#&gt; Overall stability score: 0.736  (0 = random, 1 = fully stable)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Rank summary (sorted by mean rank; 1 = most upstream):</span></span>
+<span><span class="co">#&gt;  variable mean_rank sd_rank median_rank mode_rank</span></span>
+<span><span class="co">#&gt;        x3      1.05    0.50           1         1</span></span>
+<span><span class="co">#&gt;        x0      2.62    0.51           3         3</span></span>
+<span><span class="co">#&gt;        x2      2.75    0.95           2         2</span></span>
+<span><span class="co">#&gt;        x5      4.41    1.23           4         3</span></span>
+<span><span class="co">#&gt;        x4      4.92    0.77           5         5</span></span>
+<span><span class="co">#&gt;        x1      5.25    0.88           5         6</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Precedence probability P[i, j] = P(variable i precedes j):</span></span>
+<span><span class="co">#&gt;      x0   x1   x2   x3   x4   x5</span></span>
+<span><span class="co">#&gt; x0 0.00 0.99 0.39 0.01 0.99 1.00</span></span>
+<span><span class="co">#&gt; x1 0.01 0.00 0.01 0.01 0.38 0.34</span></span>
+<span><span class="co">#&gt; x2 0.61 0.99 0.00 0.01 0.99 0.65</span></span>
+<span><span class="co">#&gt; x3 0.99 0.99 0.99 0.00 0.99 0.99</span></span>
+<span><span class="co">#&gt; x4 0.01 0.62 0.01 0.01 0.00 0.43</span></span>
+<span><span class="co">#&gt; x5 0.00 0.66 0.35 0.01 0.57 0.00</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="broom-との連携-tidy-glance">broom との連携 (tidy / glance)<a class="anchor" aria-label="anchor" href="#broom-%E3%81%A8%E3%81%AE%E9%80%A3%E6%90%BA-tidy-glance"></a>
+</h2>
+<p>推定結果は <code>broom</code> 互換の <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> /
+<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> で data.frame に変換でき、 <code>ggplot2</code> や
+<code>dplyr</code> との連携が容易になります。<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>
+はエッジ一覧（<code>from</code>, <code>to</code>,
+<code>estimate</code>）を、<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>
+はモデル全体の1行サマリを返します。<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> は
+ブートストラップ結果にも使え、その場合は各方向の出現割合などを返します。</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 推定された隣接行列をエッジ一覧に変換</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   from to  estimate</span></span>
+<span><span class="co">#&gt; 1   x0 x1  2.987704</span></span>
+<span><span class="co">#&gt; 2   x0 x4  8.016514</span></span>
+<span><span class="co">#&gt; 3   x0 x5  4.015008</span></span>
+<span><span class="co">#&gt; 4   x2 x1  2.001708</span></span>
+<span><span class="co">#&gt; 5   x2 x4 -1.009459</span></span>
+<span><span class="co">#&gt; 6   x3 x0  3.032965</span></span>
+<span><span class="co">#&gt; 7   x3 x2  5.992677</span></span>
+<span></span>
+<span><span class="co"># モデル全体の1行サマリ</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   n_variables n_edges                     causal_order</span></span>
+<span><span class="co">#&gt; 1           6       7 x3 -&gt; x2 -&gt; x0 -&gt; x4 -&gt; x5 -&gt; x1</span></span>
+<span></span>
+<span><span class="co"># ブートストラップ結果の方向別サマリ（labels で変数名を付与）</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">bs_model</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    from to count proportion mean_effect median_effect  sd_effect    ci_lower</span></span>
+<span><span class="co">#&gt; 1     1  6   100       1.00  4.01535064    4.01518466 0.01127031  3.99552486</span></span>
+<span><span class="co">#&gt; 2     1  2    99       0.99  2.98223709    2.97929357 0.02843886  2.93018267</span></span>
+<span><span class="co">#&gt; 3     1  5    99       0.99  8.01741193    8.01499334 0.02793983  7.96982894</span></span>
+<span><span class="co">#&gt; 4     3  2    99       0.99  2.00484060    2.00654938 0.01477014  1.97675011</span></span>
+<span><span class="co">#&gt; 5     3  5    99       0.99 -1.00940817   -1.00898195 0.01434909 -1.03920338</span></span>
+<span><span class="co">#&gt; 6     4  1    99       0.99  3.03520802    3.03586526 0.03002439  2.97854657</span></span>
+<span><span class="co">#&gt; 7     4  3    99       0.99  5.99647035    5.99745219 0.03184846  5.94046661</span></span>
+<span><span class="co">#&gt; 8     2  1     1       0.01  0.05299398    0.05299398 0.00000000  0.05299398</span></span>
+<span><span class="co">#&gt; 9     2  3     1       0.01  0.40422428    0.40422428 0.00000000  0.40422428</span></span>
+<span><span class="co">#&gt; 10    2  5     1       0.01  0.90679690    0.90679690 0.00000000  0.90679690</span></span>
+<span><span class="co">#&gt; 11    3  4     1       0.01  0.16165370    0.16165370 0.00000000  0.16165370</span></span>
+<span><span class="co">#&gt; 12    5  1     1       0.01  0.10459193    0.10459193 0.00000000  0.10459193</span></span>
+<span><span class="co">#&gt; 13    5  3     1       0.01 -0.13879324   -0.13879324 0.00000000 -0.13879324</span></span>
+<span><span class="co">#&gt;       ci_upper from_name to_name</span></span>
+<span><span class="co">#&gt; 1   4.03705179        x0      x5</span></span>
+<span><span class="co">#&gt; 2   3.03872609        x0      x1</span></span>
+<span><span class="co">#&gt; 3   8.07779274        x0      x4</span></span>
+<span><span class="co">#&gt; 4   2.03177449        x2      x1</span></span>
+<span><span class="co">#&gt; 5  -0.98291713        x2      x4</span></span>
+<span><span class="co">#&gt; 6   3.09306961        x3      x0</span></span>
+<span><span class="co">#&gt; 7   6.06134091        x3      x2</span></span>
+<span><span class="co">#&gt; 8   0.05299398        x1      x0</span></span>
+<span><span class="co">#&gt; 9   0.40422428        x1      x2</span></span>
+<span><span class="co">#&gt; 10  0.90679690        x1      x4</span></span>
+<span><span class="co">#&gt; 11  0.16165370        x2      x3</span></span>
+<span><span class="co">#&gt; 12  0.10459193        x4      x0</span></span>
+<span><span class="co">#&gt; 13 -0.13879324        x4      x2</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="より大きなデータセット10-変数">より大きなデータセット（10 変数）<a class="anchor" aria-label="anchor" href="#%E3%82%88%E3%82%8A%E5%A4%A7%E3%81%8D%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%8810-%E5%A4%89%E6%95%B0"></a>
 </h2>
 <p>10変数、1万行の大きめのデータセットの例です。</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x10k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_10.html">generate_lingam_sample_10</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">x10k</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
@@ -541,8 +712,8 @@ p 値を返します。</p>
 <span>    rankdir <span class="op">=</span> <span class="st">"TB"</span>,</span>
 <span>    shape   <span class="op">=</span> <span class="st">"circle"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True causal structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.00\"]\n  x0 -> x1 [label = \" 3.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n  x1 -> x6 [label = \" 2.00\"]\n  x0 -> x7 [label = \" 3.00\"]\n  x4 -> x7 [label = \" 1.50\"]\n  x2 -> x8 [label = \" 0.50\"]\n  x5 -> x8 [label = \" 2.00\"]\n  x3 -> x9 [label = \" 7.00\"]\n  x6 -> x9 [label = \" 1.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True causal structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.00\"]\n  x0 -> x1 [label = \" 3.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n  x1 -> x6 [label = \" 2.00\"]\n  x0 -> x7 [label = \" 3.00\"]\n  x4 -> x7 [label = \" 1.50\"]\n  x2 -> x8 [label = \" 0.50\"]\n  x5 -> x8 [label = \" 2.00\"]\n  x3 -> x9 [label = \" 7.00\"]\n  x6 -> x9 [label = \" 1.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level2">
 <h2 id="directlingam-が苦戦する例測定誤差のパラドックス">DirectLiNGAM が苦戦する例：測定誤差のパラドックス<a class="anchor" aria-label="anchor" href="#directlingam-%E3%81%8C%E8%8B%A6%E6%88%A6%E3%81%99%E3%82%8B%E4%BE%8B%E6%B8%AC%E5%AE%9A%E8%AA%A4%E5%B7%AE%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9"></a>
@@ -563,7 +734,7 @@ propagation）しやすくなる。</li>
 <li>すべての変数が <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code>
 で<strong>標準化</strong>されている（スケール差が無い）。</li>
 </ul>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_paradox_data.html">generate_lingam_paradox_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -581,7 +752,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;  1  1  1  1</span></span></code></pre></div>
 <p>真の因果グラフを可視化します。係数 0.8 は標準化前の
 潜在スケールでの構造係数です。</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span><span class="op">)</span>,</span>
@@ -589,9 +760,9 @@ propagation）しやすくなる。</li>
 <span>    rankdir <span class="op">=</span> <span class="st">"LR"</span>,</span>
 <span>    shape   <span class="op">=</span> <span class="st">"circle"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"True causal chain (x0 -> x1 -> x2 -> x3)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 0.80\"]\n  x1 -> x2 [label = \" 0.80\"]\n  x2 -> x3 [label = \" 0.80\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>では Direct LiNGAM を適用してみます。</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"True causal chain (x0 -> x1 -> x2 -> x3)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 0.80\"]\n  x1 -> x2 [label = \" 0.80\"]\n  x2 -> x3 [label = \" 0.80\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>では Direct LiNGAM を適用してみます。</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 推定された因果順序</span></span>
@@ -601,7 +772,7 @@ propagation）しやすくなる。</li>
 になっていることに注目して
 ください。根に乗った測定誤差のせいで、DirectLiNGAM は x0
 を最初の外生変数として 選び損ねています。</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x0    x1    x2 x3</span></span>
@@ -618,14 +789,14 @@ propagation）しやすくなる。</li>
 <span>    shape     <span class="op">=</span> <span class="st">"circle"</span>,</span>
 <span>    fillcolor <span class="op">=</span> <span class="st">"lightpink"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"Estimated structure (paradox data)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFB6C1\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x1 -> x0 [label = \" 0.56\"]\n  x1 -> x2 [label = \" 0.83\"]\n  x2 -> x3 [label = \" 0.82\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>下流の <strong>x1 → x2 → x3</strong>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-25c3e940e6859592f801" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-25c3e940e6859592f801">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"Estimated structure (paradox data)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFB6C1\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x1 -> x0 [label = \" 0.56\"]\n  x1 -> x2 [label = \" 0.83\"]\n  x2 -> x3 [label = \" 0.82\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>下流の <strong>x1 → x2 → x3</strong>
 は正しく復元される一方で、<strong>x0 と x1 の間の向きが逆転</strong>
 し（真は x0 → x1 だが、推定では x1 → x0）、x0
 がほぼ末端（sink）のように扱われて しまいます。</p>
 <p>この誤りがたまたま起きたものなのか、それとも系統的なものなのかを、ブートストラップ
 で確認します。</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_paradox</span> <span class="op">&lt;-</span> <span class="va">paradox</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -640,7 +811,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 2.7 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 2.6 seconds.</span></span>
 <span></span>
 <span><span class="co"># 各方向の出現確率（行 = to, 列 = from）</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>

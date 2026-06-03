@@ -5,7 +5,12 @@
 ## Usage
 
 ``` r
-estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
+estimate_all_total_effects(
+  X,
+  lingam_result,
+  method = "adaptive_lasso",
+  lambda = "BIC"
+)
 ```
 
 ## Arguments
@@ -28,7 +33,9 @@ estimate_all_total_effects(X, lingam_result, method = "lasso", lambda = "AIC")
 
 ## Value
 
-総合因果効果の行列 (行: 結果変数, 列: 原因変数)
+総合因果効果の行列 (n_features x n_features)。 **規則: `TE[i, j]` は変数
+j から変数 i への総合因果効果（j → i）。** 隣接行列 `adjacency_matrix`
+と同じ添字規則。直接効果と間接効果の合計。
 
 ## Examples
 
@@ -40,11 +47,11 @@ model <- LiNGAM_sample_1000$data |>
 
 LiNGAM_sample_1000$data |>
   estimate_all_total_effects(model)
-#>          x0 x1        x2        x3       x4        x5
-#> x0 0.000000  0  0.000000  3.033460 0.000000 0.0000000
-#> x1 2.909144  0  1.889122 21.058733 0.000000 0.1550764
-#> x2 0.000000  0  0.000000  5.992677 0.000000 0.0000000
-#> x3 0.000000  0  0.000000  0.000000 0.000000 0.0000000
-#> x4 8.001353  0 -1.308542 18.276121 0.000000 0.0000000
-#> x5 4.014107  0  0.000000 12.179395 0.003005 0.0000000
+#>          x0 x1        x2        x3 x4 x5
+#> x0 0.000000  0  0.000000  3.033460  0  0
+#> x1 2.896907  0  1.909712 21.058733  0  0
+#> x2 0.000000  0  0.000000  5.992677  0  0
+#> x3 0.000000  0  0.000000  0.000000  0  0
+#> x4 8.001464  0 -1.308131 18.276121  0  0
+#> x5 4.015103  0  0.000000 12.179395  0  0
 ```

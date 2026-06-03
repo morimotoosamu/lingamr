@@ -16,8 +16,16 @@ releasing it for the purpose of testing and gathering feedback.
 ## Features
 
 - Implementation of the Direct LiNGAM algorithm
-- Stability assessment of causal structures using the bootstrap method
-- Visualization of estimation results using DiagrammeR
+- Stability assessment of causal structures using the bootstrap method,
+  including causal-order stability
+- Model diagnostics: residual independence / normality tests and a
+  one-call
+  [`summary_lingam()`](https://morimotoosamu.github.io/lingamr/reference/summary_lingam.md)
+- Visualization with DiagrammeR (interactive) and ggplot2 `autoplot()`
+  (static)
+- broom-style tidiers
+  ([`tidy()`](https://generics.r-lib.org/reference/tidy.html) /
+  [`glance()`](https://generics.r-lib.org/reference/glance.html))
 
 This package does not include all the features of the Python version,
 and it also includes some features that are not present in the Python
@@ -35,8 +43,9 @@ pak::pak("morimotoosamu/lingamr")
 ```
 
 Some functionality relies on the following suggested packages:
-`DiagrammeR` (plots), `glmnet` (adaptive LASSO), `nortest` and `tseries`
-(residual tests), and `ggplot2` (QQ plots).
+`DiagrammeR` (interactive plots), `igraph` and `ggplot2` (static
+`autoplot()` graphs and QQ plots), `glmnet` (adaptive LASSO), and
+`nortest` / `tseries` (residual tests).
 
 ## Quick start
 

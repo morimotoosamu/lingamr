@@ -99,8 +99,12 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>list(adjacency_matrix, causal_order)</p>
-    </div>
+    <p><code>LingamResult</code> オブジェクト（リスト）。以下の要素を含む：</p><ul><li><p><code>adjacency_matrix</code>: 隣接行列 B (n_features x n_features)。
+<strong>規則: <code>B[i, j]</code> は変数 j から変数 i への因果係数（j → i）。</strong>
+ゼロ要素は因果関係なしを意味する。</p></li>
+<li><p><code>causal_order</code>: 推定された因果順序（1-based インデックスの整数ベクトル）。
+先頭ほど上流（外生変数に近い）。</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

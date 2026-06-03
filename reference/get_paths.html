@@ -72,16 +72,14 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">LiNGAM_sample_1000</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">30L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>, n_sampling <span class="op">=</span> <span class="fl">30L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 1 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 10 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 20 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 30 / 30</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 1.9 seconds.</span>
-<span class="r-in"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span>  <span class="fu">get_paths</span><span class="op">(</span><span class="fl">1</span>, <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 1.8 seconds.</span>
+<span class="r-in"><span><span class="fu">get_paths</span><span class="op">(</span><span class="va">bs_model</span>, <span class="fl">1</span>, <span class="fl">6</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   path   effect probability</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1, 6 4.018861           1</span>
 </code></pre></div>

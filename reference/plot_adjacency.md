@@ -18,6 +18,10 @@ plot_adjacency(
   fontsize_edge = 10,
   edge_color = "gray40",
   edge_label_color = "red",
+  true_B = NULL,
+  color_tp = "forestgreen",
+  color_fp = "firebrick",
+  color_fn = "darkorange",
   debug = FALSE
 )
 ```
@@ -26,7 +30,10 @@ plot_adjacency(
 
 - B:
 
-  隣接行列
+  隣接行列 (n_features x n_features)。 **規則: `B[i, j]` は変数 j
+  から変数 i への因果係数（j → i）。**
+  [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+  の `adjacency_matrix` をそのまま渡せる。
 
 - labels:
 
@@ -69,11 +76,33 @@ plot_adjacency(
 
 - edge_color:
 
-  エッジの色 (default: "gray40")
+  エッジの色 (default: "gray40")。`true_B` 指定時は未使用。
 
 - edge_label_color:
 
-  エッジラベルの色 (default: "red")
+  エッジラベルの色 (default: "red")。`true_B` 指定時は未使用。
+
+- true_B:
+
+  真の隣接行列 (NULL 可)。指定するとエッジを3色で分類する：
+
+  - 正解エッジ（推定あり・真あり）: `color_tp` の実線
+
+  - 過検出（推定あり・真なし）: `color_fp` の実線
+
+  - 見逃し（推定なし・真あり）: `color_fn` の破線（真の係数を表示）
+
+- color_tp:
+
+  正解エッジの色 (default: "forestgreen")
+
+- color_fp:
+
+  過検出エッジの色 (default: "firebrick")
+
+- color_fn:
+
+  見逃しエッジの色 (default: "darkorange")
 
 - debug:
 
@@ -99,4 +128,10 @@ model$adjacency_matrix |>
   plot_adjacency()
 
 {"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated Causal Structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.03\"]\n  x0 -> x1 [label = \" 2.99\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 5.99\"]\n  x0 -> x4 [label = \" 8.02\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}
+# \donttest{
+# 真の構造と比較（正解=緑, 過検出=赤, 見逃し=オレンジ破線）
+model$adjacency_matrix |>
+  plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
+
+{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated Causal Structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#888888\",\n        color = \"#888888\"]\n\n  x3 -> x0 [label = \" 3.03\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x1 [label = \" 2.99\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x2 -> x1 [label = \" 2.00\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x3 -> x2 [label = \" 5.99\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x4 [label = \" 8.02\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x2 -> x4 [label = \" -1.01\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x5 [label = \" 4.02\", color = \"#228B22\", fontcolor = \"#228B22\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}# }
 ```

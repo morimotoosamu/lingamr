@@ -43,7 +43,8 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">create_bootstrap_result</span><span class="op">(</span></span>
 <span>  <span class="va">adjacency_matrices</span>,</span>
 <span>  <span class="va">total_effects</span>,</span>
-<span>  resampled_indices <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  resampled_indices <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  causal_orders <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -61,6 +62,10 @@
 
 <dt id="arg-resampled-indices">resampled_indices<a class="anchor" aria-label="anchor" href="#arg-resampled-indices"></a></dt>
 <dd><p>list of index vectors</p></dd>
+
+
+<dt id="arg-causal-orders">causal_orders<a class="anchor" aria-label="anchor" href="#arg-causal-orders"></a></dt>
+<dd><p>matrix (n_sampling x n_features)。各行が1標本の因果順序。</p></dd>
 
 </dl></div>
     <div class="section level2">

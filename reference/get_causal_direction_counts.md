@@ -72,17 +72,15 @@ A data frame containing the following columns:
 ``` r
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- LiNGAM_sample_1000$data |>
-  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.9 seconds.
+#> Completed in 2.0 seconds.
 
-bs_model |>
-  get_causal_direction_counts(labels = names(LiNGAM_sample_1000$data))
+get_causal_direction_counts(bs_model, labels = names(LiNGAM_sample_1000$data))
 #>    from to count proportion mean_effect median_effect   sd_effect    ci_lower
 #> 1     1  6    30 1.00000000  4.02010918    4.01886128 0.009510235  4.00298581
 #> 2     1  2    29 0.96666667  2.98872289    2.98691378 0.029595289  2.94808621

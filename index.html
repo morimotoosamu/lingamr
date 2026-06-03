@@ -64,8 +64,11 @@
 </h2>
 <ul>
 <li>Implementation of the Direct LiNGAM algorithm</li>
-<li>Stability assessment of causal structures using the bootstrap method</li>
-<li>Visualization of estimation results using DiagrammeR</li>
+<li>Stability assessment of causal structures using the bootstrap method, including causal-order stability</li>
+<li>Model diagnostics: residual independence / normality tests and a one-call <code><a href="reference/summary_lingam.html">summary_lingam()</a></code>
+</li>
+<li>Visualization with DiagrammeR (interactive) and ggplot2 <code>autoplot()</code> (static)</li>
+<li>broom-style tidiers (<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> / <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>)</li>
 </ul>
 <p>This package does not include all the features of the Python version, and it also includes some features that are not present in the Python version.</p>
 </div>
@@ -76,7 +79,7 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"morimotoosamu/lingamr"</span><span class="op">)</span></span></code></pre></div>
-<p>Some functionality relies on the following suggested packages: <code>DiagrammeR</code> (plots), <code>glmnet</code> (adaptive LASSO), <code>nortest</code> and <code>tseries</code> (residual tests), and <code>ggplot2</code> (QQ plots).</p>
+<p>Some functionality relies on the following suggested packages: <code>DiagrammeR</code> (interactive plots), <code>igraph</code> and <code>ggplot2</code> (static <code>autoplot()</code> graphs and QQ plots), <code>glmnet</code> (adaptive LASSO), and <code>nortest</code> / <code>tseries</code> (residual tests).</p>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>

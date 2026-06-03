@@ -38,23 +38,24 @@ get_adjacency_matrix_summary(
 
 ## Value
 
-隣接行列 (n_features x n_features)
+隣接行列 (n_features x n_features)。 **規則: `B[i, j]` は変数 j から変数
+i への因果係数（j → i）。**
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+の `adjacency_matrix` と同じ規則。
 
 ## Examples
 
 ``` r
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- LiNGAM_sample_1000$data |>
-  lingam_direct_bootstrap(n_sampling = 30L, seed = 42)
+bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
 #> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.9 seconds.
-bs_model |>
-  get_adjacency_matrix_summary()
+#> Completed in 1.8 seconds.
+get_adjacency_matrix_summary(bs_model)
 #>          [,1]       [,2]       [,3]     [,4]       [,5] [,6]
 #> [1,] 0.000000 0.05299398  0.0000000 3.032919  0.1045919    0
 #> [2,] 2.986914 0.00000000  2.0027022 0.000000  0.0000000    0

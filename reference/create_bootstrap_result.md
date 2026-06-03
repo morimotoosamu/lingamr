@@ -8,7 +8,8 @@ BootstrapResult を作成
 create_bootstrap_result(
   adjacency_matrices,
   total_effects,
-  resampled_indices = NULL
+  resampled_indices = NULL,
+  causal_orders = NULL
 )
 ```
 
@@ -25,6 +26,10 @@ create_bootstrap_result(
 - resampled_indices:
 
   list of index vectors
+
+- causal_orders:
+
+  matrix (n_sampling x n_features)。各行が1標本の因果順序。
 
 ## Value
 

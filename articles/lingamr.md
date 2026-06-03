@@ -120,6 +120,54 @@ model$adjacency_matrix |>
   )
 ```
 
+### 推定構造と真の構造の比較
+
+サンプルデータのように真の構造が分かっている場合は、[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+の `true_B`
+引数に真の隣接行列を渡すことで、推定されたエッジを真の構造と照合して
+色分けできます。推定精度を一目で確認できるため、手法の検証や教育用途に便利です。
+
+- **緑（実線）**: 正しく検出されたエッジ（推定あり・真あり）
+- **赤（実線）**: 過検出されたエッジ（推定あり・真なし）
+- **オレンジ（破線）**:
+  見逃したエッジ（推定なし・真あり、真の係数を表示）
+
+``` r
+
+model$adjacency_matrix |>
+  plot_adjacency(
+    labels  = colnames(model$adjacency_matrix),
+    true_B  = x1k$true_adjacency,
+    title   = "Estimated vs. True Structure",
+    rankdir = "TB",
+    shape   = "ellipse"
+  )
+```
+
+### ggplot2 による静的な描画
+
+[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+は DiagrammeR による対話的な HTML 図を返しますが、
+[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+を使うと同じ因果構造を ggplot2 ベースの静的な図として描けます。
+RMarkdown / Quarto での画像・PDF 出力で安定し、ggplot2 の関数でテーマや
+タイトルを後から重ねられます。ノード配置は `igraph`
+の階層レイアウトで計算され、 因果の流れがおおむね上から下へ並びます。
+
+[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html) は
+ggplot2
+のジェネリックなので、[`ggplot2::autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+として 呼び出すか、事前に
+[`library(ggplot2)`](https://ggplot2.tidyverse.org)
+で読み込みます（描画には `ggplot2` と `igraph` が必要です）。
+
+``` r
+
+ggplot2::autoplot(model)
+```
+
+![](lingamr_files/figure-html/autoplot-1.png)
+
 ## 総合因果効果 (Total Causal Effect)
 
 推定されたすべての総合効果を算出します。
@@ -129,13 +177,13 @@ model$adjacency_matrix |>
 x1k$data |>
   estimate_all_total_effects(model) |>
   round(3)
-#>       x0 x1     x2     x3    x4    x5
-#> x0 0.000  0  0.000  3.033 0.000 0.000
-#> x1 2.909  0  1.889 21.059 0.000 0.155
-#> x2 0.000  0  0.000  5.993 0.000 0.000
-#> x3 0.000  0  0.000  0.000 0.000 0.000
-#> x4 8.001  0 -1.309 18.276 0.000 0.000
-#> x5 4.014  0  0.000 12.179 0.003 0.000
+#>       x0 x1     x2     x3 x4 x5
+#> x0 0.000  0  0.000  3.033  0  0
+#> x1 2.897  0  1.910 21.059  0  0
+#> x2 0.000  0  0.000  5.993  0  0
+#> x3 0.000  0  0.000  0.000  0  0
+#> x4 8.001  0 -1.308 18.276  0  0
+#> x5 4.015  0  0.000 12.179  0  0
 ```
 
 ## 事前知識を用いた推論 (Prior Knowledge)
@@ -349,6 +397,39 @@ x1k$data |>
 
 ![](lingamr_files/figure-html/qqplot-1.png)
 
+## 適合度の一括要約 (Model Summary)
+
+[`summary_lingam()`](https://morimotoosamu.github.io/lingamr/reference/summary_lingam.md)
+は、残差の独立性検定と正規性検定をまとめて実行し、LiNGAM が
+依拠する2つの前提（残差が互いに独立であること・残差が非ガウスであること）の
+成立度合いを一覧で確認できます。個別に
+[`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md)
+や
+[`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
+を呼ぶ代わりに、診断を1か所で見渡せます。
+
+``` r
+
+x1k$data |>
+  summary_lingam(result)
+#> === Direct LiNGAM Model Summary ===
+#> Variables:    6
+#> Observations: 1000
+#> Edges:        7
+#> Causal order: x3 -> x2 -> x0 -> x4 -> x5 -> x1
+#> 
+#> --- Assumption 1: Independence of residuals ---
+#> Method:           spearman
+#> Dependent pairs:  0 / 15  (p < 0.050)
+#> Min p-value:      0.1002
+#> => Residuals appear mutually independent (assumption supported).
+#> 
+#> --- Assumption 2: Non-Gaussianity of residuals ---
+#> Method:           shapiro
+#> Non-Gaussian:     6 / 6  (p <= 0.050)
+#> => All residuals are non-Gaussian (assumption supported).
+```
+
 ## ブートストラップ (Bootstrap Direct LiNGAM)
 
 ブートストラップ法でモデルの確からしさを確認します。
@@ -369,7 +450,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 6.6 seconds.
+#> Completed in 6.3 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -525,6 +606,105 @@ bs_model |>
   plot_bootstrap_probabilities()
 ```
 
+### 因果順序の安定性
+
+[`get_causal_order_stability()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.md)
+は、各ブートストラップ標本で推定された因果順序を
+集計し、順序がどれだけ安定しているかを数値化します。各変数の順位分布、変数ペアの
+先行確率（`P[i, j]` = 変数 i が j
+より上流に来た割合）、および全体の安定性スコア （0 = ランダム、1 =
+全標本で一致）を返します。
+
+``` r
+
+bs_model |>
+  get_causal_order_stability(labels = names(x1k$data))
+#> === Causal Order Stability ===
+#> Bootstrap samples:       100
+#> Overall stability score: 0.736  (0 = random, 1 = fully stable)
+#> 
+#> Rank summary (sorted by mean rank; 1 = most upstream):
+#>  variable mean_rank sd_rank median_rank mode_rank
+#>        x3      1.05    0.50           1         1
+#>        x0      2.62    0.51           3         3
+#>        x2      2.75    0.95           2         2
+#>        x5      4.41    1.23           4         3
+#>        x4      4.92    0.77           5         5
+#>        x1      5.25    0.88           5         6
+#> 
+#> Precedence probability P[i, j] = P(variable i precedes j):
+#>      x0   x1   x2   x3   x4   x5
+#> x0 0.00 0.99 0.39 0.01 0.99 1.00
+#> x1 0.01 0.00 0.01 0.01 0.38 0.34
+#> x2 0.61 0.99 0.00 0.01 0.99 0.65
+#> x3 0.99 0.99 0.99 0.00 0.99 0.99
+#> x4 0.01 0.62 0.01 0.01 0.00 0.43
+#> x5 0.00 0.66 0.35 0.01 0.57 0.00
+```
+
+## broom との連携 (tidy / glance)
+
+推定結果は `broom` 互換の
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) /
+[`glance()`](https://generics.r-lib.org/reference/glance.html) で
+data.frame に変換でき、 `ggplot2` や `dplyr`
+との連携が容易になります。[`tidy()`](https://generics.r-lib.org/reference/tidy.html)
+はエッジ一覧（`from`, `to`,
+`estimate`）を、[`glance()`](https://generics.r-lib.org/reference/glance.html)
+はモデル全体の1行サマリを返します。[`tidy()`](https://generics.r-lib.org/reference/tidy.html)
+は
+ブートストラップ結果にも使え、その場合は各方向の出現割合などを返します。
+
+``` r
+
+# 推定された隣接行列をエッジ一覧に変換
+tidy(model)
+#>   from to  estimate
+#> 1   x0 x1  2.987704
+#> 2   x0 x4  8.016514
+#> 3   x0 x5  4.015008
+#> 4   x2 x1  2.001708
+#> 5   x2 x4 -1.009459
+#> 6   x3 x0  3.032965
+#> 7   x3 x2  5.992677
+
+# モデル全体の1行サマリ
+glance(model)
+#>   n_variables n_edges                     causal_order
+#> 1           6       7 x3 -> x2 -> x0 -> x4 -> x5 -> x1
+
+# ブートストラップ結果の方向別サマリ（labels で変数名を付与）
+tidy(bs_model, labels = names(x1k$data))
+#>    from to count proportion mean_effect median_effect  sd_effect    ci_lower
+#> 1     1  6   100       1.00  4.01535064    4.01518466 0.01127031  3.99552486
+#> 2     1  2    99       0.99  2.98223709    2.97929357 0.02843886  2.93018267
+#> 3     1  5    99       0.99  8.01741193    8.01499334 0.02793983  7.96982894
+#> 4     3  2    99       0.99  2.00484060    2.00654938 0.01477014  1.97675011
+#> 5     3  5    99       0.99 -1.00940817   -1.00898195 0.01434909 -1.03920338
+#> 6     4  1    99       0.99  3.03520802    3.03586526 0.03002439  2.97854657
+#> 7     4  3    99       0.99  5.99647035    5.99745219 0.03184846  5.94046661
+#> 8     2  1     1       0.01  0.05299398    0.05299398 0.00000000  0.05299398
+#> 9     2  3     1       0.01  0.40422428    0.40422428 0.00000000  0.40422428
+#> 10    2  5     1       0.01  0.90679690    0.90679690 0.00000000  0.90679690
+#> 11    3  4     1       0.01  0.16165370    0.16165370 0.00000000  0.16165370
+#> 12    5  1     1       0.01  0.10459193    0.10459193 0.00000000  0.10459193
+#> 13    5  3     1       0.01 -0.13879324   -0.13879324 0.00000000 -0.13879324
+#>       ci_upper from_name to_name
+#> 1   4.03705179        x0      x5
+#> 2   3.03872609        x0      x1
+#> 3   8.07779274        x0      x4
+#> 4   2.03177449        x2      x1
+#> 5  -0.98291713        x2      x4
+#> 6   3.09306961        x3      x0
+#> 7   6.06134091        x3      x2
+#> 8   0.05299398        x1      x0
+#> 9   0.40422428        x1      x2
+#> 10  0.90679690        x1      x4
+#> 11  0.16165370        x2      x3
+#> 12  0.10459193        x4      x0
+#> 13 -0.13879324        x4      x2
+```
+
 ## より大きなデータセット（10 変数）
 
 10変数、1万行の大きめのデータセットの例です。
@@ -652,7 +832,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 2.7 seconds.
+#> Completed in 2.6 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>
