@@ -1,0 +1,9 @@
+pandoc: 3.8.3
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  lingamr: lingamr.html
+last_built: 2026-06-03T11:47Z
+urls:
+  reference: https://morimotoosamu.github.io/lingamr/reference
+  article: https://morimotoosamu.github.io/lingamr/articles

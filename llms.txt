@@ -1,0 +1,178 @@
+# lingamr
+
+LiNGAM is a method for estimating structural equation models or linear
+Bayesian networks. It is based on using the non-Gaussianity of the data.
+
+`lingamr` is a port to R of the
+[LiNGAM](https://github.com/cdt15/lingam) package (LiNGAM: Linear
+Non-Gaussian Acyclic Model), which is available in Python.
+
+- [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
+- [lingam (Python)](https://github.com/cdt15/lingam)
+
+This is currently an alpha version under development, and we are
+releasing it for the purpose of testing and gathering feedback.
+
+## Features
+
+- Implementation of the Direct LiNGAM algorithm
+- Stability assessment of causal structures using the bootstrap method
+- Visualization of estimation results using DiagrammeR
+
+This package does not include all the features of the Python version,
+and it also includes some features that are not present in the Python
+version.
+
+## Installation
+
+You can install the development version of `lingamr` from
+[GitHub](https://github.com/morimotoosamu/lingamr) with:
+
+``` r
+
+# install.packages("pak")
+pak::pak("morimotoosamu/lingamr")
+```
+
+Some functionality relies on the following suggested packages:
+`DiagrammeR` (plots), `glmnet` (adaptive LASSO), `nortest` and `tseries`
+(residual tests), and `ggplot2` (QQ plots).
+
+## Quick start
+
+``` r
+
+library(lingamr)
+
+# Generate sample data from a 6-variable LiNGAM model
+x <- generate_lingam_sample_6(n = 1000)
+
+# Estimate the causal structure with Direct LiNGAM
+model <- lingam_direct(x$data)
+
+# Estimated causal order (as variable names)
+colnames(x$data)[model$causal_order]
+#> [1] "x3" "x2" "x0" "x4" "x5" "x1"
+```
+
+``` r
+
+# Visualize the estimated causal graph
+model$adjacency_matrix |>
+  plot_adjacency(
+    labels    = colnames(model$adjacency_matrix),
+    title     = "Estimated Causal Structure (Direct LiNGAM)",
+    rankdir   = "TB",
+    shape     = "ellipse",
+    fillcolor = "lightgreen"
+  )
+```
+
+![](reference/figures/README-quickstart_plot-1.png)
+
+## Learn more
+
+For a full walkthrough — prior knowledge, total causal effects, residual
+independence and normality tests, and bootstrap (including parallel
+execution) — see the vignette:
+
+``` r
+
+vignette("lingamr")
+```
+
+It is also available online at the [package
+website](https://morimotoosamu.github.io/lingamr/).
+
+## Licence
+
+MIT License
+
+Original work: Copyright (c) 2019 T.Ikeuchi, G.Haraoka, M.Ide,
+W.Kurebayashi, S.Shimizu
+
+Portions of this work: Copyright (c) 2026 O.Morimoto
+
+## References
+
+### Algorithm
+
+- Shimizu, S. et al. (2011). DirectLiNGAM: A direct method for learning
+  a linear non-Gaussian structural equation model. *Journal of Machine
+  Learning Research*, 12, 1225-1248.
+
+### Original Implementation (Python)
+
+- Ikeuchi, T. et al. (2023). Python package for LiNGAM algorithms.
+  *Journal of Machine Learning Research*, 24(14), 1-7.
+  <https://github.com/cdt15/lingam>
+
+### Books
+
+- 清水昌平(2017)『統計的因果探索』講談社.
+- 梅津佑太・西村龍映・上田勇祐(2020)『スパース回帰分析とパターン認識』講談社.
+- 鈴木譲(2025)『グラフィカルモデルと因果探索100問 with R』共立出版.
+
+### R Packages Referenced
+
+- G. Kikuchi (2020). rlingam <https://github.com/gkikuchi/rlingam>
+
+## Feedback
+
+Please submit bug reports and feature requests via GitHub Issues.
+
+# Package index
+
+## All functions
+
+- [`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
+  : 全変数間の総合因果効果を一括推定
+- [`estimate_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect.md)
+  : 指定した2変数間の総合因果効果を推定
+- [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+  : Generate a challenging sample data for Direct LiNGAM
+- [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md)
+  : Generate Paradoxical Data Where DirectLiNGAM Struggles
+- [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md)
+  : Generate 10-variable sample data for Direct LiNGAM
+- [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+  : Generate sample data for Direct LiNGAM (6 variables)
+- [`get_adjacency_matrix_summary()`](https://morimotoosamu.github.io/lingamr/reference/get_adjacency_matrix_summary.md)
+  : ブートストラップ結果から因果効果の代表値の隣接行列を作成
+- [`get_causal_direction_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.md)
+  : 因果方向のカウント・割合・因果効果を取得
+- [`get_directed_acyclic_graph_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_directed_acyclic_graph_counts.md)
+  : DAG カウントを取得
+- [`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md)
+  : 誤差の独立性検定の p 値を計算
+- [`get_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_paths.md)
+  : 指定した2変数間の全パスとブートストラップ確率を取得
+- [`get_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_probabilities.md)
+  : ブートストラップ確率を取得
+- [`get_total_causal_effects()`](https://morimotoosamu.github.io/lingamr/reference/get_total_causal_effects.md)
+  : 総合因果効果リストを取得
+- [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+  : Direct LiNGAM
+- [`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md)
+  : Direct LiNGAM のブートストラップ
+- [`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md)
+  : 事前知識行列を作成
+- [`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+  : 隣接行列から DiagrammeR で因果グラフを描画
+- [`plot_bootstrap_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/plot_bootstrap_probabilities.md)
+  : ブートストラップ確率を DiagrammeR で描画
+- [`plot_residual_qq()`](https://morimotoosamu.github.io/lingamr/reference/plot_residual_qq.md)
+  : plot QQ
+- [`print(`*`<BootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.BootstrapResult.md)
+  : BootstrapResult の内容を表示
+- [`print(`*`<lingam_normality_test>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.lingam_normality_test.md)
+  : Print method for lingam_normality_test
+- [`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
+  : Test normality of residuals from Direct LiNGAM
+
+# Articles
+
+### All vignettes
+
+- [Causal Discovery with
+  lingamr](https://morimotoosamu.github.io/lingamr/articles/lingamr.md):
