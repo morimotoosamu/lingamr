@@ -291,6 +291,19 @@ x1k$data |>
 ```
 
 
+## 適合度の一括要約 (Model Summary)
+
+`summary_lingam()` は、残差の独立性検定と正規性検定をまとめて実行し、LiNGAM が
+依拠する2つの前提（残差が互いに独立であること・残差が非ガウスであること）の
+成立度合いを一覧で確認できます。個別に `get_error_independence_p_values()` や
+`test_residual_normality()` を呼ぶ代わりに、診断を1か所で見渡せます。
+
+```{r summary_lingam}
+x1k$data |>
+  summary_lingam(result)
+```
+
+
 ## ブートストラップ (Bootstrap Direct LiNGAM)
 ブートストラップ法でモデルの確からしさを確認します。
 
@@ -380,6 +393,38 @@ bs_model |>
 ```{r plot_bootstrap_probabilities}
 bs_model |>
   plot_bootstrap_probabilities()
+```
+
+
+### 因果順序の安定性
+
+`get_causal_order_stability()` は、各ブートストラップ標本で推定された因果順序を
+集計し、順序がどれだけ安定しているかを数値化します。各変数の順位分布、変数ペアの
+先行確率（`P[i, j]` = 変数 i が j より上流に来た割合）、および全体の安定性スコア
+（0 = ランダム、1 = 全標本で一致）を返します。
+
+```{r get_causal_order_stability}
+bs_model |>
+  get_causal_order_stability(labels = names(x1k$data))
+```
+
+
+## broom との連携 (tidy / glance)
+
+推定結果は `broom` 互換の `tidy()` / `glance()` で data.frame に変換でき、
+`ggplot2` や `dplyr` との連携が容易になります。`tidy()` はエッジ一覧（`from`,
+`to`, `estimate`）を、`glance()` はモデル全体の1行サマリを返します。`tidy()` は
+ブートストラップ結果にも使え、その場合は各方向の出現割合などを返します。
+
+```{r broom}
+# 推定された隣接行列をエッジ一覧に変換
+tidy(model)
+
+# モデル全体の1行サマリ
+glance(model)
+
+# ブートストラップ結果の方向別サマリ（labels で変数名を付与）
+tidy(bs_model, labels = names(x1k$data))
 ```
 
 
