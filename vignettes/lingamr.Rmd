@@ -169,8 +169,7 @@ model_pk1$adjacency_matrix |>
 ## 誤差変数間の独立性 (Independence between error variables)
 
 LiNGAM では残差が独立であることを仮定しています。
-`get_error_independence_p_values()` は残差間の独立性の検定の p 値を返します
-(default: Spearman)。
+`get_error_independence_p_values()` は残差間の独立性の検定の p 値を返します。
 
 ```{r Independence_between_error_variables1}
 result <- x1k$data |>
