@@ -99,7 +99,8 @@ lingam_direct_bootstrap <- function(X,
     list(
       idx              = idx,
       adjacency_matrix = result$adjacency_matrix,
-      total_effects    = te
+      total_effects    = te,
+      causal_order     = result$causal_order
     )
   }
 
@@ -175,10 +176,12 @@ lingam_direct_bootstrap <- function(X,
   # 結果を配列に集約
   adjacency_matrices <- array(0, dim = c(n_sampling, n_features, n_features))
   total_effects <- array(0, dim = c(n_sampling, n_features, n_features))
+  causal_orders <- matrix(0L, nrow = n_sampling, ncol = n_features)
   resampled_indices <- vector("list", n_sampling)
   for (i in seq_len(n_sampling)) {
     adjacency_matrices[i, , ] <- res_list[[i]]$adjacency_matrix
     total_effects[i, , ] <- res_list[[i]]$total_effects
+    causal_orders[i, ] <- res_list[[i]]$causal_order
     resampled_indices[[i]] <- res_list[[i]]$idx
   }
 
@@ -186,7 +189,7 @@ lingam_direct_bootstrap <- function(X,
     elapsed <- (proc.time() - t_start)["elapsed"]
     message(sprintf("Completed in %.1f seconds.", elapsed))
   }
-  create_bootstrap_result(adjacency_matrices, total_effects, resampled_indices)
+  create_bootstrap_result(adjacency_matrices, total_effects, resampled_indices, causal_orders)
 }
 
 
@@ -198,13 +201,15 @@ lingam_direct_bootstrap <- function(X,
 #' @param adjacency_matrices array (n_sampling x n_features x n_features)
 #' @param total_effects array (n_sampling x n_features x n_features)
 #' @param resampled_indices list of index vectors
+#' @param causal_orders matrix (n_sampling x n_features)。各行が1標本の因果順序。
 #' @return BootstrapResult (list with class attribute)
 #' @keywords internal
-create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled_indices = NULL) {
+create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled_indices = NULL, causal_orders = NULL) {
   obj <- list(
     adjacency_matrices = adjacency_matrices,
     total_effects      = total_effects,
-    resampled_indices  = resampled_indices
+    resampled_indices  = resampled_indices,
+    causal_orders      = causal_orders
   )
   class(obj) <- "BootstrapResult"
   return(obj)

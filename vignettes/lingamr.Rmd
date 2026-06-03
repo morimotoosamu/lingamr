@@ -129,6 +129,23 @@ model$adjacency_matrix |>
 ```
 
 
+### ggplot2 による静的な描画
+
+`plot_adjacency()` は DiagrammeR による対話的な HTML 図を返しますが、
+`autoplot()` を使うと同じ因果構造を ggplot2 ベースの静的な図として描けます。
+RMarkdown / Quarto での画像・PDF 出力で安定し、ggplot2 の関数でテーマや
+タイトルを後から重ねられます。ノード配置は `igraph` の階層レイアウトで計算され、
+因果の流れがおおむね上から下へ並びます。
+
+`autoplot()` は ggplot2 のジェネリックなので、`ggplot2::autoplot()` として
+呼び出すか、事前に `library(ggplot2)` で読み込みます（描画には `ggplot2` と
+`igraph` が必要です）。
+
+```{r autoplot, eval = requireNamespace("ggplot2", quietly = TRUE) && requireNamespace("igraph", quietly = TRUE)}
+ggplot2::autoplot(model)
+```
+
+
 ## 総合因果効果 (Total Causal Effect)
 
 推定されたすべての総合効果を算出します。

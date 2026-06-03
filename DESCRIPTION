@@ -22,6 +22,7 @@ Suggests:
     DiagrammeR,
     ggplot2,
     glmnet,
+    igraph,
     knitr,
     nortest,
     rmarkdown,

@@ -7,7 +7,8 @@
 create_bootstrap_result(
   adjacency_matrices,
   total_effects,
-  resampled_indices = NULL
+  resampled_indices = NULL,
+  causal_orders = NULL
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ create_bootstrap_result(
 \item{total_effects}{array (n_sampling x n_features x n_features)}
 
 \item{resampled_indices}{list of index vectors}
+
+\item{causal_orders}{matrix (n_sampling x n_features)。各行が1標本の因果順序。}
 }
 \value{
 BootstrapResult (list with class attribute)

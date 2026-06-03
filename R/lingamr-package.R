@@ -7,4 +7,4 @@ NULL
 
 # ggplot2::aes() 内で参照する data frame の列名を、R CMD check の
 # 「no visible binding for global variable」NOTE 回避のため宣言する。
-utils::globalVariables("residual")
+utils::globalVariables(c("residual", "x", "y", "xend", "yend", "label", "name"))
