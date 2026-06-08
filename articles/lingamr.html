@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -467,7 +467,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 6.3 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 6.4 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -716,6 +716,102 @@ p 値を返します。</p>
 <script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True causal structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.00\"]\n  x0 -> x1 [label = \" 3.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n  x1 -> x6 [label = \" 2.00\"]\n  x0 -> x7 [label = \" 3.00\"]\n  x4 -> x7 [label = \" 1.50\"]\n  x2 -> x8 [label = \" 0.50\"]\n  x5 -> x8 [label = \" 2.00\"]\n  x3 -> x9 [label = \" 7.00\"]\n  x6 -> x9 [label = \" 1.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level2">
+<h2 id="変数が多い場合スケーラビリティの壁">変数が多い場合：スケーラビリティの壁<a class="anchor" aria-label="anchor" href="#%E5%A4%89%E6%95%B0%E3%81%8C%E5%A4%9A%E3%81%84%E5%A0%B4%E5%90%88%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%81%AE%E5%A3%81"></a>
+</h2>
+<p>Direct LiNGAM
+は各ステップで残りの全変数ペアに独立性検定を実施します。 ステップ数が
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>、各ステップの検定数が最大
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(p-1)</annotation></semantics></math>
+であるため、 合計の独立性検定回数はおよそ</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mfrac><msup><mi>p</mi><mn>3</mn></msup><mn>3</mn></mfrac></mrow><annotation encoding="application/x-tex">\sum_{k=1}^{p} k(k-1) \approx \frac{p^3}{3}</annotation></semantics></math></p>
+<p>となり、<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>p</mi><mn>3</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(p^3)</annotation></semantics></math></strong>
+の計算量になります。 一方、ICA-LiNGAM が用いる FastICA は
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>p</mi><mn>2</mn></msup><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(p^2 n)</annotation></semantics></math>（BLAS
+最適化あり）のため、 変数数が増えるほど差が開いていきます。</p>
+<p><code><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample()</a></code> は変数数 <code>p</code>
+を自由に設定できるランダムスパース DAG データを生成します。各変数
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>i</mi></msub><annotation encoding="application/x-tex">x_i</annotation></semantics></math>（<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>≥</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">i \ge 1</annotation></semantics></math>）は
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>x</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">x_0, \ldots, x_{i-1}</annotation></semantics></math>
+の中から <code>max_parents</code>
+個以下の親をランダムに持ちます。変数はインデックス順に因果順序が
+保証されているため、隣接行列は常に<strong>下三角行列</strong>です。</p>
+<div class="section level3">
+<h3 id="データの生成">データの生成<a class="anchor" aria-label="anchor" href="#%E3%83%87%E3%83%BC%E3%82%BF%E3%81%AE%E7%94%9F%E6%88%90"></a>
+</h3>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">20</span>, n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">d20</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>                    <span class="co"># 1000 行 × 20 列</span></span>
+<span><span class="co">#&gt; [1] 1000   20</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">d20</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">!=</span> <span class="fl">0</span><span class="op">)</span>     <span class="co"># 真のエッジ数（スパース DAG）</span></span>
+<span><span class="co">#&gt; [1] 32</span></span>
+<span><span class="va">d20</span><span class="op">$</span><span class="va">true_causal_order</span>            <span class="co"># 0, 1, ..., 19</span></span>
+<span><span class="co">#&gt;  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="実行時間の比較">実行時間の比較<a class="anchor" aria-label="anchor" href="#%E5%AE%9F%E8%A1%8C%E6%99%82%E9%96%93%E3%81%AE%E6%AF%94%E8%BC%83"></a>
+</h3>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+が 1.5 倍（10 → 15）になると、独立性検定の回数は
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>15</mn><mn>3</mn></msup><mi>/</mi><msup><mn>10</mn><mn>3</mn></msup><mo>≈</mo><mn>3.4</mn></mrow><annotation encoding="application/x-tex">15^3 / 10^3 \approx 3.4</annotation></semantics></math>
+倍になります。</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">d15</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">15</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">t10</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="va">r10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">t15</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="va">r15</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">d15</span><span class="op">$</span><span class="va">data</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
+<span>  <span class="st">"p = 10 : %.2f 秒\np = 15 : %.2f 秒\n理論倍率 %.1f 倍 に対して 実測 %.1f 倍\n"</span>,</span>
+<span>  <span class="va">t10</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>,</span>
+<span>  <span class="va">t15</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>,</span>
+<span>  <span class="fl">15</span><span class="op">^</span><span class="fl">3</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">3</span>,</span>
+<span>  <span class="va">t15</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t10</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="fl">0.01</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; p = 10 : 0.08 秒</span></span>
+<span><span class="co">#&gt; p = 15 : 0.22 秒</span></span>
+<span><span class="co">#&gt; 理論倍率 3.4 倍 に対して 実測 2.9 倍</span></span></code></pre></div>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">p = 30</annotation></semantics></math>
+や
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>50</mn></mrow><annotation encoding="application/x-tex">p = 50</annotation></semantics></math>
+など大規模な設定になると実行時間は数十秒〜数分に達します。
+こうした場面では ICA-LiNGAM（<a href="https://github.com/cdt15/lingam" class="external-link">lingam Python パッケージ</a>）が
+計算効率で大きく優位になります。</p>
+</div>
+<div class="section level3">
+<h3 id="推定精度の確認p-10">推定精度の確認（p = 10）<a class="anchor" aria-label="anchor" href="#%E6%8E%A8%E5%AE%9A%E7%B2%BE%E5%BA%A6%E3%81%AE%E7%A2%BA%E8%AA%8Dp-10"></a>
+</h3>
+<p>スパース DAG
+でも<strong>非ガウス誤差</strong>（デフォルト：一様分布）があれば、
+Direct LiNGAM は正しい因果順序を復元できます。</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 推定された因果順序</span></span>
+<span><span class="va">r10</span><span class="op">$</span><span class="va">causal_order</span></span>
+<span><span class="co">#&gt;  [1]  1  2  3  7  4  5  9  8  6 10</span></span>
+<span></span>
+<span><span class="co"># 真の因果順序 0, 1, ..., 9 と完全一致しているか</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">r10</span><span class="op">$</span><span class="va">causal_order</span> <span class="op">==</span> <span class="va">d10</span><span class="op">$</span><span class="va">true_causal_order</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>
+でエッジ一覧に変換して、推定された係数を確認します。</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">r10</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    from to   estimate</span></span>
+<span><span class="co">#&gt; 1    x0 x1 -1.3787175</span></span>
+<span><span class="co">#&gt; 2    x0 x2  1.0970109</span></span>
+<span><span class="co">#&gt; 3    x0 x3  0.9352380</span></span>
+<span><span class="co">#&gt; 4    x0 x5  1.2881634</span></span>
+<span><span class="co">#&gt; 5    x1 x2  0.9042926</span></span>
+<span><span class="co">#&gt; 6    x1 x3  1.4216545</span></span>
+<span><span class="co">#&gt; 7    x1 x5 -1.2929148</span></span>
+<span><span class="co">#&gt; 8    x1 x6  1.4634000</span></span>
+<span><span class="co">#&gt; 9    x1 x9  1.2499665</span></span>
+<span><span class="co">#&gt; 10   x2 x3 -1.4986808</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="directlingam-が苦戦する例測定誤差のパラドックス">DirectLiNGAM が苦戦する例：測定誤差のパラドックス<a class="anchor" aria-label="anchor" href="#directlingam-%E3%81%8C%E8%8B%A6%E6%88%A6%E3%81%99%E3%82%8B%E4%BE%8B%E6%B8%AC%E5%AE%9A%E8%AA%A4%E5%B7%AE%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9"></a>
 </h2>
 <p>因果探索の手法には前提があり、それが破られると正しい構造を復元できないことが
@@ -734,7 +830,7 @@ propagation）しやすくなる。</li>
 <li>すべての変数が <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code>
 で<strong>標準化</strong>されている（スケール差が無い）。</li>
 </ul>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_paradox_data.html">generate_lingam_paradox_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -752,7 +848,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;  1  1  1  1</span></span></code></pre></div>
 <p>真の因果グラフを可視化します。係数 0.8 は標準化前の
 潜在スケールでの構造係数です。</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span><span class="op">)</span>,</span>
@@ -762,7 +858,7 @@ propagation）しやすくなる。</li>
 <span>  <span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:576px;height:480px;"></div>
 <script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"True causal chain (x0 -> x1 -> x2 -> x3)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 0.80\"]\n  x1 -> x2 [label = \" 0.80\"]\n  x2 -> x3 [label = \" 0.80\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>では Direct LiNGAM を適用してみます。</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 推定された因果順序</span></span>
@@ -772,7 +868,7 @@ propagation）しやすくなる。</li>
 になっていることに注目して
 ください。根に乗った測定誤差のせいで、DirectLiNGAM は x0
 を最初の外生変数として 選び損ねています。</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x0    x1    x2 x3</span></span>
@@ -796,7 +892,7 @@ propagation）しやすくなる。</li>
 がほぼ末端（sink）のように扱われて しまいます。</p>
 <p>この誤りがたまたま起きたものなのか、それとも系統的なものなのかを、ブートストラップ
 で確認します。</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_paradox</span> <span class="op">&lt;-</span> <span class="va">paradox</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -811,7 +907,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 2.6 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 2.7 seconds.</span></span>
 <span></span>
 <span><span class="co"># 各方向の出現確率（行 = to, 列 = from）</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>

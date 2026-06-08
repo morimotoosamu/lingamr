@@ -450,7 +450,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 6.3 seconds.
+#> Completed in 6.4 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -722,6 +722,108 @@ x10k$true_adjacency |>
   )
 ```
 
+## 変数が多い場合：スケーラビリティの壁
+
+Direct LiNGAM は各ステップで残りの全変数ペアに独立性検定を実施します。
+ステップ数が $`p`$、各ステップの検定数が最大 $`p(p-1)`$ であるため、
+合計の独立性検定回数はおよそ
+
+``` math
+\sum_{k=1}^{p} k(k-1) \approx \frac{p^3}{3}
+```
+
+となり、**$`O(p^3)`$** の計算量になります。 一方、ICA-LiNGAM が用いる
+FastICA は $`O(p^2 n)`$（BLAS 最適化あり）のため、
+変数数が増えるほど差が開いていきます。
+
+[`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md)
+は変数数 `p` を自由に設定できるランダムスパース DAG
+データを生成します。各変数 $`x_i`$（$`i \ge 1`$）は
+$`x_0, \ldots, x_{i-1}`$ の中から `max_parents`
+個以下の親をランダムに持ちます。変数はインデックス順に因果順序が
+保証されているため、隣接行列は常に**下三角行列**です。
+
+### データの生成
+
+``` r
+
+d20 <- generate_lingam_large_sample(p = 20, n = 1000, seed = 42)
+
+dim(d20$data)                    # 1000 行 × 20 列
+#> [1] 1000   20
+sum(d20$true_adjacency != 0)     # 真のエッジ数（スパース DAG）
+#> [1] 32
+d20$true_causal_order            # 0, 1, ..., 19
+#>  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+```
+
+### 実行時間の比較
+
+$`p`$ が 1.5 倍（10 → 15）になると、独立性検定の回数は
+$`15^3 / 10^3 \approx 3.4`$ 倍になります。
+
+``` r
+
+d10 <- generate_lingam_large_sample(p = 10, n = 500, seed = 42)
+d15 <- generate_lingam_large_sample(p = 15, n = 500, seed = 42)
+
+t10 <- system.time({ r10 <- lingam_direct(d10$data) })
+t15 <- system.time({ r15 <- lingam_direct(d15$data) })
+
+cat(sprintf(
+  "p = 10 : %.2f 秒\np = 15 : %.2f 秒\n理論倍率 %.1f 倍 に対して 実測 %.1f 倍\n",
+  t10["elapsed"],
+  t15["elapsed"],
+  15^3 / 10^3,
+  t15["elapsed"] / max(t10["elapsed"], 0.01)
+))
+#> p = 10 : 0.08 秒
+#> p = 15 : 0.22 秒
+#> 理論倍率 3.4 倍 に対して 実測 2.9 倍
+```
+
+$`p = 30`$ や $`p = 50`$
+など大規模な設定になると実行時間は数十秒〜数分に達します。
+こうした場面では ICA-LiNGAM（[lingam Python
+パッケージ](https://github.com/cdt15/lingam)）が
+計算効率で大きく優位になります。
+
+### 推定精度の確認（p = 10）
+
+スパース DAG でも**非ガウス誤差**（デフォルト：一様分布）があれば、
+Direct LiNGAM は正しい因果順序を復元できます。
+
+``` r
+
+# 推定された因果順序
+r10$causal_order
+#>  [1]  1  2  3  7  4  5  9  8  6 10
+
+# 真の因果順序 0, 1, ..., 9 と完全一致しているか
+all(r10$causal_order == d10$true_causal_order)
+#> [1] FALSE
+```
+
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html)
+でエッジ一覧に変換して、推定された係数を確認します。
+
+``` r
+
+tidy(r10) |>
+  head(10)
+#>    from to   estimate
+#> 1    x0 x1 -1.3787175
+#> 2    x0 x2  1.0970109
+#> 3    x0 x3  0.9352380
+#> 4    x0 x5  1.2881634
+#> 5    x1 x2  0.9042926
+#> 6    x1 x3  1.4216545
+#> 7    x1 x5 -1.2929148
+#> 8    x1 x6  1.4634000
+#> 9    x1 x9  1.2499665
+#> 10   x2 x3 -1.4986808
+```
+
 ## DirectLiNGAM が苦戦する例：測定誤差のパラドックス
 
 因果探索の手法には前提があり、それが破られると正しい構造を復元できないことが
@@ -832,7 +934,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 2.6 seconds.
+#> Completed in 2.7 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>

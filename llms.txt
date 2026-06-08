@@ -142,6 +142,9 @@ Please submit bug reports and feature requests via GitHub Issues.
   : 指定した2変数間の総合因果効果を推定
 - [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
   : Generate a challenging sample data for Direct LiNGAM
+- [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md)
+  : Generate large-scale sample data to benchmark Direct LiNGAM
+  scalability
 - [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md)
   : Generate Paradoxical Data Where DirectLiNGAM Struggles
 - [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md)

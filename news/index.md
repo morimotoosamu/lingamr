@@ -1,5 +1,7 @@
 # Changelog
 
+## lingamr (development version)
+
 ## lingamr 0.1.0.9005
 
 - [`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md)
