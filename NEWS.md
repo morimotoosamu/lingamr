@@ -1,3 +1,5 @@
+# lingamr (development version)
+
 # lingamr 0.1.0.9005
 
 * `lingam_direct_bootstrap()` gained `parallel` and `n_cores` arguments for
