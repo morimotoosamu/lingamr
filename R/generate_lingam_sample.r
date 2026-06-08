@@ -430,3 +430,151 @@ generate_lingam_paradox_data <- function(n = 2000L, seed = 42L) {
   ))
 }
 
+
+#' Generate large-scale sample data to benchmark Direct LiNGAM scalability
+#'
+#' Generates a dataset with many variables to demonstrate the computational
+#' scalability difference between Direct LiNGAM and ICA-LiNGAM.
+#'
+#' @param p number of variables (default: 20)
+#' @param n number of observations (default: 1000)
+#' @param max_parents maximum number of parents per node (default: 3).
+#'   Controls graph density. Each variable xi (i >= 1) receives between 1 and
+#'   `min(max_parents, i)` parents drawn from x0, ..., x(i-1).
+#' @param coef_min minimum absolute value of edge coefficients (default: 0.5)
+#' @param coef_max maximum absolute value of edge coefficients (default: 1.5)
+#' @param seed random seed (default: 42)
+#' @param noise_dist error term distribution.
+#'   "uniform"     : Uniform(0, 1) - default, non-Gaussian (LiNGAM works well)
+#'   "gaussian"    : Normal(0, 1)  - LiNGAM may fail
+#'   "lognormal"   : Log-normal(0, 1) - skewed, non-Gaussian
+#'   "exponential" : Exponential(1) - skewed, non-Gaussian
+#'   "t3"          : t-distribution (df=3) - heavy tails
+#'
+#' @return A list with three elements:
+#'   * `data`: data.frame with `p` columns (x0, x1, ..., x(p-1)).
+#'   * `true_adjacency`: p x p matrix. `true_adjacency[i, j]` is the structural
+#'     coefficient of the edge xj -> xi (row = to, col = from). The matrix is
+#'     strictly lower-triangular because variables are stored in causal order.
+#'   * `true_causal_order`: integer vector `0:(p-1)`. Variables are already in
+#'     topological order, so the true causal order is always 0, 1, ..., p-1.
+#'
+#' @details
+#' ## Why Direct LiNGAM slows down with large p
+#'
+#' At each of its `p` steps, Direct LiNGAM evaluates an independence measure
+#' between every remaining candidate root and every other residual.
+#' The total number of evaluations is:
+#'
+#' \deqn{\sum_{k=1}^{p} k(k-1) \approx \frac{p^3}{3}}
+#'
+#' i.e., O(p^3). Each evaluation is itself O(n), giving O(p^3 n) overall.
+#' For p = 10 this is about 330 evaluations; for p = 20 about 2,660;
+#' for p = 40 about 21,320 --- an 8x increase every time p doubles.
+#'
+#' ## Why ICA-LiNGAM scales better
+#'
+#' ICA-LiNGAM applies FastICA once to the whole p x n data matrix.
+#' Each FastICA iteration costs O(p^2 n), and the algorithm typically
+#' converges in far fewer than p iterations.  Additionally, these matrix
+#' operations are fully vectorised (BLAS/LAPACK), whereas Direct LiNGAM
+#' iterates over pairs in an R loop.
+#'
+#' ## Data-generating process
+#'
+#' Variables are topologically ordered as x0, x1, ..., x(p-1).
+#' For each i >= 1, the number of parents is sampled uniformly from
+#' 1 to `min(max_parents, i)`, and the parents are drawn without replacement
+#' from x0, ..., x(i-1).  Edge coefficients are drawn uniformly from
+#' \[-coef_max, -coef_min\] U \[coef_min, coef_max\].
+#' The resulting adjacency matrix is strictly lower-triangular.
+#'
+#' @examples
+#' # 20変数のデータを生成してスパース性を確認
+#' dataset <- generate_lingam_large_sample(p = 20, n = 500)
+#' dim(dataset$data)                    # 500 x 20
+#' sum(dataset$true_adjacency != 0)     # 辺の本数
+#' dataset$true_causal_order            # 0, 1, ..., 19
+#'
+#' \donttest{
+#' # 変数数が増えると Direct LiNGAM の実行時間が急増する
+#' t10 <- system.time(lingam_direct(generate_lingam_large_sample(p = 10)$data))
+#' t20 <- system.time(lingam_direct(generate_lingam_large_sample(p = 20)$data))
+#' cat(sprintf("p=10: %.1f sec,  p=20: %.1f sec\n", t10["elapsed"], t20["elapsed"]))
+#' }
+#'
+#' @export
+generate_lingam_large_sample <- function(
+    p           = 20L,
+    n           = 1000L,
+    max_parents = 3L,
+    coef_min    = 0.5,
+    coef_max    = 1.5,
+    seed        = 42L,
+    noise_dist  = "uniform") {
+
+  # --- Input validation ---
+  if (!is.numeric(p) || length(p) != 1L || p < 2)
+    stop("p must be an integer >= 2.", call. = FALSE)
+  if (!is.numeric(n) || length(n) != 1L || n < 2)
+    stop("n must be an integer >= 2.", call. = FALSE)
+  if (!is.numeric(max_parents) || length(max_parents) != 1L || max_parents < 1)
+    stop("max_parents must be an integer >= 1.", call. = FALSE)
+  if (!is.numeric(coef_min) || !is.numeric(coef_max) ||
+      coef_min <= 0 || coef_max <= coef_min)
+    stop("coef_min and coef_max must satisfy 0 < coef_min < coef_max.", call. = FALSE)
+  if (!is.numeric(seed))
+    stop("seed must be numeric.", call. = FALSE)
+
+  valid_dists <- c("uniform", "gaussian", "lognormal", "exponential", "t3")
+  if (!(noise_dist %in% valid_dists)) {
+    stop(sprintf("noise_dist must be one of: %s",
+                 paste(valid_dists, collapse = ", ")), call. = FALSE)
+  }
+
+  p           <- as.integer(p)
+  n           <- as.integer(n)
+  max_parents <- as.integer(max_parents)
+  seed        <- as.integer(seed)
+
+  var_names <- paste0("x", seq_len(p) - 1L)
+  noise_fn  <- make_noise_fn(noise_dist)
+
+  # --- Step 1: Build random DAG adjacency matrix ---
+  # Single set.seed covers both structure and data generation deterministically.
+  set.seed(seed)
+
+  B <- matrix(0.0, p, p, dimnames = list(var_names, var_names))
+
+  for (i in seq(2L, p)) {
+    # Candidate parents: R indices 1..(i-1) => variables x0..x(i-2)
+    candidates  <- seq_len(i - 1L)
+    n_pa_max    <- min(max_parents, length(candidates))
+    n_pa_chosen <- sample.int(n_pa_max, 1L)               # how many parents
+    pa_indices  <- sort(sample(candidates, n_pa_chosen))   # which parents
+    for (pa in pa_indices) {
+      sign_coef <- sample(c(-1.0, 1.0), 1L)
+      B[i, pa]  <- sign_coef * runif(1L, coef_min, coef_max)
+    }
+  }
+
+  # --- Step 2: Generate observations in causal order ---
+  X_mat <- matrix(0.0, n, p, dimnames = list(NULL, var_names))
+  for (i in seq_len(p)) {
+    xi_val <- noise_fn(n)                       # intrinsic noise
+    if (i > 1L) {
+      pa_idx <- which(B[i, ] != 0.0)
+      for (pa in pa_idx) {
+        xi_val <- xi_val + B[i, pa] * X_mat[, pa]
+      }
+    }
+    X_mat[, i] <- xi_val
+  }
+
+  return(list(
+    data              = as.data.frame(X_mat),
+    true_adjacency    = B,
+    true_causal_order = seq_len(p) - 1L
+  ))
+}
+
