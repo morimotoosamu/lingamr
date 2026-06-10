@@ -1,7 +1,7 @@
 Type: Package
 Package: lingamr
 Title: LiNGAM Algorithms for Causal Discovery
-Version: 0.1.0.9006
+Version: 0.1.0.9007
 Authors@R: 
     person("Osamu", "Morimoto", , "galactic.supermarket@gmail.com", role = c("aut", "cre"))
 Description: R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model)
