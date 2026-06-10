@@ -8,6 +8,9 @@
 \description{
 R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery. Based on the Python implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}.
 }
+\details{
+tutorial: \code{vignette("lingamr", package = "lingamr")}
+}
 \seealso{
 Useful links:
 \itemize{

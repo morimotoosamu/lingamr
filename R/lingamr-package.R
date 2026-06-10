@@ -1,3 +1,5 @@
+#' @details
+#' tutorial: `vignette("lingamr", package = "lingamr")`
 #' @keywords internal
 "_PACKAGE"
 
