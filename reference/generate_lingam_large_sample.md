@@ -116,6 +116,6 @@ dataset$true_causal_order            # 0, 1, ..., 19
 t10 <- system.time(lingam_direct(generate_lingam_large_sample(p = 10)$data))
 t20 <- system.time(lingam_direct(generate_lingam_large_sample(p = 20)$data))
 cat(sprintf("p=10: %.1f sec,  p=20: %.1f sec\n", t10["elapsed"], t20["elapsed"]))
-#> p=10: 0.1 sec,  p=20: 0.8 sec
+#> p=10: 0.1 sec,  p=20: 0.7 sec
 # }
 ```

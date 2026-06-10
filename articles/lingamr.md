@@ -450,7 +450,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 6.4 seconds.
+#> Completed in 6.9 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -779,7 +779,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.08 秒
 #> p = 15 : 0.22 秒
-#> 理論倍率 3.4 倍 に対して 実測 2.9 倍
+#> 理論倍率 3.4 倍 に対して 実測 2.8 倍
 ```
 
 $`p = 30`$ や $`p = 50`$
@@ -934,7 +934,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 2.7 seconds.
+#> Completed in 2.9 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>

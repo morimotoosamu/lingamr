@@ -4,6 +4,11 @@ R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model)
 algorithms for causal discovery. Based on the Python implementation by
 Ikeuchi et al. (2023) <https://github.com/cdt15/lingam>.
 
+## Details
+
+tutorial:
+[`vignette("lingamr", package = "lingamr")`](https://morimotoosamu.github.io/lingamr/articles/lingamr.md)
+
 ## See also
 
 Useful links:
