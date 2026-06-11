@@ -1,3 +1,48 @@
+#' LiNGAM モデルの残差（誤差項）を計算する
+#'
+#' 入力の検証（`LingamResult` であること・X が数値であること・次元の一致）を
+#' 行ったうえで `E = X - X B^T` を返す。残差ベースの診断関数で共通利用する。
+#'
+#' @param X 元データ (matrix or data.frame)
+#' @param lingam_result [lingam_direct()] の返り値
+#' @return 残差行列 (n_samples x n_features)。X の列名を保持する。
+#' @keywords internal
+lingam_residuals <- function(X, lingam_result) {
+  validate_lingam_result(lingam_result)
+  X <- as.matrix(X)
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.", call. = FALSE)
+  B <- lingam_result$adjacency_matrix
+  if (ncol(B) != ncol(X)) {
+    stop(
+      "X has ", ncol(X), " variables but lingam_result was estimated from ",
+      ncol(B), " variables.",
+      call. = FALSE
+    )
+  }
+  X - X %*% t(B)
+}
+
+
+#' 歪度（n割り）
+#' @param x 数値ベクトル
+#' @keywords internal
+skewness_pop <- function(x) {
+  n <- length(x)
+  x_c <- x - mean(x)
+  (sum(x_c^3) / n) / (sum(x_c^2) / n)^(3 / 2)
+}
+
+
+#' 尖度（n割り、正規分布で 0 になる超過尖度）
+#' @param x 数値ベクトル
+#' @keywords internal
+kurtosis_pop <- function(x) {
+  n <- length(x)
+  x_c <- x - mean(x)
+  (sum(x_c^4) / n) / (sum(x_c^2) / n)^2 - 3
+}
+
+
 #' 誤差の独立性検定の p 値を計算
 #'
 #' @param X 元データ (matrix or data.frame)
@@ -22,12 +67,11 @@
 #' p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000$data, result, method = "kendall")
 #' round(p_vals_k, 3)
 get_error_independence_p_values <- function(X, lingam_result, method = "spearman") {
-  X <- as.matrix(X)
-  B <- lingam_result$adjacency_matrix
-  n_features <- ncol(X)
+  method <- match.arg(method, c("spearman", "pearson", "kendall"))
 
-  # 残差（誤差項）の計算
-  E <- X - X %*% t(B)
+  # 残差（誤差項）の計算（入力検証込み）
+  E <- lingam_residuals(X, lingam_result)
+  n_features <- ncol(E)
 
   # 全ペアのインデックスを生成（対角を除く）
   pairs <- which(upper.tri(matrix(TRUE, n_features, n_features)), arr.ind = TRUE)
@@ -42,7 +86,7 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
   p_values[pairs] <- p_upper
   p_values[pairs[, 2:1]] <- p_upper # 下三角にコピー
 
-  colnames(p_values) <- rownames(p_values) <- colnames(X)
+  colnames(p_values) <- rownames(p_values) <- colnames(E)
 
   return(p_values)
 }
@@ -77,20 +121,14 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 test_residual_normality <- function(X, lingam_result,
                                     method = "shapiro",
                                     alpha = 0.05) {
-  # --- Input validation ---
-  X <- as.matrix(X)
-  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.")
-
-  B <- lingam_result$adjacency_matrix
-  n_features <- ncol(X)
-  n_samples  <- nrow(X)
+  # --- Calculate residuals: e = X - X %*% t(B)（入力検証込み）---
+  E <- lingam_residuals(X, lingam_result)
+  n_features <- ncol(E)
+  n_samples  <- nrow(E)
 
   # --- Variable names ---
-  var_names <- colnames(X)
+  var_names <- colnames(E)
   if (is.null(var_names)) var_names <- paste0("x", seq_len(n_features) - 1)
-
-  # --- Calculate residuals: e = X - X %*% t(B) ---
-  E <- X - X %*% t(B)
 
   # --- Method validation ---
   valid_methods <- c("shapiro", "ks", "ad", "lillie", "jb")
@@ -134,19 +172,6 @@ test_residual_normality <- function(X, lingam_result,
                     "jb"      = function(x) tseries::jarque.bera.test(x)
   )
 
-  # --- Calculate skewness and kurtosis ---
-  skewness <- function(x) {
-    n <- length(x)
-    x_c <- x - mean(x)
-    (sum(x_c^3) / n) / (sum(x_c^2) / n)^(3/2)
-  }
-
-  kurtosis <- function(x) {
-    n <- length(x)
-    x_c <- x - mean(x)
-    (sum(x_c^4) / n) / (sum(x_c^2) / n)^2 - 3
-  }
-
   # --- Run tests for each variable ---
   results <- data.frame(
     variable     = var_names,
@@ -168,8 +193,8 @@ test_residual_normality <- function(X, lingam_result,
     # Basic stats
     results$mean[i]     <- mean(e_i)
     results$sd[i]       <- sd(e_i)
-    results$skewness[i] <- skewness(e_i)
-    results$kurtosis[i] <- kurtosis(e_i)
+    results$skewness[i] <- skewness_pop(e_i)
+    results$kurtosis[i] <- kurtosis_pop(e_i)
 
     # Normality test
     test_result <- tryCatch(
@@ -264,12 +289,10 @@ plot_residual_qq <- function(X, lingam_result, ncol = 3, nrow = NULL) {
     stop("Package 'ggplot2' is required. Please install it.", call. = FALSE)
   }
 
-  X <- as.matrix(X)
-  B <- lingam_result$adjacency_matrix
-  E <- X - X %*% t(B)
+  E <- lingam_residuals(X, lingam_result)
 
-  var_names <- colnames(X)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(ncol(X)) - 1)
+  var_names <- colnames(E)
+  if (is.null(var_names)) var_names <- paste0("x", seq_len(ncol(E)) - 1)
 
   df <- data.frame(
     variable = rep(var_names, each = nrow(E)),

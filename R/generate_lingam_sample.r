@@ -1,3 +1,14 @@
+# =============================================================================
+# サンプルデータ生成関数
+#
+# 共通ヘルパー:
+#   make_noise_fn()         : ノイズ分布名 → 乱数生成関数（分布名の検証も担う）
+#   validate_sample_args()  : n / seed の共通バリデーション
+#   generate_noise_matrix() : 変数ごとに独立シードでノイズ列を生成
+#   build_true_adjacency()  : エッジ指定から真の隣接行列を構築
+# =============================================================================
+
+
 #' Create noise generation function
 #'
 #' Internal helper to create a noise function for the specified distribution.
@@ -34,6 +45,56 @@ make_noise_fn <- function(noise_dist) {
            "noise_dist must be one of: uniform, gaussian, lognormal, exponential, t3"
          ))
   )
+}
+
+
+#' サンプル生成関数の n / seed を検証して整数化する
+#'
+#' @param n サンプルサイズ
+#' @param seed 乱数シード
+#' @return list(n, seed)（いずれも integer）
+#' @keywords internal
+validate_sample_args <- function(n, seed) {
+  if (!is.numeric(n) || n < 2) stop("n must be an integer >= 2.")
+  if (!is.numeric(seed))       stop("seed must be numeric.")
+  list(n = as.integer(n), seed = as.integer(seed))
+}
+
+
+#' 変数ごとに独立シードでノイズ行列を生成する
+#'
+#' 列 k は `set.seed(seed + k - 1)` の直後に `noise_fn(n)` で生成される。
+#' 変数ごとにシードを固定することで、同じ seed なら常に同じノイズ列が得られる。
+#'
+#' @param n サンプルサイズ
+#' @param n_vars 変数（列）の数
+#' @param seed 基準シード。列 k には seed + k - 1 を用いる
+#' @param noise_fn `function(n)` 形式のノイズ生成関数
+#' @return ノイズ行列 (n x n_vars)
+#' @keywords internal
+generate_noise_matrix <- function(n, n_vars, seed, noise_fn) {
+  E <- matrix(0, nrow = n, ncol = n_vars)
+  for (k in seq_len(n_vars)) {
+    set.seed(seed + k - 1L)
+    E[, k] <- noise_fn(n)
+  }
+  E
+}
+
+
+#' エッジ指定から真の隣接行列を構築する
+#'
+#' @param var_names 変数名ベクトル
+#' @param from エッジの原因変数名ベクトル
+#' @param to エッジの結果変数名ベクトル（from と同じ長さ）
+#' @param coef エッジ係数ベクトル（from と同じ長さ）
+#' @return 隣接行列 (p x p)。`m[to, from] = coef`（行 = to, 列 = from）
+#' @keywords internal
+build_true_adjacency <- function(var_names, from, to, coef) {
+  p <- length(var_names)
+  m <- matrix(0, p, p, dimnames = list(var_names, var_names))
+  m[cbind(to, from)] <- coef
+  m
 }
 
 
@@ -74,55 +135,33 @@ make_noise_fn <- function(noise_dist) {
 generate_lingam_sample_6 <- function(n = 1000L,
                                      seed = 42L,
                                      noise_dist = "uniform") {
+  args <- validate_sample_args(n, seed)
+  n <- args$n
+  seed <- args$seed
 
-  # --- Input validation ---
-  if (!is.numeric(n) || n < 2) stop("n must be an integer >= 2.")
-  if (!is.numeric(seed))       stop("seed must be numeric.")
-
-  valid_dists <- c("uniform", "gaussian", "lognormal", "exponential", "t3")
-  if (!(noise_dist %in% valid_dists)) {
-    stop(sprintf("noise_dist must be one of: %s",
-                 paste(valid_dists, collapse = ", ")))
-  }
-
-  n    <- as.integer(n)
-  seed <- as.integer(seed)
-
-  # --- ノイズ生成関数 ---
+  # ノイズ生成関数（不正な noise_dist はここでエラーになる）
   noise_fn <- make_noise_fn(noise_dist)
 
   # --- Error terms（各変数に独立したシード）---
-  set.seed(seed)      ; e0 <- noise_fn(n)
-  set.seed(seed + 1L) ; e1 <- noise_fn(n)
-  set.seed(seed + 2L) ; e2 <- noise_fn(n)
-  set.seed(seed + 3L) ; e3 <- noise_fn(n)
-  set.seed(seed + 4L) ; e4 <- noise_fn(n)
-  set.seed(seed + 5L) ; e5 <- noise_fn(n)
+  E <- generate_noise_matrix(n, 6L, seed, noise_fn)
 
   # --- Data generation（因果順序に従う）---
-  x3 <- e3
-  x0 <- 3.0 * x3 + e0
-  x2 <- 6.0 * x3 + e2
-  x1 <- 3.0 * x0 + 2.0 * x2 + e1
-  x5 <- 4.0 * x0 + e5
-  x4 <- 8.0 * x0 - 1.0 * x2 + e4
+  x3 <- E[, 4]
+  x0 <- 3.0 * x3 + E[, 1]
+  x2 <- 6.0 * x3 + E[, 3]
+  x1 <- 3.0 * x0 + 2.0 * x2 + E[, 2]
+  x5 <- 4.0 * x0 + E[, 6]
+  x4 <- 8.0 * x0 - 1.0 * x2 + E[, 5]
 
   X <- data.frame(x0 = x0, x1 = x1, x2 = x2,
              x3 = x3, x4 = x4, x5 = x5)
 
-  # --- 真の隣接行列 ---
-  var_names <- names(X)
-  p <- length(var_names)
-  m_true <- matrix(0, p, p, dimnames = list(var_names, var_names))
-
-  # [row = to, col = from] = coefficient
-  m_true["x0", "x3"] <-  3.0
-  m_true["x2", "x3"] <-  6.0
-  m_true["x1", "x0"] <-  3.0
-  m_true["x1", "x2"] <-  2.0
-  m_true["x5", "x0"] <-  4.0
-  m_true["x4", "x0"] <-  8.0
-  m_true["x4", "x2"] <- -1.0
+  m_true <- build_true_adjacency(
+    names(X),
+    from = c("x3", "x3", "x0", "x2", "x0", "x0", "x2"),
+    to   = c("x0", "x2", "x1", "x1", "x5", "x4", "x4"),
+    coef = c(3.0, 6.0, 3.0, 2.0, 4.0, 8.0, -1.0)
+  )
 
   return(list(
     data           = X,
@@ -175,70 +214,40 @@ generate_lingam_sample_6 <- function(n = 1000L,
 generate_lingam_sample_10 <- function(n = 1000L,
                                       seed = 42L,
                                       noise_dist = "uniform") {
+  args <- validate_sample_args(n, seed)
+  n <- args$n
+  seed <- args$seed
 
-  # --- Input validation ---
-  if (!is.numeric(n) || n < 2) stop("n must be an integer >= 2.")
-  if (!is.numeric(seed))       stop("seed must be numeric.")
-
-  valid_dists <- c("uniform", "gaussian", "lognormal", "exponential", "t3")
-  if (!(noise_dist %in% valid_dists)) {
-    stop(sprintf("noise_dist must be one of: %s",
-                 paste(valid_dists, collapse = ", ")))
-  }
-
-  n    <- as.integer(n)
-  seed <- as.integer(seed)
-
-  # --- ノイズ生成関数 ---
+  # ノイズ生成関数（不正な noise_dist はここでエラーになる）
   noise_fn <- make_noise_fn(noise_dist)
 
   # --- Error terms（各変数に独立したシード）---
-  set.seed(seed)      ; e0 <- noise_fn(n)
-  set.seed(seed + 1L) ; e1 <- noise_fn(n)
-  set.seed(seed + 2L) ; e2 <- noise_fn(n)
-  set.seed(seed + 3L) ; e3 <- noise_fn(n)
-  set.seed(seed + 4L) ; e4 <- noise_fn(n)
-  set.seed(seed + 5L) ; e5 <- noise_fn(n)
-  set.seed(seed + 6L) ; e6 <- noise_fn(n)
-  set.seed(seed + 7L) ; e7 <- noise_fn(n)
-  set.seed(seed + 8L) ; e8 <- noise_fn(n)
-  set.seed(seed + 9L) ; e9 <- noise_fn(n)
+  E <- generate_noise_matrix(n, 10L, seed, noise_fn)
 
   # --- Data generation（因果順序に従う）---
-  x3 <- e3
-  x0 <- 3.0 * x3 + e0
-  x2 <- 6.0 * x3 + e2
-  x1 <- 3.0 * x0 + 2.0 * x2 + e1
-  x5 <- 4.0 * x0 + e5
-  x4 <- 8.0 * x0 - 1.0 * x2 + e4
-  x6 <- 2.0 * x1 + e6
-  x7 <- 1.5 * x4 + 3.0 * x0 + e7
-  x8 <- 0.5 * x2 + 2.0 * x5 + e8
-  x9 <- 7.0 * x3 + 1.0 * x6 + e9
+  x3 <- E[, 4]
+  x0 <- 3.0 * x3 + E[, 1]
+  x2 <- 6.0 * x3 + E[, 3]
+  x1 <- 3.0 * x0 + 2.0 * x2 + E[, 2]
+  x5 <- 4.0 * x0 + E[, 6]
+  x4 <- 8.0 * x0 - 1.0 * x2 + E[, 5]
+  x6 <- 2.0 * x1 + E[, 7]
+  x7 <- 1.5 * x4 + 3.0 * x0 + E[, 8]
+  x8 <- 0.5 * x2 + 2.0 * x5 + E[, 9]
+  x9 <- 7.0 * x3 + 1.0 * x6 + E[, 10]
 
   X <- data.frame(x0 = x0, x1 = x1, x2 = x2, x3 = x3, x4 = x4,
              x5 = x5, x6 = x6, x7 = x7, x8 = x8, x9 = x9)
 
-  # --- 真の隣接行列 ---
-  var_names <- names(X)
-  p <- length(var_names)
-  m_true <- matrix(0, p, p, dimnames = list(var_names, var_names))
-
-  # [row=to, col=from] = coefficient
-  m_true["x0", "x3"] <-  3.0
-  m_true["x2", "x3"] <-  6.0
-  m_true["x9", "x3"] <-  7.0
-  m_true["x1", "x0"] <-  3.0
-  m_true["x5", "x0"] <-  4.0
-  m_true["x4", "x0"] <-  8.0
-  m_true["x7", "x0"] <-  3.0
-  m_true["x1", "x2"] <-  2.0
-  m_true["x4", "x2"] <- -1.0
-  m_true["x8", "x2"] <-  0.5
-  m_true["x6", "x1"] <-  2.0
-  m_true["x8", "x5"] <-  2.0
-  m_true["x7", "x4"] <-  1.5
-  m_true["x9", "x6"] <-  1.0
+  m_true <- build_true_adjacency(
+    names(X),
+    from = c("x3", "x3", "x3", "x0", "x0", "x0", "x0",
+             "x2", "x2", "x2", "x1", "x5", "x4", "x6"),
+    to   = c("x0", "x2", "x9", "x1", "x5", "x4", "x7",
+             "x1", "x4", "x8", "x6", "x8", "x7", "x9"),
+    coef = c(3.0, 6.0, 7.0, 3.0, 4.0, 8.0, 3.0,
+             2.0, -1.0, 0.5, 2.0, 2.0, 1.5, 1.0)
+  )
 
   return(list(
     data           = X,
@@ -271,67 +280,44 @@ generate_lingam_sample_10 <- function(n = 1000L,
 generate_lingam_hard_sample <- function(n = 200L,
                                         seed = 42L,
                                         collinearity = 0.95) {
-
-  # --- Input validation ---
-  if (!is.numeric(n) || n < 2) stop("n must be an integer >= 2.")
-  if (!is.numeric(seed))       stop("seed must be numeric.")
+  args <- validate_sample_args(n, seed)
+  n <- args$n
+  seed <- args$seed
   if (collinearity < 0 || collinearity >= 1) {
     stop("collinearity must be in [0, 1).")
   }
 
-  n    <- as.integer(n)
-  seed <- as.integer(seed)
-
   # --- 多重共線性の強さパラメータ ---
   noise_scale <- sqrt(1 - collinearity^2)
 
-  # --- Error terms ---
-  set.seed(seed)      ; e0  <- runif(n)
-  set.seed(seed + 1L) ; e1  <- runif(n)
-  set.seed(seed + 2L) ; e2  <- runif(n)
-  set.seed(seed + 3L) ; e3  <- runif(n)
-  set.seed(seed + 4L) ; e4  <- runif(n)
-  set.seed(seed + 5L) ; e5  <- runif(n)
-  set.seed(seed + 6L) ; e6  <- runif(n)
-  set.seed(seed + 7L) ; e7  <- runif(n)
-  set.seed(seed + 8L) ; e8  <- runif(n)
-  set.seed(seed + 9L) ; e_c <- runif(n)
+  # --- Error terms（各変数に独立したシード。10列目は共通因子）---
+  E <- generate_noise_matrix(n, 10L, seed, runif)
 
   # --- 強い共通因子（多重共線性の源泉）---
-  common <- e_c
+  common <- E[, 10]
 
-  x0 <- collinearity * common + noise_scale * e0
-  x1 <- collinearity * common + noise_scale * e1
-  x2 <- collinearity * common + noise_scale * e2
-  x3 <- collinearity * common + noise_scale * e3
-  x4 <- collinearity * common + noise_scale * e4
+  x0 <- collinearity * common + noise_scale * E[, 1]
+  x1 <- collinearity * common + noise_scale * E[, 2]
+  x2 <- collinearity * common + noise_scale * E[, 3]
+  x3 <- collinearity * common + noise_scale * E[, 4]
+  x4 <- collinearity * common + noise_scale * E[, 5]
 
-  x5 <- 1.5 * x0 + 1.5 * x1 + 1.5 * x2 + e5
-  x6 <- 1.0 * x1 + 1.0 * x2 + 1.0 * x3 + 1.0 * x4 + e6
-  x7 <- 2.0 * x0 + 2.0 * x3 + e7
-  x8 <- 1.0 * x5 + 1.0 * x6 + e8
+  x5 <- 1.5 * x0 + 1.5 * x1 + 1.5 * x2 + E[, 6]
+  x6 <- 1.0 * x1 + 1.0 * x2 + 1.0 * x3 + 1.0 * x4 + E[, 7]
+  x7 <- 2.0 * x0 + 2.0 * x3 + E[, 8]
+  x8 <- 1.0 * x5 + 1.0 * x6 + E[, 9]
 
   X <- data.frame(
     x0 = x0, x1 = x1, x2 = x2, x3 = x3, x4 = x4,
     x5 = x5, x6 = x6, x7 = x7, x8 = x8
   )
 
-  # --- 真の隣接行列 ---
-  var_names <- names(X)
-  p <- length(var_names)
-  m_true <- matrix(0, p, p, dimnames = list(var_names, var_names))
-
-  m_true["x5", "x0"] <- 1.5
-  m_true["x5", "x1"] <- 1.5
-  m_true["x5", "x2"] <- 1.5
-  m_true["x6", "x1"] <- 1.0
-  m_true["x6", "x2"] <- 1.0
-  m_true["x6", "x3"] <- 1.0
-  m_true["x6", "x4"] <- 1.0
-  m_true["x7", "x0"] <- 2.0
-  m_true["x7", "x3"] <- 2.0
-  m_true["x8", "x5"] <- 1.0
-  m_true["x8", "x6"] <- 1.0
+  m_true <- build_true_adjacency(
+    names(X),
+    from = c("x0", "x1", "x2", "x1", "x2", "x3", "x4", "x0", "x3", "x5", "x6"),
+    to   = c("x5", "x5", "x5", "x6", "x6", "x6", "x6", "x7", "x7", "x8", "x8"),
+    coef = c(1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0)
+  )
 
   return(list(
     data           = X,
@@ -383,13 +369,9 @@ generate_lingam_hard_sample <- function(n = 200L,
 #'
 #' @export
 generate_lingam_paradox_data <- function(n = 2000L, seed = 42L) {
-
-  # --- Input validation ---
-  if (!is.numeric(n) || n < 2) stop("n must be an integer >= 2.")
-  if (!is.numeric(seed))       stop("seed must be numeric.")
-
-  n    <- as.integer(n)
-  seed <- as.integer(seed)
+  args <- validate_sample_args(n, seed)
+  n <- args$n
+  seed <- args$seed
 
   # 1. Set seed for reproducibility
   set.seed(seed)
@@ -416,13 +398,12 @@ generate_lingam_paradox_data <- function(n = 2000L, seed = 42L) {
   # 6. Standardize all variables to unify their scales
   df_scaled <- as.data.frame(scale(df))
 
-  # --- True adjacency matrix (m[row = to, col = from] = coefficient) ---
-  var_names <- names(df_scaled)
-  p <- length(var_names)
-  m_true <- matrix(0, p, p, dimnames = list(var_names, var_names))
-  m_true["x1", "x0"] <- 0.8 # x0 -> x1
-  m_true["x2", "x1"] <- 0.8 # x1 -> x2
-  m_true["x3", "x2"] <- 0.8 # x2 -> x3
+  m_true <- build_true_adjacency(
+    names(df_scaled),
+    from = c("x0", "x1", "x2"),
+    to   = c("x1", "x2", "x3"),
+    coef = c(0.8, 0.8, 0.8)
+  )
 
   return(list(
     data           = df_scaled,
@@ -577,4 +558,3 @@ generate_lingam_large_sample <- function(
     true_causal_order = seq_len(p) - 1L
   ))
 }
-

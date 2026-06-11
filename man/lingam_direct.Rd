@@ -40,8 +40,8 @@ lingam_direct(
 
 \item{init_method}{適応的LASSO回帰の初期重みの推定手法。
 "ols": 最小二乗法（デフォルト）、
-"ridge": Ridege回帰。
-多重共線性が疑われる場合はRidege回帰がおすすめ。}
+"ridge": Ridge回帰。
+多重共線性が疑われる場合はRidge回帰がおすすめ。}
 }
 \value{
 \code{LingamResult} オブジェクト（リスト）。以下の要素を含む：
