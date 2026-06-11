@@ -128,6 +128,16 @@ Portions of this work: Copyright (c) 2026 O.Morimoto
 
 - G. Kikuchi (2020). rlingam <https://github.com/gkikuchi/rlingam>
 
+## Acknowledgments
+
+We thank the following people and organization for their support in
+developing this package:
+
+- Hirohiko Asano
+- Yoshiyuki Okuse
+- Takahiko Umeyama
+- JMRA (Japan Marketing Research Association)
+
 ## Feedback
 
 Please submit bug reports and feature requests via GitHub Issues.

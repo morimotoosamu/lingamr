@@ -268,12 +268,13 @@ residual_vec <- function(xi, xj, standardized = FALSE) {
 #' @return 近似エントロピー値
 #' @keywords internal
 entropy_approx <- function(u) {
+  n <- length(u)
   k1 <- 79.047
   k2 <- 7.4129
   gamma <- 0.37457
   (1 + log(2 * pi)) / 2 -
-    k1 * (mean(log(cosh(u))) - gamma)^2 -
-    k2 * (mean(u * exp(-u^2 / 2)))^2
+    k1 * (sum(log(cosh(u))) / n - gamma)^2 -
+    k2 * (sum(u * exp(-u^2 / 2)) / n)^2
 }
 
 
@@ -322,7 +323,9 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
   Uc <- integer(0)
   for (j in U) {
     index <- setdiff(U, j)
-    if (sum(Aknw[j, index], na.rm = FALSE) == 0) {
+    # NA (不明) を含む行は sum が NA → isTRUE() で FALSE になり候補から外れる
+    # (Python 版の NaN.sum() == 0 が False になる挙動と同じ)
+    if (isTRUE(sum(Aknw[j, index]) == 0)) {
       Uc <- c(Uc, j)
     }
   }
@@ -340,7 +343,7 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
     # シンク特徴量
     for (i in U) {
       index <- setdiff(U, i)
-      if (sum(Aknw[index, i], na.rm = FALSE) == 0) {
+      if (isTRUE(sum(Aknw[index, i]) == 0)) {
         U_end <- c(U_end, i)
       }
     }
@@ -352,7 +355,7 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
   Vj <- integer(0)
   for (i in U) {
     if (i %in% Uc) next
-    if (sum(Aknw[i, Uc], na.rm = FALSE) == 0) {
+    if (isTRUE(sum(Aknw[i, Uc]) == 0)) {
       Vj <- c(Vj, i)
     }
   }
@@ -370,36 +373,107 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
 #' @keywords internal
 search_causal_order_pwling <- function(X, U, Uc, Vj) {
   if (length(Uc) == 1) return(Uc[1])
-  # --- 一括で標準化（ループ前に1回だけ）---
-  X_std <- matrix(0, nrow = nrow(X), ncol = ncol(X))
+  n <- nrow(X)
+  p <- ncol(X)
+
+  # --- 一括で標準化し、各列のエントロピーを事前計算（ペアに依存しないため）---
+  X_std <- matrix(0, nrow = n, ncol = p)
+  H <- numeric(p)
   for (k in U) {
     xk <- X[, k]
-    X_std[, k] <- (xk - mean(xk)) / sd_pop(xk)
+    xk <- xk - sum(xk) / n
+    X_std[, k] <- xk / sqrt(sum(xk * xk) / n)
+    H[k] <- entropy_approx(X_std[, k])
   }
-  M_list <- numeric(length(Uc))
-  for (idx in seq_along(Uc)) {
-    i <- Uc[idx]
-    M <- 0
+
+  # 標準化済みなので相関行列は crossprod / n（BLAS で一括計算）。
+  # 回帰係数 beta と残差の母標準偏差 sqrt(1 - r^2) はここから解析的に得られる。
+  R <- crossprod(X_std[, U, drop = FALSE]) / n
+  pos <- integer(p)
+  pos[U] <- seq_along(U)
+
+  in_Uc <- logical(p)
+  in_Uc[Uc] <- TRUE
+  in_Vj <- logical(p)
+  in_Vj[Vj] <- TRUE
+
+  M_acc <- numeric(p)
+  for (i in Uc) {
     xi_std <- X_std[, i]
     for (j in U) {
       if (i == j) next
+      # diff_mutual_info は反対称（dm_ji = -dm_ij）なので、
+      # 両方が候補のペアは i < j の側で1回だけ計算して両者に加算する
+      if (in_Uc[j] && j < i) next
       xj_std <- X_std[, j]
-      ri_j <- if (i %in% Vj && j %in% Uc) {
-        xi_std
+      r_ij <- R[pos[i], pos[j]]
+      sd_r <- sqrt(max(0, 1 - r_ij^2))
+
+      H_ri_j <- if (in_Vj[i] && in_Uc[j]) {
+        H[i]
       } else {
-        residual_vec(xi_std, xj_std, standardized = TRUE)
+        entropy_approx((xi_std - r_ij * xj_std) / sd_r)
       }
-      rj_i <- if (j %in% Vj && i %in% Uc) {
-        xj_std
+      H_rj_i <- if (in_Vj[j] && in_Uc[i]) {
+        H[j]
       } else {
-        residual_vec(xj_std, xi_std, standardized = TRUE)
+        entropy_approx((xj_std - r_ij * xi_std) / sd_r)
       }
-      dm <- diff_mutual_info(xi_std, xj_std, ri_j, rj_i)
-      M <- M + min(0, dm)^2
+
+      dm <- (H[j] + H_ri_j) - (H[i] + H_rj_i)
+      M_acc[i] <- M_acc[i] + min(0, dm)^2
+      if (in_Uc[j]) M_acc[j] <- M_acc[j] + min(0, -dm)^2
     }
-    M_list[idx] <- -1.0 * M
   }
-  return(Uc[which.max(M_list)])
+  return(Uc[which.max(-M_acc[Uc])])
+}
+
+
+#' カーネル法の相互情報量：変数1側の前計算
+#'
+#' `kernel_mi_core()` で使う行列 `E1 = tmp1^-1 K1`（`tmp1 = K1 + n*kappa/2 * I`）
+#' を計算する。候補変数ごとに1回だけ呼べばよく、ペアごとの再計算を避けられる。
+#'
+#' @param x 変数1のベクトル
+#' @param kappa 正則化パラメータ
+#' @param sigma ガウスカーネルの幅
+#' @return 行列 E1 (n x n)
+#' @keywords internal
+kernel_mi_prepare <- function(x, kappa, sigma) {
+  n <- length(x)
+  K <- exp(-1 / (2 * sigma^2) * outer(x, x, "-")^2)
+  c0 <- n * kappa / 2
+  tmp <- K
+  diag(tmp) <- diag(tmp) + c0
+  # tmp と K は可換なので E = tmp^-1 K = I - c0 * tmp^-1（対称）
+  E <- -c0 * chol2inv(chol(tmp))
+  diag(E) <- diag(E) + 1
+  E
+}
+
+
+#' カーネル法の相互情報量：本体
+#'
+#' 求める量は 2n x 2n 行列の logdet の差だが、ブロック構造と Schur 補行列により
+#' n x n の Cholesky 分解だけで等価に計算できる：
+#' `MI = -1/2 * (logdet(tmp2^2 - K2 K1 tmp1^-2 K1 K2) - logdet(tmp2^2))`
+#'
+#' @param E1 `kernel_mi_prepare()` で前計算した変数1側の行列
+#' @param x2 変数2のベクトル
+#' @param kappa 正則化パラメータ
+#' @param sigma ガウスカーネルの幅
+#' @return 相互情報量
+#' @keywords internal
+kernel_mi_core <- function(E1, x2, kappa, sigma) {
+  n <- length(x2)
+  K2 <- exp(-1 / (2 * sigma^2) * outer(x2, x2, "-")^2)
+  tmp2 <- K2
+  diag(tmp2) <- diag(tmp2) + n * kappa / 2
+  W <- E1 %*% K2                       # = tmp1^-1 K1 K2
+  S <- crossprod(tmp2) - crossprod(W)  # Schur 補行列（tmp2 は対称なので crossprod = tmp2^2）
+  logdet_S <- 2 * sum(log(diag(chol(S))))
+  logdet_tmp2_sq <- 4 * sum(log(diag(chol(tmp2))))
+  (-1 / 2) * (logdet_S - logdet_tmp2_sq)
 }
 
 
@@ -412,33 +486,8 @@ search_causal_order_pwling <- function(X, U, Uc, Vj) {
 mutual_information_kernel <- function(x1, x2, param) {
   kappa <- param[1]
   sigma <- param[2]
-  n <- length(x1)
-
-  # カーネル行列の計算
-  K1 <- exp(-1 / (2 * sigma^2) * outer(x1, x1, "-")^2)
-  K2 <- exp(-1 / (2 * sigma^2) * outer(x2, x2, "-")^2)
-
-  I_n <- diag(n)
-  tmp1 <- K1 + n * kappa * I_n / 2
-  tmp2 <- K2 + n * kappa * I_n / 2
-
-  K_kappa <- rbind(
-    cbind(tmp1 %*% tmp1, K1 %*% K2),
-    cbind(K2 %*% K1, tmp2 %*% tmp2)
-  )
-  D_kappa <- rbind(
-    cbind(tmp1 %*% tmp1, matrix(0, n, n)),
-    cbind(matrix(0, n, n), tmp2 %*% tmp2)
-  )
-
-  sigma_K <- svd(K_kappa, nu = 0, nv = 0)$d
-  sigma_D <- svd(D_kappa, nu = 0, nv = 0)$d
-
-  # 数値安定性のため、非常に小さい特異値を除外
-  sigma_K <- sigma_K[sigma_K > .Machine$double.eps]
-  sigma_D <- sigma_D[sigma_D > .Machine$double.eps]
-
-  return((-1 / 2) * (sum(log(sigma_K)) - sum(log(sigma_D))))
+  E1 <- kernel_mi_prepare(x1, kappa, sigma)
+  kernel_mi_core(E1, x2, kappa, sigma)
 }
 
 
@@ -461,10 +510,14 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
     param <- c(2e-2, 1.0)
   }
 
+  kappa <- param[1]
+  sigma <- param[2]
   Tkernels <- numeric(length(Uc))
 
   for (idx in seq_along(Uc)) {
     j <- Uc[idx]
+    # 候補 j 側のカーネル行列・逆行列は内側ループで不変なので1回だけ計算する
+    E1 <- kernel_mi_prepare(X[, j], kappa, sigma)
     Tkernel <- 0
     for (i in U) {
       if (i == j) next
@@ -473,12 +526,28 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
       } else {
         residual_vec(X[, i], X[, j])
       }
-      Tkernel <- Tkernel + mutual_information_kernel(X[, j], ri_j, param)
+      Tkernel <- Tkernel + kernel_mi_core(E1, ri_j, kappa, sigma)
     }
     Tkernels[idx] <- Tkernel
   }
 
   return(Uc[which.min(Tkernels)])
+}
+
+
+#' glmnet が利用可能か確認する
+#'
+#' 利用できない場合は、どの回帰手法で必要になったかを示すエラーを出す。
+#'
+#' @param method glmnet を必要とする回帰手法名（エラーメッセージ用）
+#' @keywords internal
+check_glmnet_available <- function(method) {
+  if (!requireNamespace("glmnet", quietly = TRUE)) {
+    stop(sprintf(
+      "Package 'glmnet' is required for reg_method = \"%s\". Please install it.",
+      method
+    ), call. = FALSE)
+  }
 }
 
 
@@ -515,9 +584,9 @@ estimate_adjacency_matrix <- function(X,
     ))
   }
 
-  # glmnet の確認
-  if (!requireNamespace("glmnet", quietly = TRUE)) {
-    stop("Package 'glmnet' is required. Please install it.", call. = FALSE)
+  # glmnet の確認（OLS は base R のみで動作するため不要）
+  if (method != "ols") {
+    check_glmnet_available(method)
   }
 
   n_features <- ncol(X)
@@ -618,10 +687,7 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
     return(fit_ols(y, Xp))
   }
 
-  # glmnet の確認
-  if (!requireNamespace("glmnet", quietly = TRUE)) {
-    stop("Package 'glmnet' is required. Please install it.", call. = FALSE)
-  }
+  check_glmnet_available("lasso")
 
   Xp_mat <- as.matrix(Xp)
 
@@ -667,9 +733,7 @@ fit_adaptive_lasso <- function(y, Xp,
                                gamma_weight = 1.0,
                                init_method = "ols") {
   if (ncol(Xp) == 1) return(fit_ols(y, Xp))
-  if (!requireNamespace("glmnet", quietly = TRUE)) {
-    return(fit_ols(y, Xp))
-  }
+  check_glmnet_available("adaptive_lasso")
 
   Xp_mat <- as.matrix(Xp)
   n <- nrow(Xp_mat) # サンプルサイズ n を取得
