@@ -467,7 +467,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 5.0 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 3.2 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -735,7 +735,7 @@ p 値を返します。</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Direct LiNGAM : %.2f 秒\nICA-LiNGAM    : %.2f 秒\n"</span>,</span>
 <span>            <span class="va">t_cmp_direct</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="va">t_cmp_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Direct LiNGAM : 0.02 秒</span></span>
+<span><span class="co">#&gt; Direct LiNGAM : 0.01 秒</span></span>
 <span><span class="co">#&gt; ICA-LiNGAM    : 0.02 秒</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -852,9 +852,9 @@ p 値を返します。</p>
 <span>  <span class="fl">15</span><span class="op">^</span><span class="fl">3</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">3</span>,</span>
 <span>  <span class="va">t15</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t10</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; p = 10 : 0.04 秒</span></span>
-<span><span class="co">#&gt; p = 15 : 0.07 秒</span></span>
-<span><span class="co">#&gt; 理論倍率 3.4 倍 に対して 実測 2.0 倍</span></span></code></pre></div>
+<span><span class="co">#&gt; p = 10 : 0.03 秒</span></span>
+<span><span class="co">#&gt; p = 15 : 0.06 秒</span></span>
+<span><span class="co">#&gt; 理論倍率 3.4 倍 に対して 実測 1.8 倍</span></span></code></pre></div>
 <p>ICA-LiNGAM を同じデータで実行して速度を直接比較します。</p>
 <div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
@@ -866,7 +866,7 @@ p 値を返します。</p>
 <span>  <span class="va">t10_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="va">t15_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;               p = 10   p = 15</span></span>
-<span><span class="co">#&gt; Direct LiNGAM :  0.04 秒   0.07 秒</span></span>
+<span><span class="co">#&gt; Direct LiNGAM :  0.03 秒   0.06 秒</span></span>
 <span><span class="co">#&gt; ICA-LiNGAM    :  0.02 秒   0.03 秒</span></span></code></pre></div>
 <p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
 が大きくなるほど Direct LiNGAM の
@@ -1005,7 +1005,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 2.2 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.6 seconds.</span></span>
 <span></span>
 <span><span class="co"># 各方向の出現確率（行 = to, 列 = from）</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>

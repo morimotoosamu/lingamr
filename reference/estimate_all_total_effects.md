@@ -9,7 +9,8 @@ estimate_all_total_effects(
   X,
   lingam_result,
   method = "adaptive_lasso",
-  lambda = "BIC"
+  lambda = "BIC",
+  init_method = "ols"
 )
 ```
 
@@ -30,6 +31,10 @@ estimate_all_total_effects(
 - lambda:
 
   ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
+
+- init_method:
+
+  適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
 
 ## Value
 

@@ -13,6 +13,7 @@ lingam_direct_bootstrap(
   measure = "pwling",
   reg_method = "adaptive_lasso",
   lambda = "BIC",
+  init_method = "ols",
   seed = NULL,
   verbose = TRUE,
   parallel = FALSE,
@@ -49,6 +50,12 @@ lingam_direct_bootstrap(
 - lambda:
 
   ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
+
+- init_method:
+
+  適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
+  [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+  の同名引数と同じ。
 
 - seed:
 
@@ -123,7 +130,7 @@ bs_lasso <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.4 seconds.
+#> Completed in 0.9 seconds.
 
 # Parallel execution on 2 cores
 bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,

@@ -54,7 +54,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, s
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.4 seconds.
+#> Completed in 1.0 seconds.
 get_adjacency_matrix_summary(bs_model)
 #>          [,1]       [,2]       [,3]     [,4]       [,5] [,6]
 #> [1,] 0.000000 0.05299398  0.0000000 3.032919  0.1045919    0

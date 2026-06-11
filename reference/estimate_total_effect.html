@@ -46,7 +46,8 @@
 <span>  <span class="va">from_index</span>,</span>
 <span>  <span class="va">to_index</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"adaptive_lasso"</span>,</span>
-<span>  lambda <span class="op">=</span> <span class="st">"BIC"</span></span>
+<span>  lambda <span class="op">=</span> <span class="st">"BIC"</span>,</span>
+<span>  init_method <span class="op">=</span> <span class="st">"ols"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -76,6 +77,10 @@
 
 <dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
 <dd><p>ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")デフォルトはBIC</p></dd>
+
+
+<dt id="arg-init-method">init_method<a class="anchor" aria-label="anchor" href="#arg-init-method"></a></dt>
+<dd><p>適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")</p></dd>
 
 </dl></div>
     <div class="section level2">

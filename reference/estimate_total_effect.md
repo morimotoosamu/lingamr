@@ -11,7 +11,8 @@ estimate_total_effect(
   from_index,
   to_index,
   method = "adaptive_lasso",
-  lambda = "BIC"
+  lambda = "BIC",
+  init_method = "ols"
 )
 ```
 
@@ -41,6 +42,10 @@ estimate_total_effect(
 
   ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC",
   "oracle")デフォルトはBIC
+
+- init_method:
+
+  適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
 
 ## Value
 

@@ -16,4 +16,5 @@ ic_glmnet(glmnet_model)
 
 ## Value
 
-list with lambda_AIC_best, lambda_BIC_best, ic_table
+list with lambda_AIC_best, lambda_BIC_best, idx_AIC_best, idx_BIC_best,
+ic_table
