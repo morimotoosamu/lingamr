@@ -450,7 +450,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 6.4 seconds.
+#> Completed in 5.0 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -722,6 +722,93 @@ x10k$true_adjacency |>
   )
 ```
 
+## ICA-LiNGAM と Direct LiNGAM の比較
+
+[`pcalg::lingam()`](https://rdrr.io/pkg/pcalg/man/LINGAM.html) は
+FastICA で混合行列を推定し、因果順序と係数を求める オリジナルの LiNGAM
+アルゴリズムです（Shimizu et al. 2006）。
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+とは独立したアプローチを取りながら同じ問題を解きます。
+
+### 両アルゴリズムの実行
+
+同じ 6 変数データセット（$`n = 1000`$）を両手法で分析します。
+
+``` r
+
+d_cmp <- generate_lingam_sample_6(n = 1000, seed = 42)
+
+t_cmp_direct <- system.time(res_cmp_direct <- lingam_direct(d_cmp$data))
+t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data)))
+
+cat(sprintf("Direct LiNGAM : %.2f 秒\nICA-LiNGAM    : %.2f 秒\n",
+            t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
+#> Direct LiNGAM : 0.02 秒
+#> ICA-LiNGAM    : 0.02 秒
+```
+
+### 推定係数の比較
+
+`$Bpruned` は lingamr の隣接行列と同じ規約です（`B[i, j]` =
+$`x_j \to x_i`$ の係数）。
+
+``` r
+
+B_ica <- res_cmp_ica$Bpruned
+rownames(B_ica) <- colnames(B_ica) <- names(d_cmp$data)
+
+idx_ica  <- which(abs(B_ica) > 0, arr.ind = TRUE)
+tidy_ica <- data.frame(
+  from  = colnames(B_ica)[idx_ica[, 2]],
+  to    = rownames(B_ica)[idx_ica[, 1]],
+  ica   = round(B_ica[idx_ica], 3)
+)
+
+tidy_dir <- tidy(res_cmp_direct)
+tidy_dir <- data.frame(from = tidy_dir$from, to = tidy_dir$to,
+                       direct = round(tidy_dir$estimate, 3))
+
+merge(tidy_dir, tidy_ica, by = c("from", "to"), sort = TRUE)
+#>   from to direct    ica
+#> 1   x0 x1  2.988  3.245
+#> 2   x0 x4  8.017  7.999
+#> 3   x0 x5  4.015  3.876
+#> 4   x2 x1  2.002  1.973
+#> 5   x2 x4 -1.009 -1.060
+#> 6   x3 x0  3.033  3.027
+#> 7   x3 x2  5.993  6.101
+```
+
+### DAG 構造の比較
+
+全エッジの完全外部結合で構造を比較し、真の DAG との整合性を確認します。
+
+``` r
+
+B_true   <- d_cmp$true_adjacency
+idx_true <- which(abs(B_true) > 0, arr.ind = TRUE)
+true_key <- paste(colnames(B_true)[idx_true[, 2]],
+                  rownames(B_true)[idx_true[, 1]], sep = "->")
+
+cmp <- merge(tidy_dir, tidy_ica, by = c("from", "to"), all = TRUE, sort = TRUE)
+cmp$truth <- paste(cmp$from, cmp$to, sep = "->") %in% true_key
+cmp
+#>   from to direct    ica truth
+#> 1   x0 x1  2.988  3.245  TRUE
+#> 2   x0 x4  8.017  7.999  TRUE
+#> 3   x0 x5  4.015  3.876  TRUE
+#> 4   x2 x1  2.002  1.973  TRUE
+#> 5   x2 x4 -1.009 -1.060  TRUE
+#> 6   x3 x0  3.033  3.027  TRUE
+#> 7   x3 x2  5.993  6.101  TRUE
+```
+
+`direct`・`ica` 列が `NA`
+の場合、その手法はそのエッジを検出しなかったことを意味します。
+`truth = TRUE` は真の DAG に存在するエッジです。
+
+------------------------------------------------------------------------
+
 ## 変数が多い場合：スケーラビリティの壁
 
 Direct LiNGAM は各ステップで残りの全変数ペアに独立性検定を実施します。
@@ -777,16 +864,31 @@ cat(sprintf(
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.07 秒
-#> p = 15 : 0.19 秒
-#> 理論倍率 3.4 倍 に対して 実測 2.8 倍
+#> p = 10 : 0.04 秒
+#> p = 15 : 0.07 秒
+#> 理論倍率 3.4 倍 に対して 実測 2.0 倍
 ```
 
-$`p = 30`$ や $`p = 50`$
-など大規模な設定になると実行時間は数十秒〜数分に達します。
-こうした場面では ICA-LiNGAM（[lingam Python
-パッケージ](https://github.com/cdt15/lingam)）が
-計算効率で大きく優位になります。
+ICA-LiNGAM を同じデータで実行して速度を直接比較します。
+
+``` r
+
+t10_ica <- system.time({ pcalg::lingam(as.matrix(d10$data)) })
+t15_ica <- system.time({ pcalg::lingam(as.matrix(d15$data)) })
+
+cat(sprintf(
+  "              p = 10   p = 15\nDirect LiNGAM : %5.2f 秒  %5.2f 秒\nICA-LiNGAM    : %5.2f 秒  %5.2f 秒\n",
+  t10["elapsed"], t15["elapsed"],
+  t10_ica["elapsed"], t15_ica["elapsed"]
+))
+#>               p = 10   p = 15
+#> Direct LiNGAM :  0.04 秒   0.07 秒
+#> ICA-LiNGAM    :  0.02 秒   0.03 秒
+```
+
+$`p`$ が大きくなるほど Direct LiNGAM の $`O(p^3)`$
+コストが効き、両者の差が広がります。 $`p = 30`$ や $`p = 50`$
+など大規模な設定では、この傾向はさらに顕著になります。
 
 ### 推定精度の確認（p = 10）
 
@@ -934,7 +1036,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 2.6 seconds.
+#> Completed in 2.2 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>

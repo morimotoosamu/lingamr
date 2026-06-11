@@ -9,6 +9,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/news/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.LingamResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calculate_total_effect.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/check_glmnet_available.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/create_bootstrap_result.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/diff_mutual_info.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/entropy_approx.html</loc></url>
@@ -36,6 +37,8 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.LingamResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/ic_glmnet.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/index.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_core.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_prepare.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_direct.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingamr-package.html</loc></url>
