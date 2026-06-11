@@ -51,8 +51,8 @@ lingam_direct(
 - init_method:
 
   適応的LASSO回帰の初期重みの推定手法。 "ols":
-  最小二乗法（デフォルト）、 "ridge": Ridege回帰。
-  多重共線性が疑われる場合はRidege回帰がおすすめ。
+  最小二乗法（デフォルト）、 "ridge": Ridge回帰。
+  多重共線性が疑われる場合はRidge回帰がおすすめ。
 
 ## Value
 

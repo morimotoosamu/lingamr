@@ -450,7 +450,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.2 seconds.
+#> Completed in 3.5 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -866,7 +866,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 秒
 #> p = 15 : 0.06 秒
-#> 理論倍率 3.4 倍 に対して 実測 1.8 倍
+#> 理論倍率 3.4 倍 に対して 実測 2.2 倍
 ```
 
 ICA-LiNGAM を同じデータで実行して速度を直接比較します。
@@ -1036,7 +1036,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.6 seconds.
+#> Completed in 1.4 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>

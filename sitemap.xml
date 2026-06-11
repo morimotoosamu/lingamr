@@ -8,6 +8,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/news/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.LingamResult.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/build_true_adjacency.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calculate_total_effect.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_glmnet_available.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/create_bootstrap_result.html</loc></url>
@@ -26,6 +27,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_noise_matrix.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_adjacency_matrix_summary.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.html</loc></url>
@@ -39,8 +41,10 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_core.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_prepare.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/kurtosis_pop.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_direct.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_residuals.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingamr-package.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/make_noise_fn.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.html</loc></url>
@@ -59,11 +63,12 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/search_candidate.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/search_causal_order_kernel.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/search_causal_order_pwling.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/skewness_pop.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/summary_lingam.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.BootstrapResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.LingamResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_lingam_result.html</loc></url>
-<url><loc>https://morimotoosamu.github.io/lingamr/reference/var_pop.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_sample_args.html</loc></url>
 </urlset>
 

@@ -136,6 +136,10 @@ developing this package:
 - Takahiko Umeyama
 - JMRA (Japan Marketing Research Association)
 
+Development of this package was assisted by AI coding tools (Google
+Gemini and Anthropic Claude). All AI-generated code was reviewed,
+tested, and validated by the author.
+
 ## Feedback
 
 Please submit bug reports and feature requests via GitHub Issues.
