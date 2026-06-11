@@ -8,7 +8,8 @@ estimate_all_total_effects(
   X,
   lingam_result,
   method = "adaptive_lasso",
-  lambda = "BIC"
+  lambda = "BIC",
+  init_method = "ols"
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ estimate_all_total_effects(
 \item{method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
 
 \item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")}
+
+\item{init_method}{適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")}
 }
 \value{
 総合因果効果の行列 (n_features x n_features)。

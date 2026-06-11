@@ -649,7 +649,8 @@ fit_ols <- function(y, Xp) {
 #' Select lambda by information criterion
 #'
 #' @param glmnet_model a glmnet model object
-#' @return list with lambda_AIC_best, lambda_BIC_best, ic_table
+#' @return list with lambda_AIC_best, lambda_BIC_best, idx_AIC_best,
+#'   idx_BIC_best, ic_table
 #' @keywords internal
 ic_glmnet <- function(glmnet_model) {
   tLL <- glmnet_model$nulldev - deviance(glmnet_model)
@@ -663,9 +664,13 @@ ic_glmnet <- function(glmnet_model) {
     AIC   = AIC,
     BIC    = BIC
   )
+  idx_AIC_best <- which.min(ic_table$AIC)
+  idx_BIC_best <- which.min(ic_table$BIC)
   list(
-    lambda_AIC_best = ic_table$lambda[which.min(ic_table$AIC)],
-    lambda_BIC_best  = ic_table$lambda[which.min(ic_table$BIC)],
+    lambda_AIC_best = ic_table$lambda[idx_AIC_best],
+    lambda_BIC_best  = ic_table$lambda[idx_BIC_best],
+    idx_AIC_best     = idx_AIC_best,
+    idx_BIC_best     = idx_BIC_best,
     ic_table         = ic_table
   )
 }
@@ -702,8 +707,10 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
     )
 
     ic <- ic_glmnet(fit)
-    lambda_val <- if (lambda == "AIC") ic$lambda_AIC_best else ic$lambda_BIC_best
-    coef_vec <- as.numeric(stats::coef(fit, s = lambda_val))[-1]
+    # 選んだ lambda は fit$lambda 上の1点なので、coef(fit, s = ...) の
+    # 補間を経由せず列インデックスで直接取り出す（結果は同一で高速）
+    k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
+    coef_vec <- as.numeric(fit$beta[, k_best])
 
   } else {
     cv_fit <- glmnet::cv.glmnet(
@@ -770,14 +777,17 @@ fit_adaptive_lasso <- function(y, Xp,
     lambda = lambda_seq  # ← 探索範囲を明示的に指定
   )
 
+  if (lambda %in% c("AIC", "BIC")) {
+    ic <- ic_glmnet(fit)
+    # fit$lambda 上の1点なので補間せず列インデックスで直接取り出す
+    k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
+    coef_vec <- as.numeric(fit$beta[, k_best])
+    return(coef_vec)
+  }
+
   if (lambda == "oracle") {
+    # オラクル lambda は探索グリッド上にないため coef() で補間する
     lambda_val <- 5 / (n^(1.75))
-  } else if (lambda == "BIC") {
-    ic <- ic_glmnet(fit)
-    lambda_val <- ic$lambda_BIC_best
-  } else if (lambda == "AIC") {
-    ic <- ic_glmnet(fit)
-    lambda_val <- ic$lambda_AIC_best
   } else {
     cv_fit <- glmnet::cv.glmnet(
       x = Xp_mat, y = y, alpha = 1,

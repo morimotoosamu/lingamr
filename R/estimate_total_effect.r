@@ -6,6 +6,7 @@
 #' @param to_index 結果変数 (1-based index or 変数名)
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはadaptive_lasso
 #' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")デフォルトはBIC
+#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
 #' @return 推定された総合因果効果
 #' @importFrom stats cov
 #' @export
@@ -18,10 +19,12 @@
 #' LiNGAM_sample_1000$data |>
 #'   estimate_total_effect(model, 4, 1)
 estimate_total_effect <- function(X, lingam_result, from_index, to_index,
-                                  method = "adaptive_lasso", lambda = "BIC") {
+                                  method = "adaptive_lasso", lambda = "BIC",
+                                  init_method = "ols") {
   validate_lingam_result(lingam_result)
   method <- match.arg(method, c("adaptive_lasso", "lasso", "ols"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+  init_method <- match.arg(init_method, c("ols", "ridge"))
 
   if (is.data.frame(X)) {
     col_names <- colnames(X)
@@ -97,7 +100,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
   coefs <- switch(method,
     "ols"            = fit_ols(y, Xp),
     "lasso"          = fit_lasso(y, Xp, lambda),
-    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda)
+    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda, init_method = init_method)
   )
 
   return(coefs[from_pos])
@@ -110,6 +113,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @param lingam_result lingam_direct() の返り値
 #' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
 #' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
+#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
 #' @return 総合因果効果の行列 (n_features x n_features)。
 #'   **規則: `TE[i, j]` は変数 j から変数 i への総合因果効果（j → i）。**
 #'   隣接行列 `adjacency_matrix` と同じ添字規則。直接効果と間接効果の合計。
@@ -126,10 +130,12 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 estimate_all_total_effects <- function(X,
                                        lingam_result,
                                        method = "adaptive_lasso",
-                                       lambda = "BIC") {
+                                       lambda = "BIC",
+                                       init_method = "ols") {
   validate_lingam_result(lingam_result)
   method <- match.arg(method, c("adaptive_lasso", "lasso", "ols"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+  init_method <- match.arg(init_method, c("ols", "ridge"))
 
   X <- as.matrix(X)
   n_features <- ncol(X)
@@ -150,6 +156,9 @@ estimate_all_total_effects <- function(X,
     colnames(TE) <- colnames(X)
   }
 
+  # 共分散行列はループ不変なので1回だけ計算する（OLS 経路でのみ使用）
+  cov_mat <- if (method == "ols") cov(X) else NULL
+
   for (i in 1:(n_features - 1)) {
     from_idx <- causal_order[i]
 
@@ -161,7 +170,6 @@ estimate_all_total_effects <- function(X,
 
     if (method == "ols") {
       # --- OLS: 共分散行列ベースで一括計算（最速）---
-      cov_mat <- cov(X)
       cov_xx <- cov_mat[predictors, predictors, drop = FALSE]
       cov_xy <- cov_mat[predictors, downstream, drop = FALSE]
       beta_mat <- solve(cov_xx, cov_xy)
@@ -173,7 +181,8 @@ estimate_all_total_effects <- function(X,
         y <- X[, to_idx]
         coefs <- switch(method,
           "lasso"          = fit_lasso(y, Xp, lambda),
-          "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda)
+          "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda,
+                                                init_method = init_method)
         )
         TE[to_idx, from_idx] <- coefs[from_pos]
       }

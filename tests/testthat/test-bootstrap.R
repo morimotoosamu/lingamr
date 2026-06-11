@@ -1,3 +1,31 @@
+test_that("lingam_direct_bootstrap validates inputs before running", {
+  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+
+  expect_error(lingam_direct_bootstrap(dat$data, n_sampling = 5L, measure = "bad"))
+  expect_error(lingam_direct_bootstrap(dat$data, n_sampling = 5L, reg_method = "bad"))
+  expect_error(lingam_direct_bootstrap(dat$data, n_sampling = 5L, lambda = "bad"))
+  expect_error(lingam_direct_bootstrap(dat$data, n_sampling = 5L, init_method = "bad"))
+  expect_error(
+    lingam_direct_bootstrap(dat$data, n_sampling = "abc"),
+    "n_sampling must be a positive integer"
+  )
+  expect_error(
+    lingam_direct_bootstrap(dat$data, n_sampling = 0L),
+    "n_sampling must be a positive integer"
+  )
+})
+
+test_that("lingam_direct_bootstrap passes init_method through", {
+  skip_if_not_installed("glmnet")
+  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+
+  bs <- lingam_direct_bootstrap(dat$data,
+    n_sampling = 2L, seed = 42L, verbose = FALSE,
+    reg_method = "adaptive_lasso", init_method = "ridge"
+  )
+  expect_s3_class(bs, "BootstrapResult")
+})
+
 test_that("lingam_direct_bootstrap returns BootstrapResult", {
   dat <- generate_lingam_sample_6(n = 300, seed = 1)
   bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, seed = 42L)

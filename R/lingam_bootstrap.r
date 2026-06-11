@@ -18,6 +18,8 @@
 #' @param measure 独立性の評価尺度 ("pwling" or "kernel")
 #' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso")
 #' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
+#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
+#'   `lingam_direct()` の同名引数と同じ。
 #' @param seed 乱数シード (NULL可)
 #' @param verbose 進捗を表示するか (logical)
 #' @param parallel 並列処理を行うか (logical)。`TRUE` の場合、各ブートストラップ
@@ -68,14 +70,23 @@ lingam_direct_bootstrap <- function(X,
                              measure = "pwling",
                              reg_method = "adaptive_lasso",
                              lambda = "BIC",
+                             init_method = "ols",
                              seed = NULL,
                              verbose = TRUE,
                              parallel = FALSE,
                              n_cores = NULL) {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix.")
-  n_sampling <- as.integer(n_sampling)
-  if (n_sampling <= 0) stop("n_sampling must be > 0.")
+  # 不正な引数は反復の中（並列時はワーカー内）で分かりにくいエラーになるため、
+  # クラスター起動前にここで検証する
+  measure <- match.arg(measure, c("pwling", "kernel"))
+  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols"))
+  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+  init_method <- match.arg(init_method, c("ols", "ridge"))
+  n_sampling <- suppressWarnings(as.integer(n_sampling))
+  if (length(n_sampling) != 1 || is.na(n_sampling) || n_sampling <= 0) {
+    stop("n_sampling must be a positive integer.", call. = FALSE)
+  }
   n_samples <- nrow(X)
   n_features <- ncol(X)
 
@@ -89,12 +100,14 @@ lingam_direct_bootstrap <- function(X,
       apply_prior_knowledge_softly = apply_prior_knowledge_softly,
       measure = measure,
       reg_method = reg_method,
-      lambda = lambda
+      lambda = lambda,
+      init_method = init_method
     )
     te <- estimate_all_total_effects(
       resampled_X, result,
       method = reg_method,
-      lambda = lambda
+      lambda = lambda,
+      init_method = init_method
     )
     list(
       idx              = idx,
@@ -721,6 +734,7 @@ get_adjacency_matrix_summary <- function(result,
   }
 
   if (is.null(min_causal_effect)) min_causal_effect <- 0.0
+  if (min_causal_effect < 0) stop("min_causal_effect must be >= 0.")
   if (is.null(min_probability)) min_probability <- 0.0
 
   am_array <- result$adjacency_matrices

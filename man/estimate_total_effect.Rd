@@ -10,7 +10,8 @@ estimate_total_effect(
   from_index,
   to_index,
   method = "adaptive_lasso",
-  lambda = "BIC"
+  lambda = "BIC",
+  init_method = "ols"
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ estimate_total_effect(
 \item{method}{回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはadaptive_lasso}
 
 \item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")デフォルトはBIC}
+
+\item{init_method}{適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")}
 }
 \value{
 推定された総合因果効果

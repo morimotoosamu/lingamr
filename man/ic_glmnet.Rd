@@ -10,7 +10,8 @@ ic_glmnet(glmnet_model)
 \item{glmnet_model}{a glmnet model object}
 }
 \value{
-list with lambda_AIC_best, lambda_BIC_best, ic_table
+list with lambda_AIC_best, lambda_BIC_best, idx_AIC_best,
+idx_BIC_best, ic_table
 }
 \description{
 Select lambda by information criterion

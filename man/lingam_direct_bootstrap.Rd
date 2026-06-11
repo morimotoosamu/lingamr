@@ -12,6 +12,7 @@ lingam_direct_bootstrap(
   measure = "pwling",
   reg_method = "adaptive_lasso",
   lambda = "BIC",
+  init_method = "ols",
   seed = NULL,
   verbose = TRUE,
   parallel = FALSE,
@@ -32,6 +33,9 @@ lingam_direct_bootstrap(
 \item{reg_method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
 
 \item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")}
+
+\item{init_method}{適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
+\code{lingam_direct()} の同名引数と同じ。}
 
 \item{seed}{乱数シード (NULL可)}
 
