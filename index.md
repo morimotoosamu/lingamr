@@ -90,9 +90,6 @@ execution) — see the vignette:
 vignette("lingamr")
 ```
 
-It is also available online at the [package
-website](https://morimotoosamu.github.io/lingamr/).
-
 ## Licence
 
 MIT License

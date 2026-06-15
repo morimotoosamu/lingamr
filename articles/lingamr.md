@@ -682,7 +682,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.2 seconds.
+#> Completed in 3.4 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -1106,7 +1106,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 sec
 #> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.2x
+#> theoretical factor 3.4x vs. observed 2.1x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1282,7 +1282,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.6 seconds.
+#> Completed in 1.4 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
