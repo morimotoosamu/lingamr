@@ -32,14 +32,16 @@ estimate_adjacency_matrix(
 - method:
 
   回帰手法 "ols" : 通常の最小二乗法（デフォルト） "lasso" :
-  LASSO回帰（glmnet） "adaptive_lasso": Adaptive LASSO（2段階）
+  LASSO回帰（glmnet） "adaptive_lasso": Adaptive LASSO（2段階） "ridge"
+  : Ridge回帰（glmnet）
 
 - lambda:
 
   LASSO のペナルティ (NULL = 交差検証で自動選択) "lambda.min" :
   予測誤差最小 "lambda.1se" : 1SE ルール（よりスパース） "AIC" :
   AIC最小（CVなし、高速） "BIC" :
-  BIC最小（CVなし、高速、最もスパース）デフォルト
+  BIC最小（CVなし、高速、最もスパース）デフォルト "oracle" : Adaptive
+  LASSO 専用。Ridge では使用不可。
 
 - init_method:
 

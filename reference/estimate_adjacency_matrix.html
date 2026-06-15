@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9008</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,8 @@
 <dd><p>回帰手法
 "ols"           : 通常の最小二乗法（デフォルト）
 "lasso"         : LASSO回帰（glmnet）
-"adaptive_lasso": Adaptive LASSO（2段階）</p></dd>
+"adaptive_lasso": Adaptive LASSO（2段階）
+"ridge"         : Ridge回帰（glmnet）</p></dd>
 
 
 <dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
@@ -78,7 +79,8 @@
 "lambda.min" : 予測誤差最小
 "lambda.1se" : 1SE ルール（よりスパース）
 "AIC"       : AIC最小（CVなし、高速）
-"BIC"        : BIC最小（CVなし、高速、最もスパース）デフォルト</p></dd>
+"BIC"        : BIC最小（CVなし、高速、最もスパース）デフォルト
+"oracle"     : Adaptive LASSO 専用。Ridge では使用不可。</p></dd>
 
 
 <dt id="arg-init-method">init_method<a class="anchor" aria-label="anchor" href="#arg-init-method"></a></dt>

@@ -26,3 +26,15 @@ Useful links:
 Authors:
 
 - Osamu Morimoto <galactic.supermarket@gmail.com>
+
+Other contributors:
+
+- T. Ikeuchi \[copyright holder\]
+
+- G. Haraoka \[copyright holder\]
+
+- M. Ide \[copyright holder\]
+
+- W. Kurebayashi \[copyright holder\]
+
+- S. Shimizu \[copyright holder\]

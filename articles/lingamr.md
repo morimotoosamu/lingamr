@@ -18,7 +18,7 @@ library(lingamr)
 |----|:--:|:--:|----|
 | [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md) | 6 | 1,000 | 標準的な固定構造。このビニェットの主な例 |
 | [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md) | 10 | 1,000 | 6 変数の拡張版（[より大きなデータセット](#%E3%82%88%E3%82%8A%E5%A4%A7%E3%81%8D%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%8810-%E5%A4%89%E6%95%B0)で使用） |
-| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | 多重共線性が強い難しい設定（後述） |
+| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | 多重共線性が強い難しい設定 |
 | [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md) | 可変 | 1,000 | 任意の変数数のランダムスパース DAG（[スケーラビリティの壁](#%E5%A4%89%E6%95%B0%E3%81%8C%E5%A4%9A%E3%81%84%E5%A0%B4%E5%90%88%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%81%AE%E5%A3%81)で使用） |
 | [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md) | 4 | 2,000 | 測定誤差パラドックス（[パラドックスの例](#directlingam-%E3%81%8C%E8%8B%A6%E6%88%A6%E3%81%99%E3%82%8B%E4%BE%8B%E6%B8%AC%E5%AE%9A%E8%AA%A4%E5%B7%AE%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9)で使用） |
 
@@ -69,96 +69,6 @@ x1k$true_adjacency |>
     shape   = "circle"
   )
 ```
-
-### generate_lingam_hard_sample()
-
-[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
-は、多重共線性が強い設定（デフォルト: `collinearity = 0.95`）
-で生成した難しい 9 変数データです。x0〜x4 は強い共通因子を持ち、 x5〜x8
-はそれらの線形結合で構成されます。
-
-``` r
-
-hard <- generate_lingam_hard_sample(n = 500, seed = 42)
-
-# 真の隣接行列（エッジのある部分のみ表示）
-round(hard$true_adjacency, 1)
-#>     x0  x1  x2 x3 x4 x5 x6 x7 x8
-#> x0 0.0 0.0 0.0  0  0  0  0  0  0
-#> x1 0.0 0.0 0.0  0  0  0  0  0  0
-#> x2 0.0 0.0 0.0  0  0  0  0  0  0
-#> x3 0.0 0.0 0.0  0  0  0  0  0  0
-#> x4 0.0 0.0 0.0  0  0  0  0  0  0
-#> x5 1.5 1.5 1.5  0  0  0  0  0  0
-#> x6 0.0 1.0 1.0  1  1  0  0  0  0
-#> x7 2.0 0.0 0.0  2  0  0  0  0  0
-#> x8 0.0 0.0 0.0  0  0  1  1  0  0
-```
-
-多重共線性が強い場合、OLS は係数推定が不安定になりがちです。
-`reg_method = "ridge"` を使うと、Ridge 回帰（$`\ell_2`$ 正則化）が
-多重共線性を直接吸収するため、係数の安定性が向上します。
-
-``` r
-
-# OLS（全エッジを推定。多重共線性に弱い）
-fit_ols   <- lingam_direct(hard$data, reg_method = "ols")
-
-# Ridge（正則化で係数を安定化）
-fit_ridge <- lingam_direct(hard$data, reg_method = "ridge")
-```
-
-多重共線性が強いデータでは、因果順序の推定はどちらの手法でも困難です。
-重要な違いは**係数（隣接行列）の推定精度**にあります。 OLS
-は多重共線性下で係数が大きく振れますが、 Ridge は $`\ell_2`$
-正則化によって係数を縮小・安定させます。
-
-``` r
-
-# 真の隣接行列
-round(hard$true_adjacency, 2)
-#>     x0  x1  x2 x3 x4 x5 x6 x7 x8
-#> x0 0.0 0.0 0.0  0  0  0  0  0  0
-#> x1 0.0 0.0 0.0  0  0  0  0  0  0
-#> x2 0.0 0.0 0.0  0  0  0  0  0  0
-#> x3 0.0 0.0 0.0  0  0  0  0  0  0
-#> x4 0.0 0.0 0.0  0  0  0  0  0  0
-#> x5 1.5 1.5 1.5  0  0  0  0  0  0
-#> x6 0.0 1.0 1.0  1  1  0  0  0  0
-#> x7 2.0 0.0 0.0  2  0  0  0  0  0
-#> x8 0.0 0.0 0.0  0  0  1  1  0  0
-
-# OLS による推定
-round(fit_ols$adjacency_matrix, 2)
-#>      x0   x1    x2    x3    x4 x5    x6   x7    x8
-#> x0 0.00 0.06  0.07  0.23  0.20  0 -0.06 0.00  0.08
-#> x1 0.00 0.00  0.04  0.13  0.00  0  0.00 0.00  0.10
-#> x2 0.00 0.00  0.00  0.13  0.00  0  0.00 0.00  0.10
-#> x3 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.11
-#> x4 0.00 0.16  0.10  0.26  0.00  0  0.00 0.00  0.05
-#> x5 0.62 0.77  0.75 -0.05  0.12  0 -0.51 0.01  0.50
-#> x6 0.00 0.16  0.17  0.51  0.50  0  0.00 0.00  0.31
-#> x7 1.94 0.03 -0.07  2.14 -0.06  0  0.03 0.00 -0.01
-#> x8 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.00
-
-# Ridge による推定
-round(fit_ridge$adjacency_matrix, 2)
-#>      x0   x1    x2    x3    x4 x5    x6   x7    x8
-#> x0 0.00 0.07  0.08  0.23  0.20  0 -0.05 0.00  0.07
-#> x1 0.00 0.00  0.06  0.14  0.00  0  0.00 0.00  0.09
-#> x2 0.00 0.00  0.00  0.15  0.00  0  0.00 0.00  0.09
-#> x3 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.11
-#> x4 0.00 0.17  0.11  0.26  0.00  0  0.00 0.00  0.05
-#> x5 0.64 0.78  0.76 -0.06  0.11  0 -0.48 0.01  0.48
-#> x6 0.00 0.19  0.19  0.51  0.51  0  0.00 0.00  0.30
-#> x7 1.92 0.03 -0.07  2.12 -0.05  0  0.03 0.00 -0.01
-#> x8 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.00
-```
-
-多重共線性が疑われる場合は `reg_method = "ridge"` を試してみてください。
-スパース推定（不要なエッジをゼロに落とす）も必要な場合は
-`reg_method = "adaptive_lasso"` + `init_method = "ridge"`
-の組み合わせが有効です。
 
 ## 因果探索 (Causal Discovery)
 
@@ -474,9 +384,7 @@ Direct LiNGAM では、因果順序が確定した後に隣接行列を回帰で
 | `"ridge"` | 必要 | なし | $`\ell_2`$ 正則化で係数を安定化。多重共線性に強い。スパース化は行わない |
 
 オラクル性質とは「サンプルが増えれば真の構造を確実に回復できる」理論的保証で、
-通常は `"adaptive_lasso"` が推奨です。多重共線性が強い場合は `"ridge"`
-が有効で、 さらにスパース化も必要なら `"adaptive_lasso"` +
-`init_method = "ridge"` を組み合わせてください。
+通常は `"adaptive_lasso"` が推奨です。
 
 ### 4 手法の比較
 
@@ -548,32 +456,8 @@ fit_lam_min <- lingam_direct(x1k$data, lambda = "lambda.min")
 sum(fit_bic$adjacency_matrix     != 0)
 #> [1] 7
 sum(fit_lam_min$adjacency_matrix != 0)
-#> [1] 7
+#> [1] 8
 ```
-
-### 多重共線性がある場合
-
-多重共線性が強い場合の対応策は 2 つあります。
-
-**`reg_method = "ridge"`**（シンプル） Ridge 回帰が隣接行列推定全体に
-$`\ell_2`$ 正則化を適用します。
-スパース化は行わないため係数がゼロになりませんが、
-係数の安定性を優先したい場合に適しています。
-
-**`reg_method = "adaptive_lasso"` +
-`init_method = "ridge"`**（スパース化も必要な場合） Adaptive LASSO の第
-1 段階（OLS 初期推定）は多重共線性に弱く、
-係数が不安定になることがあります。`init_method = "ridge"` に切り替えると
-Ridge 回帰で初期重みを安定させ、かつ最終推定はスパース化されます。
-
-多重共線性の強いデータ（`collinearity = 0.95`）での OLS vs Ridge
-の係数比較は、 「サンプルデータ」節の
-[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
-を参照してください。
-なお、因果順序の推定はどちらの手法でも困難であり、係数精度の改善が主な利点です。
-
-標準的なデータでは
-`reg_method = "adaptive_lasso"`（デフォルト）のままで構いません。
 
 ## 誤差変数間の独立性 (Independence between error variables)
 
@@ -773,7 +657,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.2 seconds.
+#> Completed in 3.5 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -1189,7 +1073,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 秒
 #> p = 15 : 0.06 秒
-#> 理論倍率 3.4 倍 に対して 実測 2.1 倍
+#> 理論倍率 3.4 倍 に対して 実測 2.2 倍
 ```
 
 ICA-LiNGAM を同じデータで実行して速度を直接比較します。
@@ -1359,7 +1243,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.6 seconds.
+#> Completed in 1.4 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>

@@ -47,7 +47,7 @@ bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.9 seconds.
+#> Completed in 1.0 seconds.
 get_causal_order_stability(bs, labels = names(dat$data))
 #> === Causal Order Stability ===
 #> Bootstrap samples:       30

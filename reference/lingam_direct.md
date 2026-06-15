@@ -38,7 +38,8 @@ lingam_direct(
 - reg_method:
 
   隣接行列推定の回帰手法。 "ols": 最小二乗法、 "lasso": LASSO回帰、
-  "adaptive_lasso": 適応的LASSO回帰（デフォルト）。
+  "adaptive_lasso": 適応的LASSO回帰（デフォルト）、 "ridge":
+  Ridge回帰（多重共線性に強い。スパース推定は行わない）。
 
 - lambda:
 

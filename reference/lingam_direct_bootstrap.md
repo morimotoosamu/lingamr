@@ -45,7 +45,7 @@ lingam_direct_bootstrap(
 
 - reg_method:
 
-  回帰手法 ("ols", "lasso", "adaptive_lasso")
+  回帰手法 ("ols", "lasso", "adaptive_lasso", "ridge")
 
 - lambda:
 
@@ -130,7 +130,7 @@ bs_lasso <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.9 seconds.
+#> Completed in 1.0 seconds.
 
 # Parallel execution on 2 cores
 bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
@@ -140,6 +140,6 @@ bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
   n_cores = 2L
 )
 #> Bootstrap: 30 iterations, method=adaptive_lasso (parallel, 2 cores)
-#> Completed in 2.3 seconds.
+#> Completed in 2.5 seconds.
 # }
 ```
