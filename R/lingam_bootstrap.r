@@ -16,7 +16,7 @@
 #' @param prior_knowledge 事前知識行列 (NULL可)
 #' @param apply_prior_knowledge_softly 事前知識のソフト適用 (logical)
 #' @param measure 独立性の評価尺度 ("pwling" or "kernel")
-#' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso")
+#' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso", "ridge")
 #' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
 #' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
 #'   `lingam_direct()` の同名引数と同じ。
@@ -80,9 +80,14 @@ lingam_direct_bootstrap <- function(X,
   # 不正な引数は反復の中（並列時はワーカー内）で分かりにくいエラーになるため、
   # クラスター起動前にここで検証する
   measure <- match.arg(measure, c("pwling", "kernel"))
-  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols"))
+  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
+
+  if (reg_method == "ridge" && lambda == "oracle") {
+    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
+         call. = FALSE)
+  }
   n_sampling <- suppressWarnings(as.integer(n_sampling))
   if (length(n_sampling) != 1 || is.na(n_sampling) || n_sampling <= 0) {
     stop("n_sampling must be a positive integer.", call. = FALSE)

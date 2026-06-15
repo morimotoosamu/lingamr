@@ -150,4 +150,25 @@ test_that("reg_method = 'ols' does not require glmnet", {
   expect_no_error(lingam_direct(dat$data, reg_method = "ols"))
   expect_error(lingam_direct(dat$data, reg_method = "lasso"), "glmnet")
   expect_error(lingam_direct(dat$data, reg_method = "adaptive_lasso"), "glmnet")
+  expect_error(lingam_direct(dat$data, reg_method = "ridge"), "glmnet")
+})
+
+test_that("reg_method = 'ridge' returns a valid LingamResult", {
+  dat <- generate_lingam_sample_6(n = 300, seed = 42)
+  res <- lingam_direct(dat$data, reg_method = "ridge")
+
+  expect_s3_class(res, "LingamResult")
+  expect_equal(dim(res$adjacency_matrix), c(6L, 6L))
+  expect_equal(length(res$causal_order), 6L)
+  # Ridge はスパースでないため非ゼロ係数が多い
+  expect_gt(sum(res$adjacency_matrix != 0), 0L)
+})
+
+test_that("reg_method = 'ridge' with lambda = 'oracle' errors", {
+  dat <- generate_lingam_sample_6(n = 200, seed = 1)
+
+  expect_error(
+    lingam_direct(dat$data, reg_method = "ridge", lambda = "oracle"),
+    "oracle"
+  )
 })

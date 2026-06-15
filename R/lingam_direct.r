@@ -31,7 +31,8 @@
 #' @param reg_method 隣接行列推定の回帰手法。
 #' "ols": 最小二乗法、
 #' "lasso": LASSO回帰、
-#' "adaptive_lasso": 適応的LASSO回帰（デフォルト）。
+#' "adaptive_lasso": 適応的LASSO回帰（デフォルト）、
+#' "ridge": Ridge回帰（多重共線性に強い。スパース推定は行わない）。
 #' @param init_method 適応的LASSO回帰の初期重みの推定手法。
 #' "ols": 最小二乗法（デフォルト）、
 #' "ridge": Ridge回帰。
@@ -77,9 +78,14 @@ lingam_direct <- function(X,
   if (!is.null(col_names)) colnames(X) <- col_names
 
   measure <- match.arg(measure, c("pwling", "kernel"))
-  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols"))
+  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
+
+  if (reg_method == "ridge" && lambda == "oracle") {
+    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
+         call. = FALSE)
+  }
 
   if (!is.logical(apply_prior_knowledge_softly) || length(apply_prior_knowledge_softly) != 1) {
     stop("apply_prior_knowledge_softly must be a single logical value (TRUE or FALSE).", call. = FALSE)

@@ -19,6 +19,9 @@
 # fit_lasso() と fit_adaptive_lasso() で共通。
 lasso_lambda_seq <- exp(seq(2, -7, length.out = 80))
 
+# Ridge 用の lambda グリッド。LASSO より大きい値が最適になりうるため広めに設定。
+ridge_lambda_seq <- exp(seq(6, -7, length.out = 100))
+
 
 #' glmnet が利用可能か確認する
 #'
@@ -45,6 +48,7 @@ check_glmnet_available <- function(method) {
 #'   "ols"           : 通常の最小二乗法（デフォルト）
 #'   "lasso"         : LASSO回帰（glmnet）
 #'   "adaptive_lasso": Adaptive LASSO（2段階）
+#'   "ridge"         : Ridge回帰（glmnet）
 #' @param init_method Adaptive LASSOの初期重みの推定手法
 #'   "ols"   :最小二乗法（デフォルト）
 #'   "ridge" :Ridge回帰
@@ -53,6 +57,7 @@ check_glmnet_available <- function(method) {
 #'   "lambda.1se" : 1SE ルール（よりスパース）
 #'   "AIC"       : AIC最小（CVなし、高速）
 #'   "BIC"        : BIC最小（CVなし、高速、最もスパース）デフォルト
+#'   "oracle"     : Adaptive LASSO 専用。Ridge では使用不可。
 #' @return 隣接行列 B (n_features x n_features)
 #' @keywords internal
 estimate_adjacency_matrix <- function(X,
@@ -61,7 +66,7 @@ estimate_adjacency_matrix <- function(X,
                                       method = "adaptive_lasso",
                                       lambda = "BIC",
                                       init_method = "ols") {
-  valid_methods <- c("ols", "lasso", "adaptive_lasso")
+  valid_methods <- c("ols", "lasso", "adaptive_lasso", "ridge")
   if (!(method %in% valid_methods)) {
     stop(sprintf(
       "'method' must be one of: %s.",
@@ -104,7 +109,8 @@ estimate_adjacency_matrix <- function(X,
       "lasso"          = fit_lasso(y, Xp, lambda = lambda),
       "adaptive_lasso" = fit_adaptive_lasso(y, Xp,
                                             lambda = lambda,
-                                            init_method = init_method)
+                                            init_method = init_method),
+      "ridge"          = fit_ridge_reg(y, Xp, lambda = lambda)
     )
 
     B[target, predictors] <- coefs
@@ -194,6 +200,58 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
       x = Xp_mat, y = y,
       alpha = 1, intercept = TRUE, standardize = TRUE,
       lambda = lasso_lambda_seq
+    )
+
+    lambda_val <- cv_fit[[lambda]]
+    coef_vec <- as.numeric(stats::coef(cv_fit, s = lambda_val))[-1]
+  }
+
+  return(coef_vec)
+}
+
+
+#' Ridge 回帰（情報量基準 or CV でラムダ選択）
+#'
+#' @param y 目的変数
+#' @param Xp 説明変数行列
+#' @param lambda ラムダ選択方法
+#'   "lambda.min" : CV予測誤差最小
+#'   "lambda.1se" : CV 1SEルール
+#'   "AIC"       : AIC最小
+#'   "BIC"        : BIC最小。デフォルト
+#'   "oracle"は使用不可（Adaptive LASSO 専用）。
+#' @return 係数ベクトル
+#' @keywords internal
+fit_ridge_reg <- function(y, Xp, lambda = "BIC") {
+  if (ncol(Xp) == 1) {
+    return(fit_ols(y, Xp))
+  }
+
+  if (lambda == "oracle") {
+    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
+         call. = FALSE)
+  }
+
+  check_glmnet_available("ridge")
+
+  Xp_mat <- as.matrix(Xp)
+
+  if (lambda %in% c("AIC", "BIC")) {
+    fit <- glmnet::glmnet(
+      x = Xp_mat, y = y,
+      alpha = 0, intercept = TRUE, standardize = TRUE,
+      lambda = ridge_lambda_seq
+    )
+
+    ic <- ic_glmnet(fit)
+    k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
+    coef_vec <- as.numeric(fit$beta[, k_best])
+
+  } else {
+    cv_fit <- glmnet::cv.glmnet(
+      x = Xp_mat, y = y,
+      alpha = 0, intercept = TRUE, standardize = TRUE,
+      lambda = ridge_lambda_seq
     )
 
     lambda_val <- cv_fit[[lambda]]
