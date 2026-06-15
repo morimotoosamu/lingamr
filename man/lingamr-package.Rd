@@ -28,5 +28,14 @@ Authors:
   \item Osamu Morimoto \email{galactic.supermarket@gmail.com}
 }
 
+Other contributors:
+\itemize{
+  \item T. Ikeuchi [copyright holder]
+  \item G. Haraoka [copyright holder]
+  \item M. Ide [copyright holder]
+  \item W. Kurebayashi [copyright holder]
+  \item S. Shimizu [copyright holder]
+}
+
 }
 \keyword{internal}

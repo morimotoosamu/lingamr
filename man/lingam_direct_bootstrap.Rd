@@ -30,7 +30,7 @@ lingam_direct_bootstrap(
 
 \item{measure}{独立性の評価尺度 ("pwling" or "kernel")}
 
-\item{reg_method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
+\item{reg_method}{回帰手法 ("ols", "lasso", "adaptive_lasso", "ridge")}
 
 \item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")}
 
