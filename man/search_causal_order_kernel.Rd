@@ -2,23 +2,23 @@
 % Please edit documentation in R/search_causal_order.r
 \name{search_causal_order_kernel}
 \alias{search_causal_order_kernel}
-\title{カーネル法による因果順序の探索}
+\title{Causal order search via the kernel method}
 \usage{
 search_causal_order_kernel(X, U, Uc, Vj)
 }
 \arguments{
-\item{X}{データ行列}
+\item{X}{Data matrix}
 
-\item{U}{全変数}
+\item{U}{All variables}
 
-\item{Uc}{候補変数}
+\item{Uc}{Candidate variables}
 
-\item{Vj}{事前知識集合}
+\item{Vj}{Prior knowledge set}
 }
 \value{
-選ばれた変数のインデックス
+Index of the selected variable
 }
 \description{
-カーネル法による因果順序の探索
+Causal order search via the kernel method
 }
 \keyword{internal}

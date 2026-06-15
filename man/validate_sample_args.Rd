@@ -2,19 +2,19 @@
 % Please edit documentation in R/generate_lingam_sample.r
 \name{validate_sample_args}
 \alias{validate_sample_args}
-\title{サンプル生成関数の n / seed を検証して整数化する}
+\title{Validate and coerce n / seed for the sample generation functions}
 \usage{
 validate_sample_args(n, seed)
 }
 \arguments{
-\item{n}{サンプルサイズ}
+\item{n}{sample size}
 
-\item{seed}{乱数シード}
+\item{seed}{random seed}
 }
 \value{
-list(n, seed)（いずれも integer）
+list(n, seed) (both integers)
 }
 \description{
-サンプル生成関数の n / seed を検証して整数化する
+Validate and coerce n / seed for the sample generation functions
 }
 \keyword{internal}

@@ -2,23 +2,24 @@
 # ggplot2 autoplot method for LingamResult
 # =============================================================================
 
-#' LingamResult の因果グラフを ggplot2 で描画
+#' Plot the causal graph of a LingamResult with ggplot2
 #'
-#' 推定された因果構造を ggplot2 ベースの有向グラフとして描画する。ノード配置は
-#' igraph の階層レイアウト (sugiyama) で計算し、因果の流れが概ね上から下へ並ぶ。
-#' 静的画像として出力されるため RMarkdown / Quarto で安定する。対話的な HTML
-#' 図が必要な場合は [plot_adjacency()]（DiagrammeR ベース）を使う。
+#' Draws the estimated causal structure as a ggplot2-based directed graph. Node
+#' positions are computed with igraph's hierarchical layout (sugiyama), so the
+#' causal flow is generally arranged from top to bottom. Because the output is a
+#' static image, it is stable in RMarkdown / Quarto. If you need an interactive
+#' HTML figure, use [plot_adjacency()] (DiagrammeR-based).
 #'
-#' `autoplot()` は ggplot2 のジェネリックなので、利用前に `library(ggplot2)` で
-#' ggplot2 を読み込む必要がある。描画には ggplot2 と igraph が必要。
+#' `autoplot()` is a ggplot2 generic, so you must load ggplot2 with
+#' `library(ggplot2)` before using it. Plotting requires ggplot2 and igraph.
 #'
-#' @param object [lingam_direct()] の返り値 (`LingamResult` オブジェクト)
-#' @param threshold この絶対値以下の係数はエッジとみなさない (default: 0)
-#' @param node_size ノードの大きさ (default: 16)
-#' @param node_color ノードの塗り色 (default: "lightblue")
-#' @param label_edges エッジに係数ラベルを表示するか (default: TRUE)
-#' @param ... 未使用
-#' @return ggplot オブジェクト
+#' @param object Return value of [lingam_direct()] (a `LingamResult` object)
+#' @param threshold Coefficients with an absolute value at or below this are not treated as edges (default: 0)
+#' @param node_size Node size (default: 16)
+#' @param node_color Node fill color (default: "lightblue")
+#' @param label_edges Whether to display coefficient labels on edges (default: TRUE)
+#' @param ... Unused
+#' @return A ggplot object
 #' @exportS3Method ggplot2::autoplot
 #' @examples
 #' \donttest{
@@ -47,14 +48,14 @@ autoplot.LingamResult <- function(object, threshold = 0,
 
   edges <- tidy(object, threshold = threshold)
 
-  # --- igraph グラフ作成（孤立ノードも含める）---
+  # --- Build the igraph graph (including isolated nodes) ---
   g <- igraph::graph_from_data_frame(
     d = edges[, c("from", "to"), drop = FALSE],
     directed = TRUE,
     vertices = data.frame(name = var_names, stringsAsFactors = FALSE)
   )
 
-  # --- 階層レイアウト座標（y を反転して上流を上に）---
+  # --- Hierarchical layout coordinates (flip y so upstream is at the top) ---
   lay <- igraph::layout_with_sugiyama(g)$layout
   node_df <- data.frame(
     name = var_names,
@@ -63,7 +64,7 @@ autoplot.LingamResult <- function(object, threshold = 0,
     stringsAsFactors = FALSE
   )
 
-  # --- エッジ座標をノード座標から構成 ---
+  # --- Build edge coordinates from the node coordinates ---
   if (nrow(edges) > 0) {
     fi <- match(edges$from, node_df$name)
     ti <- match(edges$to, node_df$name)
@@ -81,7 +82,7 @@ autoplot.LingamResult <- function(object, threshold = 0,
                           label = character(0), stringsAsFactors = FALSE)
   }
 
-  # --- 描画 ---
+  # --- Plotting ---
   pl <- ggplot2::ggplot()
 
   if (nrow(edge_df) > 0) {

@@ -2,26 +2,26 @@
 % Please edit documentation in R/fit_regression.r
 \name{fit_ridge_reg}
 \alias{fit_ridge_reg}
-\title{Ridge 回帰（情報量基準 or CV でラムダ選択）}
+\title{Ridge regression (lambda selection by information criterion or CV)}
 \usage{
 fit_ridge_reg(y, Xp, lambda = "BIC")
 }
 \arguments{
-\item{y}{目的変数}
+\item{y}{response variable}
 
-\item{Xp}{説明変数行列}
+\item{Xp}{predictor matrix}
 
-\item{lambda}{ラムダ選択方法
-"lambda.min" : CV予測誤差最小
-"lambda.1se" : CV 1SEルール
-"AIC"       : AIC最小
-"BIC"        : BIC最小。デフォルト
-"oracle"は使用不可（Adaptive LASSO 専用）。}
+\item{lambda}{lambda selection method
+"lambda.min" : minimum CV prediction error
+"lambda.1se" : CV 1SE rule
+"AIC"       : minimum AIC
+"BIC"        : minimum BIC, default
+"oracle" is not usable (Adaptive LASSO only).}
 }
 \value{
-係数ベクトル
+coefficient vector
 }
 \description{
-Ridge 回帰（情報量基準 or CV でラムダ選択）
+Ridge regression (lambda selection by information criterion or CV)
 }
 \keyword{internal}

@@ -2,20 +2,21 @@
 % Please edit documentation in R/get_error_independence_p_values.r
 \name{lingam_residuals}
 \alias{lingam_residuals}
-\title{LiNGAM モデルの残差（誤差項）を計算する}
+\title{Compute residuals (error terms) of a LiNGAM model}
 \usage{
 lingam_residuals(X, lingam_result)
 }
 \arguments{
-\item{X}{元データ (matrix or data.frame)}
+\item{X}{original data (matrix or data.frame)}
 
-\item{lingam_result}{\code{\link[=lingam_direct]{lingam_direct()}} の返り値}
+\item{lingam_result}{return value of \code{\link[=lingam_direct]{lingam_direct()}}}
 }
 \value{
-残差行列 (n_samples x n_features)。X の列名を保持する。
+residual matrix (n_samples x n_features). Preserves the column names of X.
 }
 \description{
-入力の検証（\code{LingamResult} であること・X が数値であること・次元の一致）を
-行ったうえで \verb{E = X - X B^T} を返す。残差ベースの診断関数で共通利用する。
+After validating the inputs (that \code{lingam_result} is a \code{LingamResult},
+that X is numeric, and that the dimensions match), returns \verb{E = X - X B^T}.
+Shared by the residual-based diagnostic functions.
 }
 \keyword{internal}

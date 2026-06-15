@@ -85,14 +85,14 @@ The resulting adjacency matrix is strictly lower-triangular.
 }
 }
 \examples{
-# 20変数のデータを生成してスパース性を確認
+# Generate 20-variable data and check its sparsity
 dataset <- generate_lingam_large_sample(p = 20, n = 500)
 dim(dataset$data)                    # 500 x 20
-sum(dataset$true_adjacency != 0)     # 辺の本数
+sum(dataset$true_adjacency != 0)     # number of edges
 dataset$true_causal_order            # 0, 1, ..., 19
 
 \donttest{
-# 変数数が増えると Direct LiNGAM の実行時間が急増する
+# As the number of variables grows, Direct LiNGAM's run time increases sharply
 t10 <- system.time(lingam_direct(generate_lingam_large_sample(p = 10)$data))
 t20 <- system.time(lingam_direct(generate_lingam_large_sample(p = 20)$data))
 cat(sprintf("p=10: \%.1f sec,  p=20: \%.1f sec\n", t10["elapsed"], t20["elapsed"]))

@@ -13,18 +13,18 @@ fit_adaptive_lasso(
 )
 }
 \arguments{
-\item{y}{目的変数}
+\item{y}{response variable}
 
-\item{Xp}{説明変数行列}
+\item{Xp}{predictor matrix}
 
-\item{lambda}{ラムダ選択方法 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")}
+\item{lambda}{lambda selection method ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")}
 
-\item{gamma_weight}{重みの指数}
+\item{gamma_weight}{exponent of the weights}
 
-\item{init_method}{初期重みの推定手法 ("ols" または "ridge")}
+\item{init_method}{estimation method for the initial weights ("ols" or "ridge")}
 }
 \value{
-係数ベクトル
+coefficient vector
 }
 \description{
 Adaptive LASSO

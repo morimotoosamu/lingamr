@@ -1,24 +1,24 @@
-#' 事前知識行列を作成
+#' Create a prior knowledge matrix
 #'
-#' @param n_variables 変数の数
-#' @param exogenous_variables 外生変数 (1-based index または変数名, NULL可)
-#'   指定した変数は他のどの変数からも影響を受けないとする
-#' @param sink_variables シンク変数 (1-based index または変数名, NULL可)
-#'   指定した変数は他のどの変数にも影響を与えないとする
-#' @param paths 有向パスが存在する変数ペア (NULL可)
-#'   list(c(from, to), ...) の形式。インデックスまたは変数名で指定
-#' @param no_paths 有向パスが存在しない変数ペア (NULL可)
-#'   list(c(from, to), ...) の形式。インデックスまたは変数名で指定
-#' @param labels 変数名ベクトル (NULL可)
-#'   変数名で指定する場合は必須。data.frame の colnames() 等を渡す
-#' @return 事前知識行列 (n_variables x n_variables)
-#'   -1: 不明, 0: パスなし, 1: パスあり
+#' @param n_variables Number of variables
+#' @param exogenous_variables Exogenous variables (1-based index or variable name, NULL allowed)
+#'   The specified variables are assumed not to be influenced by any other variable
+#' @param sink_variables Sink variables (1-based index or variable name, NULL allowed)
+#'   The specified variables are assumed not to influence any other variable
+#' @param paths Variable pairs that have a directed path (NULL allowed)
+#'   Of the form list(c(from, to), ...). Specified by index or variable name
+#' @param no_paths Variable pairs that have no directed path (NULL allowed)
+#'   Of the form list(c(from, to), ...). Specified by index or variable name
+#' @param labels Vector of variable names (NULL allowed)
+#'   Required when specifying by variable name. Pass e.g. colnames() of a data.frame
+#' @return Prior knowledge matrix (n_variables x n_variables)
+#'   -1: unknown, 0: no path, 1: path exists
 #' @export
 #' @examples
-#' # インデックスで指定
+#' # Specify by index
 #' pk <- make_prior_knowledge(6, exogenous_variables = c(4))
 #'
-#' # 変数名で指定
+#' # Specify by variable name
 #' pk <- make_prior_knowledge(6,
 #'   exogenous_variables = "x3",
 #'   sink_variables = c("x1", "x4"),
@@ -32,13 +32,13 @@ make_prior_knowledge <- function(n_variables,
                                  paths = NULL,
                                  no_paths = NULL,
                                  labels = NULL) {
-  # --- 基本バリデーション ---
+  # --- Basic validation ---
   if (!is.numeric(n_variables) || n_variables < 2) {
     stop("n_variables must be an integer >= 2.")
   }
   n_variables <- as.integer(n_variables)
 
-  # --- labels のバリデーション ---
+  # --- labels validation ---
   if (!is.null(labels)) {
     if (length(labels) != n_variables) {
       stop(sprintf(
@@ -51,7 +51,7 @@ make_prior_knowledge <- function(n_variables,
     }
   }
 
-  # --- 変数名 → インデックス変換ヘルパー ---
+  # --- Helper to convert variable names to indices ---
   resolve_variable <- function(x, arg_name) {
     if (is.character(x)) {
       if (is.null(labels)) {
@@ -93,7 +93,7 @@ make_prior_knowledge <- function(n_variables,
       if (length(p) != 2) {
         stop(sprintf("Each element of '%s' must be a length-2 vector (from, to).", arg_name))
       }
-      # ペア内で型が混在していても各要素を個別に解決
+      # Resolve each element individually even if types are mixed within a pair
       from_idx <- resolve_variable(p[1], sprintf("%s[[%d]][1]", arg_name, i))
       to_idx <- resolve_variable(p[2], sprintf("%s[[%d]][2]", arg_name, i))
       c(from_idx, to_idx)
@@ -101,7 +101,7 @@ make_prior_knowledge <- function(n_variables,
     return(resolved)
   }
 
-  # --- 引数の解決 ---
+  # --- Resolve arguments ---
   if (!is.null(exogenous_variables)) {
     exogenous_variables <- resolve_variable(exogenous_variables, "exogenous_variables")
   }
@@ -111,7 +111,7 @@ make_prior_knowledge <- function(n_variables,
   paths <- resolve_pairs(paths, "paths")
   no_paths <- resolve_pairs(no_paths, "no_paths")
 
-  # --- 事前知識行列の初期化（全て -1 = 不明）---
+  # --- Initialize the prior knowledge matrix (all -1 = unknown) ---
   prior_knowledge <- matrix(-1L, nrow = n_variables, ncol = n_variables)
 
   if (!is.null(labels)) {
@@ -119,35 +119,35 @@ make_prior_knowledge <- function(n_variables,
     colnames(prior_knowledge) <- labels
   }
 
-  # --- no_paths の設定: (from, to) → prior_knowledge[to, from] = 0 ---
+  # --- Set no_paths: (from, to) -> prior_knowledge[to, from] = 0 ---
   if (!is.null(no_paths)) {
     for (pair in no_paths) {
       prior_knowledge[pair[2], pair[1]] <- 0L
     }
   }
 
-  # --- paths の設定: (from, to) → prior_knowledge[to, from] = 1 ---
+  # --- Set paths: (from, to) -> prior_knowledge[to, from] = 1 ---
   if (!is.null(paths)) {
     for (pair in paths) {
       prior_knowledge[pair[2], pair[1]] <- 1L
     }
   }
 
-  # --- sink_variables: 他の変数に影響を与えない → 列を全て 0 ---
+  # --- sink_variables: do not influence other variables -> set entire column to 0 ---
   if (!is.null(sink_variables)) {
     for (var in sink_variables) {
       prior_knowledge[, var] <- 0L
     }
   }
 
-  # --- exogenous_variables: 他の変数から影響を受けない → 行を全て 0 ---
+  # --- exogenous_variables: not influenced by other variables -> set entire row to 0 ---
   if (!is.null(exogenous_variables)) {
     for (var in exogenous_variables) {
       prior_knowledge[var, ] <- 0L
     }
   }
 
-  # --- 対角要素は -1 ---
+  # --- Diagonal elements are -1 ---
   diag(prior_knowledge) <- -1L
 
   return(prior_knowledge)

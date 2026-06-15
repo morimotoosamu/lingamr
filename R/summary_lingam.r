@@ -1,31 +1,42 @@
-#' Direct LiNGAM モデルの適合度を一括要約
+#' Summarize the goodness-of-fit of a Direct LiNGAM model at once
 #'
-#' 推定済みの Direct LiNGAM モデルについて、LiNGAM が依拠する2つの主要な前提
-#' （残差の相互独立性・残差の非ガウス性）の成立度合いを一度に検証し、まとめて
-#' 表示する。内部で [get_error_independence_p_values()] と
-#' [test_residual_normality()] を呼び出す。
+#' For a fitted Direct LiNGAM model, this verifies how well the two main
+#' assumptions on which LiNGAM relies (mutual independence of residuals and
+#' non-Gaussianity of residuals) hold, all at once, and displays the results
+#' together. Internally it calls [get_error_independence_p_values()] and
+#' [test_residual_normality()].
 #'
-#' BIC/AIC のようなガウス尤度ベースの指標は、LiNGAM の「誤差は非ガウス」という
-#' 前提と理論的に整合しないため含めていない。代わりに前提そのものの検証結果を
-#' 要約する。
+#' Gaussian-likelihood-based criteria such as BIC/AIC are not included because
+#' they are theoretically inconsistent with LiNGAM's assumption that "the errors
+#' are non-Gaussian". Instead, the verification results of the assumptions
+#' themselves are summarized.
 #'
-#' @param X 元データ (matrix or data.frame)。`lingam_result` の推定に用いたもの。
-#' @param lingam_result [lingam_direct()] の返り値（`LingamResult` オブジェクト）
-#' @param independence_method 残差の独立性検定で用いる相関係数の種類
-#'   ("spearman", "pearson", "kendall")。[get_error_independence_p_values()] に渡す。
-#' @param normality_method 残差の正規性検定の手法
-#'   ("shapiro", "ks", "ad", "lillie", "jb")。[test_residual_normality()] に渡す。
-#' @param alpha 有意水準 (default: 0.05)
-#' @return `lingam_summary` クラスのリスト。以下の要素を含む：
-#' * `n_variables`, `n_samples`: 変数の数・観測数
-#' * `causal_order`: 因果順序（変数名ラベル）
-#' * `n_edges`: 隣接行列の非ゼロ要素数（推定されたエッジ数）
-#' * `independence_p_values`: 残差間の独立性検定の p 値行列
-#' * `n_dependent_pairs`, `n_pairs`: p < alpha のペア数 / 全ペア数
-#' * `min_independence_p`: 独立性検定 p 値の最小値
-#' * `normality`: 正規性検定の結果（`lingam_normality_test` オブジェクト）
-#' * `n_non_gaussian`: 非ガウスと判定された変数の数
-#' * `alpha`, `independence_method`, `normality_method`: 用いた設定
+#' @param X The original data (matrix or data.frame), the one used to estimate
+#'   `lingam_result`.
+#' @param lingam_result The return value of [lingam_direct()] (a `LingamResult`
+#'   object)
+#' @param independence_method The type of correlation coefficient used in the
+#'   residual independence test
+#'   ("spearman", "pearson", "kendall"). Passed to
+#'   [get_error_independence_p_values()].
+#' @param normality_method The method for the residual normality test
+#'   ("shapiro", "ks", "ad", "lillie", "jb"). Passed to
+#'   [test_residual_normality()].
+#' @param alpha Significance level (default: 0.05)
+#' @return A list of class `lingam_summary`, containing the following elements:
+#' * `n_variables`, `n_samples`: Number of variables / number of observations
+#' * `causal_order`: Causal order (variable-name labels)
+#' * `n_edges`: Number of nonzero elements in the adjacency matrix (number of
+#'   estimated edges)
+#' * `independence_p_values`: Matrix of p-values from the independence test
+#'   between residuals
+#' * `n_dependent_pairs`, `n_pairs`: Number of pairs with p < alpha / total
+#'   number of pairs
+#' * `min_independence_p`: Minimum p-value of the independence test
+#' * `normality`: Result of the normality test (a `lingam_normality_test`
+#'   object)
+#' * `n_non_gaussian`: Number of variables judged to be non-Gaussian
+#' * `alpha`, `independence_method`, `normality_method`: The settings used
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -60,7 +71,7 @@ summary_lingam <- function(X, lingam_result,
   var_names <- colnames(B)
   if (is.null(var_names)) var_names <- paste0("x", seq_len(n_features) - 1)
 
-  # --- 前提1: 残差の独立性 ---
+  # --- Assumption 1: Independence of residuals ---
   p_mat <- get_error_independence_p_values(X, lingam_result,
                                            method = independence_method)
   upper_p <- p_mat[upper.tri(p_mat)]
@@ -68,7 +79,7 @@ summary_lingam <- function(X, lingam_result,
   n_dependent_pairs <- sum(upper_p < alpha, na.rm = TRUE)
   min_independence_p <- if (all(is.na(upper_p))) NA_real_ else min(upper_p, na.rm = TRUE)
 
-  # --- 前提2: 残差の非ガウス性 ---
+  # --- Assumption 2: Non-Gaussianity of residuals ---
   norm_df <- test_residual_normality(X, lingam_result,
                                      method = normality_method, alpha = alpha)
   n_non_gaussian <- attr(norm_df, "n_non_gaussian")
@@ -93,10 +104,10 @@ summary_lingam <- function(X, lingam_result,
 }
 
 
-#' lingam_summary の print メソッド
+#' print method for lingam_summary
 #'
-#' @param x `lingam_summary` オブジェクト
-#' @param ... 追加引数（未使用）
+#' @param x A `lingam_summary` object
+#' @param ... Additional arguments (unused)
 #' @export
 print.lingam_summary <- function(x, ...) {
   cat("=== Direct LiNGAM Model Summary ===\n")
@@ -105,7 +116,7 @@ print.lingam_summary <- function(x, ...) {
   cat(sprintf("Edges:        %d\n", x$n_edges))
   cat(sprintf("Causal order: %s\n", paste(x$causal_order, collapse = " -> ")))
 
-  # --- 前提1: 独立性 ---
+  # --- Assumption 1: Independence ---
   cat("\n--- Assumption 1: Independence of residuals ---\n")
   cat(sprintf("Method:           %s\n", x$independence_method))
   cat(sprintf("Dependent pairs:  %d / %d  (p < %.3f)\n",
@@ -119,7 +130,7 @@ print.lingam_summary <- function(x, ...) {
                 x$n_dependent_pairs))
   }
 
-  # --- 前提2: 非ガウス性 ---
+  # --- Assumption 2: Non-Gaussianity ---
   cat("\n--- Assumption 2: Non-Gaussianity of residuals ---\n")
   cat(sprintf("Method:           %s\n", x$normality_method))
   cat(sprintf("Non-Gaussian:     %d / %d  (p <= %.3f)\n",

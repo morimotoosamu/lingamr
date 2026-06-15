@@ -2,23 +2,23 @@
 % Please edit documentation in R/search_causal_order.r
 \name{search_candidate}
 \alias{search_candidate}
-\title{候補変数の探索}
+\title{Search for candidate variables}
 \usage{
 search_candidate(U, Aknw, apply_prior_knowledge_softly, partial_orders)
 }
 \arguments{
-\item{U}{現在の未確定変数の集合}
+\item{U}{Set of currently undetermined variables}
 
-\item{Aknw}{事前知識行列}
+\item{Aknw}{Prior knowledge matrix}
 
-\item{apply_prior_knowledge_softly}{ソフト適用の有無}
+\item{apply_prior_knowledge_softly}{Whether to apply prior knowledge softly}
 
-\item{partial_orders}{抽出された部分順序}
+\item{partial_orders}{Extracted partial orders}
 }
 \value{
 list(Uc, Vj)
 }
 \description{
-候補変数の探索
+Search for candidate variables
 }
 \keyword{internal}

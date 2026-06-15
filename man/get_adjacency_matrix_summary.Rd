@@ -2,7 +2,7 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{get_adjacency_matrix_summary}
 \alias{get_adjacency_matrix_summary}
-\title{ブートストラップ結果から因果効果の代表値の隣接行列を作成}
+\title{Create an adjacency matrix of representative causal-effect values from bootstrap results}
 \usage{
 get_adjacency_matrix_summary(
   result,
@@ -13,23 +13,24 @@ get_adjacency_matrix_summary(
 )
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{stat}{代表値 ("mean" or "median")}
+\item{stat}{Representative statistic ("mean" or "median")}
 
-\item{min_causal_effect}{因果効果の最小閾値（これ以下はゼロ扱い）(NULL = 0)}
+\item{min_causal_effect}{Minimum threshold for the causal effect (values at or
+below this are treated as zero) (NULL = 0)}
 
-\item{min_probability}{この確率未満のエッジはゼロにする (NULL = 0)}
+\item{min_probability}{Edges below this probability are set to zero (NULL = 0)}
 
-\item{labels}{変数名ベクトル (NULL可)}
+\item{labels}{Vector of variable names (NULL allowed)}
 }
 \value{
-隣接行列 (n_features x n_features)。
-\strong{規則: \code{B[i, j]} は変数 j から変数 i への因果係数（j → i）。}
-\code{lingam_direct()} の \code{adjacency_matrix} と同じ規則。
+Adjacency matrix (n_features x n_features).
+\strong{Rule: \code{B[i, j]} is the causal coefficient from variable j to variable i (j -> i).}
+Same rule as the \code{adjacency_matrix} of \code{lingam_direct()}.
 }
 \description{
-ブートストラップ結果から因果効果の代表値の隣接行列を作成
+Create an adjacency matrix of representative causal-effect values from bootstrap results
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

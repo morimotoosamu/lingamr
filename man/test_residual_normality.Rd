@@ -29,10 +29,10 @@ and test their normality. Since LiNGAM assumes non-Gaussian errors,
 rejecting normality (small p-value) supports the LiNGAM model assumption.
 }
 \examples{
-# サンプルデータの呼び出し
+# Load the sample data
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-# Direct LiNGAM の実行
+# Run Direct LiNGAM
 result <- lingam_direct(LiNGAM_sample_1000$data)
 
 # Shapiro-Wilk (default)

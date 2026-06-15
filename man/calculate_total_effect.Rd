@@ -2,22 +2,22 @@
 % Please edit documentation in R/paths.r
 \name{calculate_total_effect}
 \alias{calculate_total_effect}
-\title{隣接行列から2変数間の総合因果効果を計算する}
+\title{Compute the total causal effect between two variables from an adjacency matrix}
 \usage{
 calculate_total_effect(adjacency_matrix, from_index, to_index)
 }
 \arguments{
-\item{adjacency_matrix}{隣接行列 (n x n)。\code{B[i,j]} は j → i の係数。}
+\item{adjacency_matrix}{Adjacency matrix (n x n). \code{B[i,j]} is the coefficient of j -> i.}
 
-\item{from_index}{原因変数のインデックス (1-based)}
+\item{from_index}{Index of the cause variable (1-based)}
 
-\item{to_index}{結果変数のインデックス (1-based)}
+\item{to_index}{Index of the effect variable (1-based)}
 }
 \value{
-総合因果効果（スカラー）
+Total causal effect (scalar)
 }
 \description{
-\code{find_all_paths()} で列挙した全経路効果の総和を返す。
-パスが存在しない場合は 0 を返す。
+Returns the sum of all path effects enumerated by \code{find_all_paths()}.
+Returns 0 if no path exists.
 }
 \keyword{internal}

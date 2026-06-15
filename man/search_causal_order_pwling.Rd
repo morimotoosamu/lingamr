@@ -2,23 +2,23 @@
 % Please edit documentation in R/search_causal_order.r
 \name{search_causal_order_pwling}
 \alias{search_causal_order_pwling}
-\title{pwling による因果順序の探索}
+\title{Causal order search via pwling}
 \usage{
 search_causal_order_pwling(X, U, Uc, Vj)
 }
 \arguments{
-\item{X}{データ行列}
+\item{X}{Data matrix}
 
-\item{U}{全変数インデックス}
+\item{U}{Indices of all variables}
 
-\item{Uc}{候補変数のインデックス}
+\item{Uc}{Indices of candidate variables}
 
-\item{Vj}{事前知識に基づく変数集合}
+\item{Vj}{Variable set based on prior knowledge}
 }
 \value{
-選ばれた変数のインデックス
+Index of the selected variable
 }
 \description{
-pwling による因果順序の探索
+Causal order search via pwling
 }
 \keyword{internal}

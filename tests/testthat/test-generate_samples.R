@@ -10,7 +10,7 @@ test_that("generate_lingam_sample_6 returns correct structure", {
   B <- out$true_adjacency
   expect_true(is.matrix(B))
   expect_equal(dim(B), c(6L, 6L))
-  # 既知の係数
+  # known coefficients
   expect_equal(B["x0", "x3"],  3.0)
   expect_equal(B["x2", "x3"],  6.0)
   expect_equal(B["x1", "x0"],  3.0)
@@ -18,7 +18,7 @@ test_that("generate_lingam_sample_6 returns correct structure", {
   expect_equal(B["x5", "x0"],  4.0)
   expect_equal(B["x4", "x0"],  8.0)
   expect_equal(B["x4", "x2"], -1.0)
-  # 真の構造にない辺はゼロ
+  # edges not in the true structure are zero
   expect_equal(B["x3", "x0"],  0.0)
 })
 
@@ -78,9 +78,9 @@ test_that("generate_lingam_large_sample true_causal_order is 0:(p-1)", {
 test_that("generate_lingam_large_sample adjacency matrix is strictly lower-triangular (valid DAG)", {
   out <- generate_lingam_large_sample(p = 15, n = 100, seed = 7)
   B   <- out$true_adjacency
-  # 上三角（対角を含む）はすべてゼロ  ⇒  因果順序通りの変数配置
+  # upper triangle (including diagonal) is all zero => variables ordered by causal order
   expect_true(all(B[upper.tri(B, diag = TRUE)] == 0))
-  # 少なくとも 1 本の辺が存在する
+  # at least one edge exists
   expect_gt(sum(B != 0), 0L)
 })
 

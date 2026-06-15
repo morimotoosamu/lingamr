@@ -2,21 +2,21 @@
 % Please edit documentation in R/search_causal_order.r
 \name{mutual_information_kernel}
 \alias{mutual_information_kernel}
-\title{カーネル法による相互情報量}
+\title{Kernel-based mutual information}
 \usage{
 mutual_information_kernel(x1, x2, param)
 }
 \arguments{
-\item{x1}{変数1}
+\item{x1}{Variable 1}
 
-\item{x2}{変数2}
+\item{x2}{Variable 2}
 
-\item{param}{パラメータベクトル (kappa, sigma)}
+\item{param}{Parameter vector (kappa, sigma)}
 }
 \value{
-相互情報量
+Mutual information
 }
 \description{
-カーネル法による相互情報量
+Kernel-based mutual information
 }
 \keyword{internal}

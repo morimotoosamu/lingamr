@@ -2,7 +2,7 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{get_causal_direction_counts}
 \alias{get_causal_direction_counts}
-\title{因果方向のカウント・割合・因果効果を取得}
+\title{Get counts, proportions, and causal effects of causal directions}
 \usage{
 get_causal_direction_counts(
   result,
@@ -13,15 +13,15 @@ get_causal_direction_counts(
 )
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{n_directions}{上位何件を返すか (NULL = 全て)}
+\item{n_directions}{How many of the top entries to return (NULL = all)}
 
-\item{min_causal_effect}{因果効果の最小閾値 (NULL = 0)}
+\item{min_causal_effect}{Minimum threshold for the causal effect (NULL = 0)}
 
-\item{split_by_causal_effect_sign}{因果効果の符号で分割するか}
+\item{split_by_causal_effect_sign}{Whether to split by the sign of the causal effect}
 
-\item{labels}{変数名ベクトル (NULL可。指定するとfrom_name, to_name列を追加)}
+\item{labels}{Vector of variable names (NULL allowed; if provided, adds from_name and to_name columns)}
 }
 \value{
 A data frame containing the following columns:
@@ -38,7 +38,7 @@ A data frame containing the following columns:
 }
 }
 \description{
-因果方向のカウント・割合・因果効果を取得
+Get counts, proportions, and causal effects of causal directions
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

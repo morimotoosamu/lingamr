@@ -2,22 +2,23 @@
 % Please edit documentation in R/tidiers.r
 \name{tidy.BootstrapResult}
 \alias{tidy.BootstrapResult}
-\title{BootstrapResult を tidy な data.frame に変換}
+\title{Convert a BootstrapResult to a tidy data.frame}
 \usage{
 \method{tidy}{BootstrapResult}(x, ...)
 }
 \arguments{
-\item{x}{\code{\link[=lingam_direct_bootstrap]{lingam_direct_bootstrap()}} の返り値（\code{BootstrapResult} オブジェクト）}
+\item{x}{The return value of \code{\link[=lingam_direct_bootstrap]{lingam_direct_bootstrap()}} (a \code{BootstrapResult} object)}
 
-\item{...}{\code{\link[=get_causal_direction_counts]{get_causal_direction_counts()}} に渡す引数
-(\code{n_directions}, \code{min_causal_effect}, \code{split_by_causal_effect_sign}, \code{labels} など)}
+\item{...}{Arguments passed to \code{\link[=get_causal_direction_counts]{get_causal_direction_counts()}}
+(such as \code{n_directions}, \code{min_causal_effect}, \code{split_by_causal_effect_sign}, \code{labels})}
 }
 \value{
 data.frame (from, to, count, proportion, ...)
 }
 \description{
-各因果方向の出現回数・割合・効果量の要約を返す。内部で
-\code{\link[=get_causal_direction_counts]{get_causal_direction_counts()}} を呼び出すため、同関数の引数を \code{...} で渡せる。
+Returns a summary of the occurrence count, proportion, and effect size for
+each causal direction. Internally it calls \code{\link[=get_causal_direction_counts]{get_causal_direction_counts()}},
+so that function's arguments can be passed through \code{...}.
 }
 \examples{
 dat <- generate_lingam_sample_6()

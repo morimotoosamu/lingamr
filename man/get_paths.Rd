@@ -2,24 +2,24 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{get_paths}
 \alias{get_paths}
-\title{指定した2変数間の全パスとブートストラップ確率を取得}
+\title{Get all paths between two specified variables and their bootstrap probabilities}
 \usage{
 get_paths(result, from_index, to_index, min_causal_effect = NULL)
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{from_index}{始点インデックス (1-based)}
+\item{from_index}{Start index (1-based)}
 
-\item{to_index}{終点インデックス (1-based)}
+\item{to_index}{End index (1-based)}
 
-\item{min_causal_effect}{因果効果の最小閾値 (NULL = 0)}
+\item{min_causal_effect}{Minimum threshold for the causal effect (NULL = 0)}
 }
 \value{
 data.frame (path, effect, probability)
 }
 \description{
-指定した2変数間の全パスとブートストラップ確率を取得
+Get all paths between two specified variables and their bootstrap probabilities
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

@@ -2,17 +2,17 @@
 % Please edit documentation in R/lingam_direct.r
 \name{print.LingamResult}
 \alias{print.LingamResult}
-\title{LingamResult の print メソッド}
+\title{Print method for LingamResult}
 \usage{
 \method{print}{LingamResult}(x, digits = 3, ...)
 }
 \arguments{
-\item{x}{LingamResult オブジェクト}
+\item{x}{LingamResult object}
 
-\item{digits}{表示桁数}
+\item{digits}{Number of digits to display}
 
-\item{...}{追加引数（未使用）}
+\item{...}{Additional arguments (unused)}
 }
 \description{
-LingamResult の print メソッド
+Print method for LingamResult
 }

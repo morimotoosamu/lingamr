@@ -1,5 +1,5 @@
 # =============================================================================
-# Direct LiNGAM - DAG のパス列挙と経路効果
+# Direct LiNGAM - DAG path enumeration and path effects
 # Based on the Python implementation from the LiNGAM Project
 # https://sites.google.com/view/sshimizu06/lingam
 # https://github.com/cdt15/lingam
@@ -14,15 +14,16 @@
 # =============================================================================
 
 
-#' DAG 中の全パスを深さ優先探索で列挙する
+#' Enumerate all paths in a DAG via depth-first search
 #'
-#' `B[i, j]` が j → i を表す隣接行列を受け取り、`from_index` から
-#' `to_index` に至る全パスとそれぞれの経路効果（係数の積）を返す。
+#' Takes an adjacency matrix where `B[i, j]` represents j -> i, and returns
+#' all paths from `from_index` to `to_index` together with each path effect
+#' (the product of the coefficients).
 #'
-#' @param adjacency_matrix 隣接行列 (n x n)。`B[i,j]` は j → i の係数。
-#' @param from_index 始点インデックス (1-based)
-#' @param to_index 終点インデックス (1-based)
-#' @param min_causal_effect このしきい値以下の係数は存在しないエッジとみなす
+#' @param adjacency_matrix Adjacency matrix (n x n). `B[i,j]` is the coefficient of j -> i.
+#' @param from_index Start index (1-based)
+#' @param to_index End index (1-based)
+#' @param min_causal_effect Coefficients at or below this threshold are treated as nonexistent edges
 #' @return list(paths, effects)
 #' @keywords internal
 find_all_paths <- function(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0) {
@@ -55,15 +56,15 @@ find_all_paths <- function(adjacency_matrix, from_index, to_index, min_causal_ef
 }
 
 
-#' 隣接行列から2変数間の総合因果効果を計算する
+#' Compute the total causal effect between two variables from an adjacency matrix
 #'
-#' `find_all_paths()` で列挙した全経路効果の総和を返す。
-#' パスが存在しない場合は 0 を返す。
+#' Returns the sum of all path effects enumerated by `find_all_paths()`.
+#' Returns 0 if no path exists.
 #'
-#' @param adjacency_matrix 隣接行列 (n x n)。`B[i,j]` は j → i の係数。
-#' @param from_index 原因変数のインデックス (1-based)
-#' @param to_index 結果変数のインデックス (1-based)
-#' @return 総合因果効果（スカラー）
+#' @param adjacency_matrix Adjacency matrix (n x n). `B[i,j]` is the coefficient of j -> i.
+#' @param from_index Index of the cause variable (1-based)
+#' @param to_index Index of the effect variable (1-based)
+#' @return Total causal effect (scalar)
 #' @keywords internal
 calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
   result <- find_all_paths(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0)

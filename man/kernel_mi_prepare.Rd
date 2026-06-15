@@ -2,22 +2,23 @@
 % Please edit documentation in R/search_causal_order.r
 \name{kernel_mi_prepare}
 \alias{kernel_mi_prepare}
-\title{カーネル法の相互情報量：変数1側の前計算}
+\title{Kernel-based mutual information: precomputation for variable 1}
 \usage{
 kernel_mi_prepare(x, kappa, sigma)
 }
 \arguments{
-\item{x}{変数1のベクトル}
+\item{x}{Vector of variable 1}
 
-\item{kappa}{正則化パラメータ}
+\item{kappa}{Regularization parameter}
 
-\item{sigma}{ガウスカーネルの幅}
+\item{sigma}{Width of the Gaussian kernel}
 }
 \value{
-行列 E1 (n x n)
+Matrix E1 (n x n)
 }
 \description{
-\code{kernel_mi_core()} で使う行列 \verb{E1 = tmp1^-1 K1}（\code{tmp1 = K1 + n*kappa/2 * I}）
-を計算する。候補変数ごとに1回だけ呼べばよく、ペアごとの再計算を避けられる。
+Computes the matrix \verb{E1 = tmp1^-1 K1} (\code{tmp1 = K1 + n*kappa/2 * I}) used in
+\code{kernel_mi_core()}. It only needs to be called once per candidate variable,
+avoiding per-pair recomputation.
 }
 \keyword{internal}

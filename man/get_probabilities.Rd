@@ -2,20 +2,20 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{get_probabilities}
 \alias{get_probabilities}
-\title{ブートストラップ確率を取得}
+\title{Get bootstrap probabilities}
 \usage{
 get_probabilities(result, min_causal_effect = NULL)
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{min_causal_effect}{因果効果の最小閾値 (NULL = 0)}
+\item{min_causal_effect}{Minimum threshold for the causal effect (NULL = 0)}
 }
 \value{
-確率行列 (n_features x n_features)
+Probability matrix (n_features x n_features)
 }
 \description{
-ブートストラップ確率を取得
+Get bootstrap probabilities
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

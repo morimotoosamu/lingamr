@@ -11,17 +11,20 @@ generics::tidy
 generics::glance
 
 
-#' LingamResult を tidy な data.frame に変換
+#' Convert a LingamResult to a tidy data.frame
 #'
-#' 推定された隣接行列を、1 行が 1 エッジの long 形式 data.frame に変換する。
-#' `B[i, j]`（j → i の係数）の規則に従い、`from` 列が原因、`to` 列が結果となる。
-#' ggplot2 や ggraph での可視化、dplyr でのフィルタリングに便利。
+#' Converts the estimated adjacency matrix into a long-format data.frame with
+#' one edge per row. Following the `B[i, j]` convention (the coefficient for
+#' j -> i), the `from` column is the cause and the `to` column is the effect.
+#' Convenient for visualization with ggplot2 or ggraph and for filtering with dplyr.
 #'
-#' @param x [lingam_direct()] の返り値（`LingamResult` オブジェクト）
-#' @param threshold この絶対値以下の係数はエッジとみなさない (default: 0)
-#' @param ... 未使用
-#' @return data.frame(from, to, estimate)。`from`/`to` は変数名（文字列）、
-#'   `estimate` は因果係数。エッジが無ければ 0 行の data.frame。
+#' @param x The return value of [lingam_direct()] (a `LingamResult` object)
+#' @param threshold Coefficients with an absolute value at or below this are not
+#'   treated as edges (default: 0)
+#' @param ... Unused
+#' @return data.frame(from, to, estimate). `from`/`to` are variable names
+#'   (strings) and `estimate` is the causal coefficient. Returns a 0-row
+#'   data.frame if there are no edges.
 #' @export
 #' @examples
 #' dat <- generate_lingam_sample_6()
@@ -41,7 +44,7 @@ tidy.LingamResult <- function(x, threshold = 0, ...) {
     ))
   }
 
-  # B[i, j] は j -> i。行 i が to、列 j が from。
+  # B[i, j] is j -> i. Row i is the "to", column j is the "from".
   ord <- order(idx[, 2], idx[, 1])
   idx <- idx[ord, , drop = FALSE]
   data.frame(
@@ -53,14 +56,15 @@ tidy.LingamResult <- function(x, threshold = 0, ...) {
 }
 
 
-#' LingamResult の1行サマリを取得
+#' Get a one-row summary of a LingamResult
 #'
-#' モデル全体を1行に要約する。残差を計算しないためデータ `X` は不要。
-#' 残差ベースの診断が必要な場合は [summary_lingam()] を使用すること。
+#' Summarizes the entire model in a single row. The data `X` is not required
+#' because no residuals are computed. If residual-based diagnostics are needed,
+#' use [summary_lingam()] instead.
 #'
-#' @param x [lingam_direct()] の返り値（`LingamResult` オブジェクト）
-#' @param ... 未使用
-#' @return 1 行の data.frame(n_variables, n_edges, causal_order)
+#' @param x The return value of [lingam_direct()] (a `LingamResult` object)
+#' @param ... Unused
+#' @return A one-row data.frame(n_variables, n_edges, causal_order)
 #' @export
 #' @examples
 #' dat <- generate_lingam_sample_6()
@@ -80,14 +84,15 @@ glance.LingamResult <- function(x, ...) {
 }
 
 
-#' BootstrapResult を tidy な data.frame に変換
+#' Convert a BootstrapResult to a tidy data.frame
 #'
-#' 各因果方向の出現回数・割合・効果量の要約を返す。内部で
-#' [get_causal_direction_counts()] を呼び出すため、同関数の引数を `...` で渡せる。
+#' Returns a summary of the occurrence count, proportion, and effect size for
+#' each causal direction. Internally it calls [get_causal_direction_counts()],
+#' so that function's arguments can be passed through `...`.
 #'
-#' @param x [lingam_direct_bootstrap()] の返り値（`BootstrapResult` オブジェクト）
-#' @param ... [get_causal_direction_counts()] に渡す引数
-#'   (`n_directions`, `min_causal_effect`, `split_by_causal_effect_sign`, `labels` など)
+#' @param x The return value of [lingam_direct_bootstrap()] (a `BootstrapResult` object)
+#' @param ... Arguments passed to [get_causal_direction_counts()]
+#'   (such as `n_directions`, `min_causal_effect`, `split_by_causal_effect_sign`, `labels`)
 #' @return data.frame (from, to, count, proportion, ...)
 #' @export
 #' @examples

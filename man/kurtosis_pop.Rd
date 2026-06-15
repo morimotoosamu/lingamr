@@ -2,14 +2,14 @@
 % Please edit documentation in R/get_error_independence_p_values.r
 \name{kurtosis_pop}
 \alias{kurtosis_pop}
-\title{尖度（n割り、正規分布で 0 になる超過尖度）}
+\title{Kurtosis (divided by n; excess kurtosis, which is 0 for a normal distribution)}
 \usage{
 kurtosis_pop(x)
 }
 \arguments{
-\item{x}{数値ベクトル}
+\item{x}{numeric vector}
 }
 \description{
-尖度（n割り、正規分布で 0 になる超過尖度）
+Kurtosis (divided by n; excess kurtosis, which is 0 for a normal distribution)
 }
 \keyword{internal}

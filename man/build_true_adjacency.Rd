@@ -2,23 +2,24 @@
 % Please edit documentation in R/generate_lingam_sample.r
 \name{build_true_adjacency}
 \alias{build_true_adjacency}
-\title{エッジ指定から真の隣接行列を構築する}
+\title{Build the true adjacency matrix from edge specifications}
 \usage{
 build_true_adjacency(var_names, from, to, coef)
 }
 \arguments{
-\item{var_names}{変数名ベクトル}
+\item{var_names}{vector of variable names}
 
-\item{from}{エッジの原因変数名ベクトル}
+\item{from}{vector of cause (source) variable names for the edges}
 
-\item{to}{エッジの結果変数名ベクトル（from と同じ長さ）}
+\item{to}{vector of effect (target) variable names for the edges
+(same length as \code{from})}
 
-\item{coef}{エッジ係数ベクトル（from と同じ長さ）}
+\item{coef}{vector of edge coefficients (same length as \code{from})}
 }
 \value{
-隣接行列 (p x p)。\code{m[to, from] = coef}（行 = to, 列 = from）
+adjacency matrix (p x p). \code{m[to, from] = coef} (row = to, col = from)
 }
 \description{
-エッジ指定から真の隣接行列を構築する
+Build the true adjacency matrix from edge specifications
 }
 \keyword{internal}

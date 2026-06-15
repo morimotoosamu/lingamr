@@ -2,17 +2,17 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{print.BootstrapResult}
 \alias{print.BootstrapResult}
-\title{BootstrapResult の内容を表示}
+\title{Display the contents of a BootstrapResult}
 \usage{
 \method{print}{BootstrapResult}(x, ...)
 }
 \arguments{
-\item{x}{BootstrapResult オブジェクト}
+\item{x}{BootstrapResult object}
 
-\item{...}{追加の引数 (S3メソッド互換用)}
+\item{...}{Additional arguments (for S3 method compatibility)}
 }
 \description{
-BootstrapResult の内容を表示
+Display the contents of a BootstrapResult
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

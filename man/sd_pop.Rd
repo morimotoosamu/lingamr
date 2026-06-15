@@ -2,11 +2,11 @@
 % Please edit documentation in R/lingam_direct.r
 \name{sd_pop}
 \alias{sd_pop}
-\title{Population standard deviation (n割り)}
+\title{Population standard deviation (divided by n)}
 \usage{
 sd_pop(x)
 }
 \description{
-Population standard deviation (n割り)
+Population standard deviation (divided by n)
 }
 \keyword{internal}

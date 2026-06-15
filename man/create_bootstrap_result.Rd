@@ -2,7 +2,7 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{create_bootstrap_result}
 \alias{create_bootstrap_result}
-\title{BootstrapResult を作成}
+\title{Create a BootstrapResult}
 \usage{
 create_bootstrap_result(
   adjacency_matrices,
@@ -18,12 +18,13 @@ create_bootstrap_result(
 
 \item{resampled_indices}{list of index vectors}
 
-\item{causal_orders}{matrix (n_sampling x n_features)。各行が1標本の因果順序。}
+\item{causal_orders}{matrix (n_sampling x n_features). Each row is the causal
+order of one sample.}
 }
 \value{
 BootstrapResult (list with class attribute)
 }
 \description{
-BootstrapResult を作成
+Create a BootstrapResult
 }
 \keyword{internal}

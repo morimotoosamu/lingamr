@@ -2,17 +2,17 @@
 % Please edit documentation in R/search_causal_order.r
 \name{entropy_approx}
 \alias{entropy_approx}
-\title{エントロピーの最大エントロピー近似}
+\title{Maximum-entropy approximation of entropy}
 \usage{
 entropy_approx(u)
 }
 \arguments{
-\item{u}{入力ベクトル}
+\item{u}{Input vector}
 }
 \value{
-近似エントロピー値
+Approximate entropy value
 }
 \description{
-エントロピーの最大エントロピー近似
+Maximum-entropy approximation of entropy
 }
 \keyword{internal}

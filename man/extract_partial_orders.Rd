@@ -2,17 +2,17 @@
 % Please edit documentation in R/search_causal_order.r
 \name{extract_partial_orders}
 \alias{extract_partial_orders}
-\title{事前知識から部分順序を抽出}
+\title{Extract partial orders from prior knowledge}
 \usage{
 extract_partial_orders(pk)
 }
 \arguments{
-\item{pk}{事前知識行列 (NaN = 不明)}
+\item{pk}{Prior knowledge matrix (NaN = unknown)}
 }
 \value{
-matrix (n x 2), 各行は (from, to) の部分順序
+matrix (n x 2), each row is a (from, to) partial order
 }
 \description{
-事前知識から部分順序を抽出
+Extract partial orders from prior knowledge
 }
 \keyword{internal}

@@ -24,8 +24,8 @@ test_that("plot_adjacency comparison mode adds per-edge color attributes", {
   dat <- generate_lingam_sample_6(n = 500, seed = 42)
   res <- lingam_direct(dat$data, reg_method = "ols")
 
-  # debug = TRUE で DOT 文字列を出力させる。色名は内部で hex に変換されるため、
-  # 比較モードの特徴である「各エッジ行に color 属性が付くこと」を確認する。
+  # debug = TRUE outputs the DOT string. Since color names are converted to hex internally,
+  # we check the comparison-mode characteristic that each edge row gets a color attribute.
   dot_output <- capture.output(
     plot_adjacency(res$adjacency_matrix,
                    true_B = dat$true_adjacency,
@@ -34,7 +34,7 @@ test_that("plot_adjacency comparison mode adds per-edge color attributes", {
 
   edge_rows <- grep("->", dot_output, value = TRUE)
   expect_true(length(edge_rows) > 0)
-  # 比較モードではエッジごとに color = '#...' が付与される（通常モードでは付かない）
+  # In comparison mode each edge gets color = '#...' (in normal mode it does not)
   expect_true(any(grepl("color = '#", edge_rows)))
 })
 
@@ -49,7 +49,7 @@ test_that("plot_adjacency normal mode does NOT add per-edge color attributes", {
 
   edge_rows <- grep("->", dot_output, value = TRUE)
   expect_true(length(edge_rows) > 0)
-  # 通常モードのエッジ行は label のみで、個別 color 属性は付かない
+  # Normal-mode edge rows have label only, with no individual color attribute
   expect_false(any(grepl("color =", edge_rows)))
 })
 

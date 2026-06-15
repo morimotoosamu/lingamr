@@ -2,14 +2,14 @@
 % Please edit documentation in R/get_error_independence_p_values.r
 \name{skewness_pop}
 \alias{skewness_pop}
-\title{歪度（n割り）}
+\title{Skewness (divided by n)}
 \usage{
 skewness_pop(x)
 }
 \arguments{
-\item{x}{数値ベクトル}
+\item{x}{numeric vector}
 }
 \description{
-歪度（n割り）
+Skewness (divided by n)
 }
 \keyword{internal}

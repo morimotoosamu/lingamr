@@ -1,11 +1,12 @@
-#' LiNGAM モデルの残差（誤差項）を計算する
+#' Compute residuals (error terms) of a LiNGAM model
 #'
-#' 入力の検証（`LingamResult` であること・X が数値であること・次元の一致）を
-#' 行ったうえで `E = X - X B^T` を返す。残差ベースの診断関数で共通利用する。
+#' After validating the inputs (that `lingam_result` is a `LingamResult`,
+#' that X is numeric, and that the dimensions match), returns `E = X - X B^T`.
+#' Shared by the residual-based diagnostic functions.
 #'
-#' @param X 元データ (matrix or data.frame)
-#' @param lingam_result [lingam_direct()] の返り値
-#' @return 残差行列 (n_samples x n_features)。X の列名を保持する。
+#' @param X original data (matrix or data.frame)
+#' @param lingam_result return value of [lingam_direct()]
+#' @return residual matrix (n_samples x n_features). Preserves the column names of X.
 #' @keywords internal
 lingam_residuals <- function(X, lingam_result) {
   validate_lingam_result(lingam_result)
@@ -23,8 +24,8 @@ lingam_residuals <- function(X, lingam_result) {
 }
 
 
-#' 歪度（n割り）
-#' @param x 数値ベクトル
+#' Skewness (divided by n)
+#' @param x numeric vector
 #' @keywords internal
 skewness_pop <- function(x) {
   n <- length(x)
@@ -33,8 +34,8 @@ skewness_pop <- function(x) {
 }
 
 
-#' 尖度（n割り、正規分布で 0 になる超過尖度）
-#' @param x 数値ベクトル
+#' Kurtosis (divided by n; excess kurtosis, which is 0 for a normal distribution)
+#' @param x numeric vector
 #' @keywords internal
 kurtosis_pop <- function(x) {
   n <- length(x)
@@ -43,48 +44,48 @@ kurtosis_pop <- function(x) {
 }
 
 
-#' 誤差の独立性検定の p 値を計算
+#' Compute p-values for the independence test of the errors
 #'
-#' @param X 元データ (matrix or data.frame)
-#' @param lingam_result lingam_direct() の返り値
-#' @param method 相関係数の種類 ("spearman", "pearson", "kendall")
-#' @return p 値の行列 (n_features x n_features)
+#' @param X original data (matrix or data.frame)
+#' @param lingam_result return value of lingam_direct()
+#' @param method type of correlation coefficient ("spearman", "pearson", "kendall")
+#' @return matrix of p-values (n_features x n_features)
 #' @importFrom stats cor.test
 #' @export
 #' @examples
-#' # サンプルデータの呼び出し
+#' # Load the sample data
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' # Direct LiNGAM の実行
+#' # Run Direct LiNGAM
 #' result <- LiNGAM_sample_1000$data |>
 #'   lingam_direct()
 #'
-#' # p 値の計算（デフォルト: Spearman）
+#' # Compute p-values (default: Spearman)
 #' p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
 #' round(p_vals, 3)
 #'
-#' # Kendall で計算
+#' # Compute with Kendall
 #' p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000$data, result, method = "kendall")
 #' round(p_vals_k, 3)
 get_error_independence_p_values <- function(X, lingam_result, method = "spearman") {
   method <- match.arg(method, c("spearman", "pearson", "kendall"))
 
-  # 残差（誤差項）の計算（入力検証込み）
+  # Compute residuals (error terms) (with input validation)
   E <- lingam_residuals(X, lingam_result)
   n_features <- ncol(E)
 
-  # 全ペアのインデックスを生成（対角を除く）
+  # Generate indices for all pairs (excluding the diagonal)
   pairs <- which(upper.tri(matrix(TRUE, n_features, n_features)), arr.ind = TRUE)
 
-  # 上三角の全ペアを一括計算
+  # Compute all upper-triangular pairs at once
   p_upper <- apply(pairs, 1, function(idx) {
     stats::cor.test(E[, idx[1]], E[, idx[2]], method = method)$p.value
   })
 
-  # 対称行列に格納
+  # Store in a symmetric matrix
   p_values <- matrix(NA, nrow = n_features, ncol = n_features)
   p_values[pairs] <- p_upper
-  p_values[pairs[, 2:1]] <- p_upper # 下三角にコピー
+  p_values[pairs[, 2:1]] <- p_upper # copy to the lower triangle
 
   colnames(p_values) <- rownames(p_values) <- colnames(E)
 
@@ -110,10 +111,10 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 #' @return data.frame with test results for each variable
 #' @export
 #' @examples
-#' # サンプルデータの呼び出し
+#' # Load the sample data
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' # Direct LiNGAM の実行
+#' # Run Direct LiNGAM
 #' result <- lingam_direct(LiNGAM_sample_1000$data)
 #'
 #' # Shapiro-Wilk (default)
@@ -121,7 +122,7 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 test_residual_normality <- function(X, lingam_result,
                                     method = "shapiro",
                                     alpha = 0.05) {
-  # --- Calculate residuals: e = X - X %*% t(B)（入力検証込み）---
+  # --- Calculate residuals: e = X - X %*% t(B) (with input validation) ---
   E <- lingam_residuals(X, lingam_result)
   n_features <- ncol(E)
   n_samples  <- nrow(E)
@@ -237,7 +238,7 @@ print.lingam_normality_test <- function(x, ...) {
   cat(sprintf("Significance:   %.3f\n", alpha))
   cat(sprintf("Non-Gaussian:   %d / %d variables\n\n", n_non_gauss, n_features))
 
-  # --- Display用のdata.frameを作成（型を明示的にcharacterに） ---
+  # --- Build a data.frame for display (with types explicitly set to character) ---
   display_df <- data.frame(
     variable     = x$variable,
     statistic    = sprintf("%.4f", x$statistic),
@@ -271,16 +272,16 @@ print.lingam_normality_test <- function(x, ...) {
 }
 
 #' plot QQ
-#' @param X 元データ (matrix or data.frame)
-#' @param lingam_result lingam_direct() の返り値
+#' @param X original data (matrix or data.frame)
+#' @param lingam_result return value of lingam_direct()
 #' @param ncol Number of columns.
 #' @param nrow Number of rows.
 #' @export
 #' @examples
-#' # サンプルデータの呼び出し
+#' # Load the sample data
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' # Direct LiNGAM の実行
+#' # Run Direct LiNGAM
 #' result <- lingam_direct(LiNGAM_sample_1000$data)
 #'
 #' plot_residual_qq(LiNGAM_sample_1000$data, result)

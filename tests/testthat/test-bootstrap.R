@@ -64,9 +64,9 @@ test_that("get_causal_direction_counts returns data.frame with expected columns"
   expect_true(all(c("from", "to", "count", "proportion",
                     "mean_effect", "median_effect", "sd_effect",
                     "ci_lower", "ci_upper") %in% names(dc)))
-  # from が to より先に来る（列順）
+  # from comes before to (column order)
   expect_lt(which(names(dc) == "from"), which(names(dc) == "to"))
-  # proportion は [0, 1]
+  # proportion is in [0, 1]
   expect_true(all(dc$proportion >= 0 & dc$proportion <= 1))
 })
 
@@ -89,7 +89,7 @@ test_that("get_adjacency_matrix_summary returns correctly shaped matrix", {
 })
 
 # =============================================================================
-# 並列実行の再現性テスト (#11)
+# Reproducibility tests for parallel execution (#11)
 # =============================================================================
 
 test_that("parallel bootstrap is reproducible with same seed and same n_cores", {
@@ -119,8 +119,9 @@ test_that("parallel bootstrap with different seeds gives different results", {
 })
 
 test_that("parallel and sequential results differ (L'Ecuyer vs set.seed)", {
-  # ドキュメントに明記の通り、並列と逐次は同一 seed でも数値が一致しない
-  # このテストはその仕様を回帰テストとして記録する
+  # As documented, parallel and sequential runs do not produce identical
+  # numbers even with the same seed.
+  # This test records that specification as a regression test.
   skip_if_not(parallel::detectCores() >= 2L, "requires >= 2 cores")
 
   dat <- generate_lingam_sample_6(n = 300, seed = 1)
@@ -143,7 +144,7 @@ test_that("parallel bootstrap returns same structure as sequential", {
   bs_par <- lingam_direct_bootstrap(dat$data, n_sampling = 8L, seed = 1L,
                                     parallel = TRUE, n_cores = 2L)
 
-  # 数値は違っても構造（次元・クラス）は同じであること
+  # Even if the numbers differ, the structure (dimensions/class) must be the same
   expect_s3_class(bs_par, "BootstrapResult")
   expect_equal(dim(bs_par$adjacency_matrices), dim(bs_seq$adjacency_matrices))
 })

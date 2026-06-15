@@ -2,15 +2,15 @@
 % Please edit documentation in R/summary_lingam.r
 \name{print.lingam_summary}
 \alias{print.lingam_summary}
-\title{lingam_summary の print メソッド}
+\title{print method for lingam_summary}
 \usage{
 \method{print}{lingam_summary}(x, ...)
 }
 \arguments{
-\item{x}{\code{lingam_summary} オブジェクト}
+\item{x}{A \code{lingam_summary} object}
 
-\item{...}{追加引数（未使用）}
+\item{...}{Additional arguments (unused)}
 }
 \description{
-lingam_summary の print メソッド
+print method for lingam_summary
 }

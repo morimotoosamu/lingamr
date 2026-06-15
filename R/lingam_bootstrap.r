@@ -6,36 +6,41 @@
 # =============================================================================
 
 # =============================================================================
-# ブートストラップ実行関数
+# Bootstrap execution function
 # =============================================================================
 
-#' Direct LiNGAM のブートストラップ
+#' Bootstrap for Direct LiNGAM
 #'
-#' @param X 数値行列 (n_samples x n_features)
-#' @param n_sampling ブートストラップの反復回数
-#' @param prior_knowledge 事前知識行列 (NULL可)
-#' @param apply_prior_knowledge_softly 事前知識のソフト適用 (logical)
-#' @param measure 独立性の評価尺度 ("pwling" or "kernel")
-#' @param reg_method 回帰手法 ("ols", "lasso", "adaptive_lasso", "ridge")
-#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
-#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
-#'   `lingam_direct()` の同名引数と同じ。
-#' @param seed 乱数シード (NULL可)
-#' @param verbose 進捗を表示するか (logical)
-#' @param parallel 並列処理を行うか (logical)。`TRUE` の場合、各ブートストラップ
-#'   反復を複数コアに分散して実行する。
-#' @param n_cores 使用するコア数 (整数, NULL可)。`NULL` の場合は安全のため最大 2
-#'   コアに制限される。`parallel = FALSE` のときは無視される。
+#' @param X Numeric matrix (n_samples x n_features)
+#' @param n_sampling Number of bootstrap iterations
+#' @param prior_knowledge Prior knowledge matrix (NULL allowed)
+#' @param apply_prior_knowledge_softly Apply prior knowledge softly (logical)
+#' @param measure Independence measure ("pwling" or "kernel")
+#' @param reg_method Regression method ("ols", "lasso", "adaptive_lasso", "ridge")
+#' @param lambda Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
+#' @param init_method Method for estimating the initial weights of adaptive LASSO
+#'   regression ("ols" or "ridge"). Same as the argument of the same name in
+#'   `lingam_direct()`.
+#' @param seed Random seed (NULL allowed)
+#' @param verbose Whether to display progress (logical)
+#' @param parallel Whether to use parallel processing (logical). When `TRUE`,
+#'   each bootstrap iteration is distributed across multiple cores.
+#' @param n_cores Number of cores to use (integer, NULL allowed). When `NULL`,
+#'   the number of cores is limited to a maximum of 2 for safety. Ignored when
+#'   `parallel = FALSE`.
 #' @return BootstrapResult (list)
 #' @details
-#' `parallel = TRUE` を指定すると、`parallel::makePSOCKcluster()` による
-#' ソケットクラスターで反復を分散実行する。クラスターは処理終了時・エラー発生時
-#' いずれの場合も `on.exit()` により必ず解放される。
+#' When `parallel = TRUE` is specified, iterations are distributed across a
+#' socket cluster created by `parallel::makePSOCKcluster()`. The cluster is
+#' always released via `on.exit()`, whether the process finishes normally or
+#' an error occurs.
 #'
-#' **再現性について:** 並列実行時は `parallel::clusterSetRNGStream()` による
-#' L'Ecuyer の並列乱数ストリームを用いる。同じ `seed`・同じ `n_cores` であれば
-#' 結果は再現するが、逐次実行 (`parallel = FALSE`) の結果とは数値的に一致しない。
-#' 厳密に逐次版と同じ結果が必要な場合は `parallel = FALSE` を使用すること。
+#' **On reproducibility:** During parallel execution, L'Ecuyer parallel random
+#' number streams via `parallel::clusterSetRNGStream()` are used. Results are
+#' reproducible given the same `seed` and same `n_cores`, but they do not
+#' numerically match the results of sequential execution (`parallel = FALSE`).
+#' If you need results that exactly match the sequential version, use
+#' `parallel = FALSE`.
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -77,8 +82,9 @@ lingam_direct_bootstrap <- function(X,
                              n_cores = NULL) {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix.")
-  # 不正な引数は反復の中（並列時はワーカー内）で分かりにくいエラーになるため、
-  # クラスター起動前にここで検証する
+  # Invalid arguments would otherwise produce confusing errors inside the
+  # iterations (within workers when parallel), so validate them here before
+  # starting the cluster.
   measure <- match.arg(measure, c("pwling", "kernel"))
   reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
@@ -95,7 +101,7 @@ lingam_direct_bootstrap <- function(X,
   n_samples <- nrow(X)
   n_features <- ncol(X)
 
-  # 1 反復分の処理: リサンプリング → 推定 → 総合効果
+  # Processing for one iteration: resampling -> estimation -> total effects
   run_one <- function(i) {
     idx <- sample(n_samples, replace = TRUE)
     resampled_X <- X[idx, , drop = FALSE]
@@ -122,7 +128,7 @@ lingam_direct_bootstrap <- function(X,
     )
   }
 
-  # 使用コア数を解決（デフォルトは最大 2 コアに制限）
+  # Resolve the number of cores to use (defaults to a maximum of 2 cores)
   if (parallel) {
     available <- parallel::detectCores()
     if (is.na(available)) available <- 1L
@@ -149,13 +155,14 @@ lingam_direct_bootstrap <- function(X,
     cl <- parallel::makePSOCKcluster(n_cores)
     on.exit(parallel::stopCluster(cl), add = TRUE)
 
-    # ワーカー上で本パッケージの関数を利用可能にする。
-    # requireNamespace は名前空間を読み込むだけで探索パスに付けないため、
-    # ワーカー側でクロージャ内の関数が解決できるよう library() で attach する。
+    # Make this package's functions available on the workers.
+    # requireNamespace only loads the namespace without adding it to the search
+    # path, so attach the package with library() so that functions referenced
+    # inside the closure can be resolved on the worker side.
     pkg <- utils::packageName()
     ns <- environment(lingam_direct)
-    # ワーカーは新規 R セッションのため、メインと同じライブラリパスを設定し、
-    # 同一バージョンの本パッケージを読み込めるようにする。
+    # Because the workers are fresh R sessions, set the same library paths as
+    # the main session so that the same version of this package can be loaded.
     parallel::clusterCall(cl, function(paths) .libPaths(paths), .libPaths())
     worker_ready <- FALSE
     if (!is.null(pkg) && nzchar(pkg)) {
@@ -172,12 +179,13 @@ lingam_direct_bootstrap <- function(X,
       }
     }
     if (!worker_ready) {
-      # 未インストール時 (devtools::load_all 等) のフォールバック:
-      # 名前空間の全オブジェクトをワーカーへ送る
+      # Fallback when not installed (e.g. devtools::load_all):
+      # send all objects of the namespace to the workers.
       parallel::clusterExport(cl, varlist = ls(ns, all.names = TRUE), envir = ns)
     }
 
-    # 並列安全な乱数ストリーム（再現性確保。逐次版とは一致しない）
+    # Parallel-safe random number stream (ensures reproducibility; does not
+    # match the sequential version)
     if (!is.null(seed)) parallel::clusterSetRNGStream(cl, seed)
 
     res_list <- parallel::parLapply(cl, seq_len(n_sampling), run_one)
@@ -191,7 +199,7 @@ lingam_direct_bootstrap <- function(X,
     })
   }
 
-  # 結果を配列に集約
+  # Aggregate results into arrays
   adjacency_matrices <- array(0, dim = c(n_sampling, n_features, n_features))
   total_effects <- array(0, dim = c(n_sampling, n_features, n_features))
   causal_orders <- matrix(0L, nrow = n_sampling, ncol = n_features)
@@ -212,14 +220,15 @@ lingam_direct_bootstrap <- function(X,
 
 
 # =============================================================================
-# BootstrapResult オブジェクト
+# BootstrapResult object
 # =============================================================================
 
-#' BootstrapResult を作成
+#' Create a BootstrapResult
 #' @param adjacency_matrices array (n_sampling x n_features x n_features)
 #' @param total_effects array (n_sampling x n_features x n_features)
 #' @param resampled_indices list of index vectors
-#' @param causal_orders matrix (n_sampling x n_features)。各行が1標本の因果順序。
+#' @param causal_orders matrix (n_sampling x n_features). Each row is the causal
+#'   order of one sample.
 #' @return BootstrapResult (list with class attribute)
 #' @keywords internal
 create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled_indices = NULL, causal_orders = NULL) {
@@ -234,10 +243,10 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 }
 
 
-#' BootstrapResult の内容を表示
+#' Display the contents of a BootstrapResult
 #'
-#' @param x BootstrapResult オブジェクト
-#' @param ... 追加の引数 (S3メソッド互換用)
+#' @param x BootstrapResult object
+#' @param ... Additional arguments (for S3 method compatibility)
 #' @method print BootstrapResult
 #' @export
 #' @examples
@@ -254,16 +263,16 @@ print.BootstrapResult <- function(x, ...) {
 
 
 # =============================================================================
-# BootstrapResult のメソッド群
+# BootstrapResult methods
 # =============================================================================
 
-#' 因果方向のカウント・割合・因果効果を取得
+#' Get counts, proportions, and causal effects of causal directions
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param n_directions 上位何件を返すか (NULL = 全て)
-#' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
-#' @param split_by_causal_effect_sign 因果効果の符号で分割するか
-#' @param labels 変数名ベクトル (NULL可。指定するとfrom_name, to_name列を追加)
+#' @param result BootstrapResult object
+#' @param n_directions How many of the top entries to return (NULL = all)
+#' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
+#' @param split_by_causal_effect_sign Whether to split by the sign of the causal effect
+#' @param labels Vector of variable names (NULL allowed; if provided, adds from_name and to_name columns)
 #' @return A data frame containing the following columns:
 #' * `from`, `to`: 1-based indices of the causal (from) and effect (to) variables.
 #' * `count`: Number of bootstrap samples in which this specific causal direction was identified.
@@ -297,7 +306,7 @@ get_causal_direction_counts <- function(result,
   n_sampling <- dim(am_array)[1]
   n_features <- dim(am_array)[2]
 
-  # 全ブートストラップから方向と効果量を収集
+  # Collect directions and effect sizes from all bootstrap samples
   directions_list <- list()
   for (s in seq_len(n_sampling)) {
     am <- am_array[s, , ]
@@ -322,7 +331,7 @@ get_causal_direction_counts <- function(result,
     }
   }
 
-  # 空の場合
+  # When empty
   if (length(directions_list) == 0) {
     empty <- data.frame(
       from = integer(0), to = integer(0),
@@ -340,14 +349,14 @@ get_causal_direction_counts <- function(result,
 
   directions <- do.call(rbind, directions_list)
 
-  # グループキーの構築
+  # Build group keys
   if (split_by_causal_effect_sign) {
     group_key <- paste(directions$from, directions$to, directions$sign, sep = "_")
   } else {
     group_key <- paste(directions$from, directions$to, sep = "_")
   }
 
-  # グループごとに集計
+  # Aggregate by group
   unique_keys <- unique(group_key)
   results_list <- lapply(unique_keys, function(key) {
     mask <- group_key == key
@@ -376,17 +385,17 @@ get_causal_direction_counts <- function(result,
 
   agg <- do.call(rbind, results_list)
 
-  # 降順ソート
+  # Sort in descending order
   agg <- agg[order(-agg$count), ]
   rownames(agg) <- NULL
 
-  # 変数名の付与
+  # Add variable names
   if (!is.null(labels)) {
     agg$from_name <- labels[agg$from]
     agg$to_name <- labels[agg$to]
   }
 
-  # 上位 n_directions 件
+  # Top n_directions entries
   if (!is.null(n_directions)) {
     n_directions <- min(n_directions, nrow(agg))
     agg <- agg[seq_len(n_directions), ]
@@ -396,12 +405,12 @@ get_causal_direction_counts <- function(result,
 }
 
 
-#' DAG カウントを取得
+#' Get DAG counts
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param n_dags 上位何件を返すか (NULL = 全て)
-#' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
-#' @param split_by_causal_effect_sign 因果効果の符号で分割するか
+#' @param result BootstrapResult object
+#' @param n_dags How many of the top entries to return (NULL = all)
+#' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
+#' @param split_by_causal_effect_sign Whether to split by the sign of the causal effect
 #' @return list(dag = list of data.frames, count = integer vector)
 #' @export
 #' @examples
@@ -423,7 +432,7 @@ get_directed_acyclic_graph_counts <- function(result,
   am_array[is.na(am_array)] <- 0
   n_sampling <- dim(am_array)[1]
 
-  # 各 DAG を文字列キーに変換
+  # Convert each DAG to a string key
   dag_keys <- character(n_sampling)
   dag_list <- vector("list", n_sampling)
 
@@ -434,19 +443,19 @@ get_directed_acyclic_graph_counts <- function(result,
     dag_list <- lapply(seq_len(n_sampling), function(s) sign_array[s, , ])
   } else {
     bin_array <- abs(am_array) > min_causal_effect
-    mode(bin_array) <- "integer" # 文字列化のために integer に変換
+    mode(bin_array) <- "integer" # convert to integer for string conversion
     dag_keys <- apply(bin_array, MARGIN = 1, FUN = paste, collapse = ",")
     dag_list <- lapply(seq_len(n_sampling), function(s) bin_array[s, , ])
   }
 
-  # カウント
+  # Count
   tbl <- sort(table(dag_keys), decreasing = TRUE)
   if (!is.null(n_dags)) {
     n_dags <- min(n_dags, length(tbl))
     tbl <- tbl[seq_len(n_dags)]
   }
 
-  # 結果の構築
+  # Build the result
   dags_result <- list()
   counts_result <- as.integer(tbl)
 
@@ -455,7 +464,7 @@ get_directed_acyclic_graph_counts <- function(result,
     match_idx <- which(dag_keys == key)[1]
     mat <- dag_list[[match_idx]]
 
-    # ★修正: 両方とも which(mat != 0) で統一
+    # Fix: unify both to use which(mat != 0)
     idx <- which(mat != 0, arr.ind = TRUE)
 
     if (nrow(idx) == 0) {
@@ -485,11 +494,11 @@ get_directed_acyclic_graph_counts <- function(result,
 }
 
 
-#' ブートストラップ確率を取得
+#' Get bootstrap probabilities
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
-#' @return 確率行列 (n_features x n_features)
+#' @param result BootstrapResult object
+#' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
+#' @return Probability matrix (n_features x n_features)
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -512,10 +521,10 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 }
 
 
-#' 総合因果効果リストを取得
+#' Get a list of total causal effects
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
+#' @param result BootstrapResult object
+#' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
 #' @return data.frame (from, to, effect, probability)
 #' @importFrom stats median
 #' @export
@@ -536,7 +545,7 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 
   probs <- apply(abs(te_array) > min_causal_effect, MARGIN = c(2, 3), FUN = mean)
 
-  # 確率 > 0 の因果方向
+  # Causal directions with probability > 0
   idx <- which(abs(probs) > 0, arr.ind = TRUE)
   if (nrow(idx) == 0) {
     return(data.frame(
@@ -558,10 +567,10 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
     stats::median(nonzero)
   })
 
-  # 中央値も idx を使って一発で抽出
+  # Extract the medians in one step using idx as well
   effect_vec <- median_mat[idx]
 
-  # 確率の降順でソート
+  # Sort by probability in descending order
   ord <- order(-prob_vec)
   data.frame(
     from        = from_vec[ord],
@@ -572,12 +581,12 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 }
 
 
-#' 指定した2変数間の全パスとブートストラップ確率を取得
+#' Get all paths between two specified variables and their bootstrap probabilities
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param from_index 始点インデックス (1-based)
-#' @param to_index 終点インデックス (1-based)
-#' @param min_causal_effect 因果効果の最小閾値 (NULL = 0)
+#' @param result BootstrapResult object
+#' @param from_index Start index (1-based)
+#' @param to_index End index (1-based)
+#' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
 #' @return data.frame (path, effect, probability)
 #' @importFrom stats median
 #' @export
@@ -595,8 +604,8 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
   am_array <- result$adjacency_matrices
   n_sampling <- dim(am_array)[1]
 
-  # 全パスの収集
-  # 事前にリストに蓄積し、最後に unlist
+  # Collect all paths
+  # Accumulate into a list first, then unlist at the end
   paths_collector <- vector("list", n_sampling)
   effects_collector <- vector("list", n_sampling)
 
@@ -615,18 +624,18 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
     return(data.frame(path = character(0), effect = numeric(0), probability = numeric(0)))
   }
 
-  # カウント
+  # Count
   tbl <- table(paths_str_list)
   tbl <- sort(tbl, decreasing = TRUE)
   probs <- as.numeric(tbl) / n_sampling
 
-  # 各パスの中央値効果
+  # Median effect of each path
   path_strs <- names(tbl)
   effects_median <- sapply(path_strs, function(ps) {
     stats::median(effects_list[paths_str_list == ps])
   })
 
-  # パス文字列をリストに変換
+  # Convert path strings to lists
   path_list <- lapply(path_strs, function(ps) {
     as.integer(strsplit(ps, "_")[[1]])
   })
@@ -641,18 +650,18 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 
 
 # =============================================================================
-# 結果の表示・可視化ヘルパー
+# Helpers for displaying and visualizing results
 # =============================================================================
 
-#' ブートストラップ確率を DiagrammeR で描画
+#' Draw bootstrap probabilities with DiagrammeR
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param labels 変数名ベクトル (NULL可)
-#' @param min_causal_effect 表示する最小因果効果
-#' @param min_probability 表示する最小確率
-#' @param rankdir レイアウト方向
-#' @param shape ノード形状
-#' @return grViz オブジェクト
+#' @param result BootstrapResult object
+#' @param labels Vector of variable names (NULL allowed)
+#' @param min_causal_effect Minimum causal effect to display
+#' @param min_probability Minimum probability to display
+#' @param rankdir Layout direction
+#' @param shape Node shape
+#' @return grViz object
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -675,7 +684,7 @@ plot_bootstrap_probabilities <- function(result,
   p <- ncol(bp)
   if (is.null(labels)) labels <- paste0("x", seq_len(p) - 1)
 
-  # エッジの生成
+  # Generate edges
   edge_lines <- c()
   for (i in 1:p) {
     for (j in 1:p) {
@@ -712,16 +721,17 @@ plot_bootstrap_probabilities <- function(result,
 }
 
 
-#' ブートストラップ結果から因果効果の代表値の隣接行列を作成
+#' Create an adjacency matrix of representative causal-effect values from bootstrap results
 #'
-#' @param result BootstrapResult オブジェクト
-#' @param stat 代表値 ("mean" or "median")
-#' @param min_causal_effect 因果効果の最小閾値（これ以下はゼロ扱い）(NULL = 0)
-#' @param min_probability この確率未満のエッジはゼロにする (NULL = 0)
-#' @param labels 変数名ベクトル (NULL可)
-#' @return 隣接行列 (n_features x n_features)。
-#'   **規則: `B[i, j]` は変数 j から変数 i への因果係数（j → i）。**
-#'   `lingam_direct()` の `adjacency_matrix` と同じ規則。
+#' @param result BootstrapResult object
+#' @param stat Representative statistic ("mean" or "median")
+#' @param min_causal_effect Minimum threshold for the causal effect (values at or
+#'   below this are treated as zero) (NULL = 0)
+#' @param min_probability Edges below this probability are set to zero (NULL = 0)
+#' @param labels Vector of variable names (NULL allowed)
+#' @return Adjacency matrix (n_features x n_features).
+#'   **Rule: `B[i, j]` is the causal coefficient from variable j to variable i (j -> i).**
+#'   Same rule as the `adjacency_matrix` of `lingam_direct()`.
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -753,13 +763,13 @@ get_adjacency_matrix_summary <- function(result,
     for (j in 1:n_features) {
       if (i == j) next
 
-      # 全ブートストラップでの (i,j) 要素を取得
+      # Get the (i, j) element across all bootstrap samples
       vals <- am_array[, i, j]
 
-      # 閾値を超える値のみ抽出
+      # Extract only values exceeding the threshold
       significant <- vals[abs(vals) > min_causal_effect]
 
-      # 確率の計算
+      # Compute the probability
       prob <- length(significant) / n_sampling
 
       if (prob < min_probability || length(significant) == 0) {
@@ -770,7 +780,7 @@ get_adjacency_matrix_summary <- function(result,
     }
   }
 
-  # 変数名の付与
+  # Add variable names
   if (!is.null(labels)) {
     rownames(B) <- labels
     colnames(B) <- labels

@@ -2,25 +2,26 @@
 % Please edit documentation in R/search_causal_order.r
 \name{kernel_mi_core}
 \alias{kernel_mi_core}
-\title{カーネル法の相互情報量：本体}
+\title{Kernel-based mutual information: core}
 \usage{
 kernel_mi_core(E1, x2, kappa, sigma)
 }
 \arguments{
-\item{E1}{\code{kernel_mi_prepare()} で前計算した変数1側の行列}
+\item{E1}{Variable-1 matrix precomputed by \code{kernel_mi_prepare()}}
 
-\item{x2}{変数2のベクトル}
+\item{x2}{Vector of variable 2}
 
-\item{kappa}{正則化パラメータ}
+\item{kappa}{Regularization parameter}
 
-\item{sigma}{ガウスカーネルの幅}
+\item{sigma}{Width of the Gaussian kernel}
 }
 \value{
-相互情報量
+Mutual information
 }
 \description{
-求める量は 2n x 2n 行列の logdet の差だが、ブロック構造と Schur 補行列により
-n x n の Cholesky 分解だけで等価に計算できる：
+The target quantity is the difference of logdets of 2n x 2n matrices, but via
+the block structure and the Schur complement it can be computed equivalently
+using only an n x n Cholesky decomposition:
 \verb{MI = -1/2 * (logdet(tmp2^2 - K2 K1 tmp1^-2 K1 K2) - logdet(tmp2^2))}
 }
 \keyword{internal}

@@ -2,23 +2,23 @@
 % Please edit documentation in R/search_causal_order.r
 \name{diff_mutual_info}
 \alias{diff_mutual_info}
-\title{相互情報量の差}
+\title{Difference of mutual information}
 \usage{
 diff_mutual_info(xi_std, xj_std, ri_j, rj_i)
 }
 \arguments{
-\item{xi_std}{標準化された xi}
+\item{xi_std}{Standardized xi}
 
-\item{xj_std}{標準化された xj}
+\item{xj_std}{Standardized xj}
 
-\item{ri_j}{xi を xj で回帰した残差}
+\item{ri_j}{Residual of xi regressed on xj}
 
-\item{rj_i}{xj を xi で回帰した残差}
+\item{rj_i}{Residual of xj regressed on xi}
 }
 \value{
-相互情報量の差
+Difference of mutual information
 }
 \description{
-相互情報量の差
+Difference of mutual information
 }
 \keyword{internal}

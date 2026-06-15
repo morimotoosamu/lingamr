@@ -8,7 +8,7 @@ test_that("tidy.LingamResult returns long data.frame of edges", {
   expect_type(td$from, "character")
   expect_type(td$to, "character")
   expect_type(td$estimate, "double")
-  # 行数 == 非ゼロエッジ数
+  # number of rows == number of non-zero edges
   expect_equal(nrow(td), sum(abs(res$adjacency_matrix) > 0))
 })
 
@@ -17,14 +17,14 @@ test_that("tidy.LingamResult threshold filters edges", {
   res <- lingam_direct(dat$data, reg_method = "ols")
 
   td_all  <- tidy(res, threshold = 0)
-  td_high <- tidy(res, threshold = 100)  # 全エッジ除外
+  td_high <- tidy(res, threshold = 100)  # exclude all edges
 
   expect_gte(nrow(td_all), nrow(td_high))
   expect_equal(nrow(td_high), 0L)
 })
 
 test_that("tidy.LingamResult from/to follow j -> i convention", {
-  # 真の構造を直接渡して規則を確認: B["x0","x3"] = 3 は x3 -> x0
+  # pass the true structure directly to confirm the convention: B["x0","x3"] = 3 is x3 -> x0
   dat  <- generate_lingam_sample_6(n = 100, seed = 1)
   fake <- structure(
     list(adjacency_matrix = dat$true_adjacency, causal_order = 1:6),

@@ -9,7 +9,7 @@ test_that("summary_lingam returns lingam_summary with expected structure", {
   expect_equal(length(s$causal_order), 6L)
   expect_true(is.matrix(s$independence_p_values))
   expect_equal(dim(s$independence_p_values), c(6L, 6L))
-  # 6変数 → 上三角ペアは 15
+  # 6 variables -> 15 upper-triangular pairs
   expect_equal(s$n_pairs, 15L)
   expect_true(s$n_dependent_pairs >= 0 && s$n_dependent_pairs <= 15L)
   expect_true(s$n_non_gaussian >= 0 && s$n_non_gaussian <= 6L)
@@ -21,7 +21,7 @@ test_that("summary_lingam detects non-Gaussianity for uniform noise", {
   res <- lingam_direct(dat$data, reg_method = "ols")
   s   <- summary_lingam(dat$data, res)
 
-  # 一様分布の残差は非ガウスとして検出されるはず
+  # residuals from a uniform distribution should be detected as non-Gaussian
   expect_gt(s$n_non_gaussian, 0)
 })
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_total_effect.r
 \name{estimate_all_total_effects}
 \alias{estimate_all_total_effects}
-\title{全変数間の総合因果効果を一括推定}
+\title{Estimate the total causal effects between all variables at once}
 \usage{
 estimate_all_total_effects(
   X,
@@ -13,23 +13,23 @@ estimate_all_total_effects(
 )
 }
 \arguments{
-\item{X}{元データ (n_samples x n_features)}
+\item{X}{Original data (n_samples x n_features)}
 
-\item{lingam_result}{lingam_direct() の返り値}
+\item{lingam_result}{Return value of lingam_direct()}
 
-\item{method}{回帰手法 ("ols", "lasso", "adaptive_lasso")}
+\item{method}{Regression method ("ols", "lasso", "adaptive_lasso")}
 
-\item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")}
+\item{lambda}{Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC")}
 
-\item{init_method}{適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")}
+\item{init_method}{Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")}
 }
 \value{
-総合因果効果の行列 (n_features x n_features)。
-\strong{規則: \code{TE[i, j]} は変数 j から変数 i への総合因果効果（j → i）。}
-隣接行列 \code{adjacency_matrix} と同じ添字規則。直接効果と間接効果の合計。
+Matrix of total causal effects (n_features x n_features).
+\strong{Convention: \code{TE[i, j]} is the total causal effect from variable j to variable i (j -> i).}
+Same index convention as the adjacency matrix \code{adjacency_matrix}. The sum of direct and indirect effects.
 }
 \description{
-全変数間の総合因果効果を一括推定
+Estimate the total causal effects between all variables at once
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

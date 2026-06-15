@@ -2,20 +2,20 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{get_total_causal_effects}
 \alias{get_total_causal_effects}
-\title{総合因果効果リストを取得}
+\title{Get a list of total causal effects}
 \usage{
 get_total_causal_effects(result, min_causal_effect = NULL)
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{min_causal_effect}{因果効果の最小閾値 (NULL = 0)}
+\item{min_causal_effect}{Minimum threshold for the causal effect (NULL = 0)}
 }
 \value{
 data.frame (from, to, effect, probability)
 }
 \description{
-総合因果効果リストを取得
+Get a list of total causal effects
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

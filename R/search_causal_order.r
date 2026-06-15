@@ -1,5 +1,5 @@
 # =============================================================================
-# Direct LiNGAM - 因果順序の探索（pwling / kernel）と事前知識の処理
+# Direct LiNGAM - Causal order search (pwling / kernel) and prior knowledge handling
 # Based on the Python implementation from the LiNGAM Project
 # https://sites.google.com/view/sshimizu06/lingam
 # https://github.com/cdt15/lingam
@@ -14,17 +14,17 @@
 # =============================================================================
 
 
-#' 事前知識から部分順序を抽出
-#' @param pk 事前知識行列 (NaN = 不明)
-#' @return matrix (n x 2), 各行は (from, to) の部分順序
+#' Extract partial orders from prior knowledge
+#' @param pk Prior knowledge matrix (NaN = unknown)
+#' @return matrix (n x 2), each row is a (from, to) partial order
 #' @keywords internal
 extract_partial_orders <- function(pk) {
-  # パスがあるペア (pk == 1)
+  # Pairs with a path (pk == 1)
   path_idx <- which(pk == 1, arr.ind = TRUE)
-  # パスがないペア (pk == 0)
+  # Pairs with no path (pk == 0)
   no_path_idx <- which(pk == 0, arr.ind = TRUE)
 
-  # --- パスありペアの矛盾チェック ---
+  # --- Consistency check for path pairs ---
   if (nrow(path_idx) > 0) {
     check_pairs <- rbind(path_idx, path_idx[, 2:1, drop = FALSE])
     dup <- duplicated(check_pairs) | duplicated(check_pairs, fromLast = TRUE)
@@ -39,20 +39,20 @@ extract_partial_orders <- function(pk) {
     }
   }
 
-  # --- パスなしペアの重複除去 ---
+  # --- Deduplicate no-path pairs ---
   if (nrow(no_path_idx) > 0) {
     check_pairs2 <- rbind(no_path_idx, no_path_idx[, 2:1, drop = FALSE])
-    # 双方向に 0 が入っているペアを見つけて除外
+    # Find and exclude pairs that have 0 in both directions
     pair_key <- paste(check_pairs2[, 1], check_pairs2[, 2], sep = ",")
     tbl <- table(pair_key)
     dup_keys <- names(tbl[tbl > 1])
-    # no_path_idx のうち、双方向に存在するものを除外
+    # Exclude entries of no_path_idx that exist in both directions
     no_path_key <- paste(no_path_idx[, 1], no_path_idx[, 2], sep = ",")
     keep <- !(no_path_key %in% dup_keys)
     no_path_idx <- no_path_idx[keep, , drop = FALSE]
   }
 
-  # path_pairs と no_path_pairs[:, [1,0]] を結合
+  # Combine path_pairs with no_path_pairs[:, [1,0]]
   combined <- matrix(nrow = 0, ncol = 2)
   if (nrow(path_idx) > 0) {
     combined <- rbind(combined, path_idx)
@@ -73,19 +73,19 @@ extract_partial_orders <- function(pk) {
 }
 
 
-#' 残差 (xi を xj に回帰したときの残差)
-#' 残差ベクトルの計算
-#' @param xi 対象変数ベクトル
-#' @param xj 説明変数ベクトル
-#' @param standardized データが標準化済みか (default: FALSE)
-#' @return 回帰後の残差ベクトル
+#' Residual (residual when xi is regressed on xj)
+#' Compute the residual vector
+#' @param xi Target variable vector
+#' @param xj Explanatory variable vector
+#' @param standardized Whether the data is already standardized (default: FALSE)
+#' @return Residual vector after regression
 #' @keywords internal
 residual_vec <- function(xi, xj, standardized = FALSE) {
   if (standardized) {
-    # 高速版: mean = 0 を仮定
+    # Fast version: assumes mean = 0
     beta <- sum(xi * xj) / sum(xj * xj)
   } else {
-    # 汎用版: 中心化を含む
+    # General version: includes centering
     xi_c <- xi - mean(xi)
     xj_c <- xj - mean(xj)
     beta <- sum(xi_c * xj_c) / sum(xj_c * xj_c)
@@ -94,9 +94,9 @@ residual_vec <- function(xi, xj, standardized = FALSE) {
 }
 
 
-#' エントロピーの最大エントロピー近似
-#' @param u 入力ベクトル
-#' @return 近似エントロピー値
+#' Maximum-entropy approximation of entropy
+#' @param u Input vector
+#' @return Approximate entropy value
 #' @keywords internal
 entropy_approx <- function(u) {
   n <- length(u)
@@ -109,12 +109,12 @@ entropy_approx <- function(u) {
 }
 
 
-#' 相互情報量の差
-#' @param xi_std 標準化された xi
-#' @param xj_std 標準化された xj
-#' @param ri_j xi を xj で回帰した残差
-#' @param rj_i xj を xi で回帰した残差
-#' @return 相互情報量の差
+#' Difference of mutual information
+#' @param xi_std Standardized xi
+#' @param xj_std Standardized xj
+#' @param ri_j Residual of xi regressed on xj
+#' @param rj_i Residual of xj regressed on xi
+#' @return Difference of mutual information
 #' @keywords internal
 diff_mutual_info <- function(xi_std, xj_std, ri_j, rj_i) {
   sd_ri_j <- sd_pop(ri_j)
@@ -124,21 +124,21 @@ diff_mutual_info <- function(xi_std, xj_std, ri_j, rj_i) {
 }
 
 
-#' 候補変数の探索
-#' @param U 現在の未確定変数の集合
-#' @param Aknw 事前知識行列
-#' @param apply_prior_knowledge_softly ソフト適用の有無
-#' @param partial_orders 抽出された部分順序
+#' Search for candidate variables
+#' @param U Set of currently undetermined variables
+#' @param Aknw Prior knowledge matrix
+#' @param apply_prior_knowledge_softly Whether to apply prior knowledge softly
+#' @param partial_orders Extracted partial orders
 #' @return list(Uc, Vj)
 #' @keywords internal
 search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orders) {
-  # 事前知識なし
+  # No prior knowledge
 
   if (is.null(Aknw)) {
     return(list(Uc = U, Vj = integer(0)))
   }
 
-  # --- ハード適用 ---
+  # --- Hard application ---
   if (!apply_prior_knowledge_softly) {
     if (!is.null(partial_orders) && nrow(partial_orders) > 0) {
       Uc <- setdiff(U, partial_orders[, 2])
@@ -149,19 +149,19 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
     }
   }
 
-  # --- ソフト適用 ---
-  # 外生変数の探索
+  # --- Soft application ---
+  # Search for exogenous variables
   Uc <- integer(0)
   for (j in U) {
     index <- setdiff(U, j)
-    # NA (不明) を含む行は sum が NA → isTRUE() で FALSE になり候補から外れる
-    # (Python 版の NaN.sum() == 0 が False になる挙動と同じ)
+    # A row containing NA (unknown) yields NA from sum -> isTRUE() becomes FALSE and it is dropped from candidates
+    # (same behavior as Python's NaN.sum() == 0 evaluating to False)
     if (isTRUE(sum(Aknw[j, index]) == 0)) {
       Uc <- c(Uc, j)
     }
   }
 
-  # 内生変数の探索 → 候補の絞り込み
+  # Search for endogenous variables -> narrow down candidates
   if (length(Uc) == 0) {
     U_end <- integer(0)
     for (j in U) {
@@ -171,7 +171,7 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
         U_end <- c(U_end, j)
       }
     }
-    # シンク特徴量
+    # Sink features
     for (i in U) {
       index <- setdiff(U, i)
       if (isTRUE(sum(Aknw[index, i]) == 0)) {
@@ -182,7 +182,7 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
     if (length(Uc) == 0) Uc <- U
   }
 
-  # V^(j) の構築
+  # Build V^(j)
   Vj <- integer(0)
   for (i in U) {
     if (i %in% Uc) next
@@ -195,19 +195,19 @@ search_candidate <- function(U, Aknw, apply_prior_knowledge_softly, partial_orde
 }
 
 
-#' pwling による因果順序の探索
-#' @param X データ行列
-#' @param U 全変数インデックス
-#' @param Uc 候補変数のインデックス
-#' @param Vj 事前知識に基づく変数集合
-#' @return 選ばれた変数のインデックス
+#' Causal order search via pwling
+#' @param X Data matrix
+#' @param U Indices of all variables
+#' @param Uc Indices of candidate variables
+#' @param Vj Variable set based on prior knowledge
+#' @return Index of the selected variable
 #' @keywords internal
 search_causal_order_pwling <- function(X, U, Uc, Vj) {
   if (length(Uc) == 1) return(Uc[1])
   n <- nrow(X)
   p <- ncol(X)
 
-  # --- 一括で標準化し、各列のエントロピーを事前計算（ペアに依存しないため）---
+  # --- Standardize all columns at once and precompute each column's entropy (independent of pairs) ---
   X_std <- matrix(0, nrow = n, ncol = p)
   H <- numeric(p)
   for (k in U) {
@@ -217,8 +217,8 @@ search_causal_order_pwling <- function(X, U, Uc, Vj) {
     H[k] <- entropy_approx(X_std[, k])
   }
 
-  # 標準化済みなので相関行列は crossprod / n（BLAS で一括計算）。
-  # 回帰係数 beta と残差の母標準偏差 sqrt(1 - r^2) はここから解析的に得られる。
+  # Since the data is standardized, the correlation matrix is crossprod / n (computed at once via BLAS).
+  # The regression coefficient beta and the population SD of the residual sqrt(1 - r^2) follow analytically.
   R <- crossprod(X_std[, U, drop = FALSE]) / n
   pos <- integer(p)
   pos[U] <- seq_along(U)
@@ -233,8 +233,8 @@ search_causal_order_pwling <- function(X, U, Uc, Vj) {
     xi_std <- X_std[, i]
     for (j in U) {
       if (i == j) next
-      # diff_mutual_info は反対称（dm_ji = -dm_ij）なので、
-      # 両方が候補のペアは i < j の側で1回だけ計算して両者に加算する
+      # diff_mutual_info is antisymmetric (dm_ji = -dm_ij), so for pairs
+      # where both are candidates, compute once on the i < j side and add to both.
       if (in_Uc[j] && j < i) next
       xj_std <- X_std[, j]
       r_ij <- R[pos[i], pos[j]]
@@ -260,15 +260,16 @@ search_causal_order_pwling <- function(X, U, Uc, Vj) {
 }
 
 
-#' カーネル法の相互情報量：変数1側の前計算
+#' Kernel-based mutual information: precomputation for variable 1
 #'
-#' `kernel_mi_core()` で使う行列 `E1 = tmp1^-1 K1`（`tmp1 = K1 + n*kappa/2 * I`）
-#' を計算する。候補変数ごとに1回だけ呼べばよく、ペアごとの再計算を避けられる。
+#' Computes the matrix `E1 = tmp1^-1 K1` (`tmp1 = K1 + n*kappa/2 * I`) used in
+#' `kernel_mi_core()`. It only needs to be called once per candidate variable,
+#' avoiding per-pair recomputation.
 #'
-#' @param x 変数1のベクトル
-#' @param kappa 正則化パラメータ
-#' @param sigma ガウスカーネルの幅
-#' @return 行列 E1 (n x n)
+#' @param x Vector of variable 1
+#' @param kappa Regularization parameter
+#' @param sigma Width of the Gaussian kernel
+#' @return Matrix E1 (n x n)
 #' @keywords internal
 kernel_mi_prepare <- function(x, kappa, sigma) {
   n <- length(x)
@@ -276,24 +277,25 @@ kernel_mi_prepare <- function(x, kappa, sigma) {
   c0 <- n * kappa / 2
   tmp <- K
   diag(tmp) <- diag(tmp) + c0
-  # tmp と K は可換なので E = tmp^-1 K = I - c0 * tmp^-1（対称）
+  # tmp and K commute, so E = tmp^-1 K = I - c0 * tmp^-1 (symmetric)
   E <- -c0 * chol2inv(chol(tmp))
   diag(E) <- diag(E) + 1
   E
 }
 
 
-#' カーネル法の相互情報量：本体
+#' Kernel-based mutual information: core
 #'
-#' 求める量は 2n x 2n 行列の logdet の差だが、ブロック構造と Schur 補行列により
-#' n x n の Cholesky 分解だけで等価に計算できる：
+#' The target quantity is the difference of logdets of 2n x 2n matrices, but via
+#' the block structure and the Schur complement it can be computed equivalently
+#' using only an n x n Cholesky decomposition:
 #' `MI = -1/2 * (logdet(tmp2^2 - K2 K1 tmp1^-2 K1 K2) - logdet(tmp2^2))`
 #'
-#' @param E1 `kernel_mi_prepare()` で前計算した変数1側の行列
-#' @param x2 変数2のベクトル
-#' @param kappa 正則化パラメータ
-#' @param sigma ガウスカーネルの幅
-#' @return 相互情報量
+#' @param E1 Variable-1 matrix precomputed by `kernel_mi_prepare()`
+#' @param x2 Vector of variable 2
+#' @param kappa Regularization parameter
+#' @param sigma Width of the Gaussian kernel
+#' @return Mutual information
 #' @keywords internal
 kernel_mi_core <- function(E1, x2, kappa, sigma) {
   n <- length(x2)
@@ -301,18 +303,18 @@ kernel_mi_core <- function(E1, x2, kappa, sigma) {
   tmp2 <- K2
   diag(tmp2) <- diag(tmp2) + n * kappa / 2
   W <- E1 %*% K2                       # = tmp1^-1 K1 K2
-  S <- crossprod(tmp2) - crossprod(W)  # Schur 補行列（tmp2 は対称なので crossprod = tmp2^2）
+  S <- crossprod(tmp2) - crossprod(W)  # Schur complement (tmp2 is symmetric, so crossprod = tmp2^2)
   logdet_S <- 2 * sum(log(diag(chol(S))))
   logdet_tmp2_sq <- 4 * sum(log(diag(chol(tmp2))))
   (-1 / 2) * (logdet_S - logdet_tmp2_sq)
 }
 
 
-#' カーネル法による相互情報量
-#' @param x1 変数1
-#' @param x2 変数2
-#' @param param パラメータベクトル (kappa, sigma)
-#' @return 相互情報量
+#' Kernel-based mutual information
+#' @param x1 Variable 1
+#' @param x2 Variable 2
+#' @param param Parameter vector (kappa, sigma)
+#' @return Mutual information
 #' @keywords internal
 mutual_information_kernel <- function(x1, x2, param) {
   kappa <- param[1]
@@ -322,12 +324,12 @@ mutual_information_kernel <- function(x1, x2, param) {
 }
 
 
-#' カーネル法による因果順序の探索
-#' @param X データ行列
-#' @param U 全変数
-#' @param Uc 候補変数
-#' @param Vj 事前知識集合
-#' @return 選ばれた変数のインデックス
+#' Causal order search via the kernel method
+#' @param X Data matrix
+#' @param U All variables
+#' @param Uc Candidate variables
+#' @param Vj Prior knowledge set
+#' @return Index of the selected variable
 #' @keywords internal
 search_causal_order_kernel <- function(X, U, Uc, Vj) {
   if (length(Uc) == 1) {
@@ -347,7 +349,7 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
 
   for (idx in seq_along(Uc)) {
     j <- Uc[idx]
-    # 候補 j 側のカーネル行列・逆行列は内側ループで不変なので1回だけ計算する
+    # The kernel matrix / inverse for candidate j is invariant across the inner loop, so compute it once
     E1 <- kernel_mi_prepare(X[, j], kappa, sigma)
     Tkernel <- 0
     for (i in U) {

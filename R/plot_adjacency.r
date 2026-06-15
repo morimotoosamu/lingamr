@@ -6,34 +6,41 @@
 # =============================================================================
 
 
-#' 隣接行列から DiagrammeR で因果グラフを描画
+#' Plot a causal graph from an adjacency matrix with DiagrammeR
 #'
-#' @param B 隣接行列 (n_features x n_features)。
-#'   **規則: `B[i, j]` は変数 j から変数 i への因果係数（j → i）。**
-#'   `lingam_direct()` の `adjacency_matrix` をそのまま渡せる。
-#' @param labels 変数名ベクトル (NULL の場合は x0, x1, ... を自動生成)
-#' @param threshold 表示する最小係数の絶対値 (default: 0)
-#' @param rankdir レイアウト方向 (default: "LR")
-#'   "LR" = 左→右, "RL" = 右→左, "TB" = 上→下, "BT" = 下→上
-#' @param title グラフのタイトル (default: "Estimated Causal Structure")
-#' @param shape ノードの形状 (default: "circle")
+#' @param B Adjacency matrix (n_features x n_features).
+#'   **Convention: `B[i, j]` is the causal coefficient from variable j to
+#'   variable i (j -> i).** The `adjacency_matrix` from `lingam_direct()` can
+#'   be passed directly.
+#' @param labels Vector of variable names (if NULL, x0, x1, ... are generated
+#'   automatically)
+#' @param threshold Minimum absolute coefficient value to display (default: 0)
+#' @param rankdir Layout direction (default: "LR")
+#'   "LR" = left -> right, "RL" = right -> left, "TB" = top -> bottom,
+#'   "BT" = bottom -> top
+#' @param title Graph title (default: "Estimated Causal Structure")
+#' @param shape Node shape (default: "circle")
 #'   "circle", "box", "ellipse", "diamond", "plaintext",
-#'   "square", "triangle", "hexagon", "octagon" など
-#' @param fillcolor ノードの塗りつぶし色 (default: "lightyellow")
-#' @param bordercolor 枠線の色
-#' @param fontsize_node ノードのフォントサイズ (default: 14)
-#' @param fontsize_edge エッジラベルのフォントサイズ (default: 10)
-#' @param edge_color エッジの色 (default: "gray40")。`true_B` 指定時は未使用。
-#' @param edge_label_color エッジラベルの色 (default: "red")。`true_B` 指定時は未使用。
-#' @param true_B 真の隣接行列 (NULL 可)。指定するとエッジを3色で分類する：
-#'   * 正解エッジ（推定あり・真あり）: `color_tp` の実線
-#'   * 過検出（推定あり・真なし）: `color_fp` の実線
-#'   * 見逃し（推定なし・真あり）: `color_fn` の破線（真の係数を表示）
-#' @param color_tp 正解エッジの色 (default: "forestgreen")
-#' @param color_fp 過検出エッジの色 (default: "firebrick")
-#' @param color_fn 見逃しエッジの色 (default: "darkorange")
-#' @param debug デバッグモードの有効化 (logical)
-#' @return grViz オブジェクト（DiagrammeR が利用可能な場合）
+#'   "square", "triangle", "hexagon", "octagon", etc.
+#' @param fillcolor Node fill color (default: "lightyellow")
+#' @param bordercolor Border color
+#' @param fontsize_node Node font size (default: 14)
+#' @param fontsize_edge Edge label font size (default: 10)
+#' @param edge_color Edge color (default: "gray40"). Unused when `true_B` is
+#'   specified.
+#' @param edge_label_color Edge label color (default: "red"). Unused when
+#'   `true_B` is specified.
+#' @param true_B True adjacency matrix (may be NULL). When specified, edges are
+#'   classified into three colors:
+#'   * Correct edges (estimated and true): solid line in `color_tp`
+#'   * False positives (estimated but not true): solid line in `color_fp`
+#'   * Missed edges (not estimated but true): dashed line in `color_fn`
+#'     (showing the true coefficient)
+#' @param color_tp Color for correct edges (default: "forestgreen")
+#' @param color_fp Color for false-positive edges (default: "firebrick")
+#' @param color_fn Color for missed edges (default: "darkorange")
+#' @param debug Enable debug mode (logical)
+#' @return A grViz object (when DiagrammeR is available)
 #' @importFrom grDevices col2rgb
 #' @export
 #' @examples
@@ -49,7 +56,8 @@
 #'   plot_adjacency()
 #'
 #' \donttest{
-#' # 真の構造と比較（正解=緑, 過検出=赤, 見逃し=オレンジ破線）
+#' # Compare with the true structure
+#' # (correct = green, false positive = red, missed = orange dashed)
 #' model$adjacency_matrix |>
 #'   plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
 #' }
@@ -70,12 +78,12 @@ plot_adjacency <- function(B,
                            color_fp = "firebrick",
                            color_fn = "darkorange",
                            debug = FALSE) {
-  # --- DiagrammeR パッケージの確認 ---
+  # --- Check for the DiagrammeR package ---
   if (!requireNamespace("DiagrammeR", quietly = TRUE)) {
     stop("Package 'DiagrammeR' is required. Please install it.", call. = FALSE)
   }
 
-  # --- 色名をカラーコードに変換するヘルパー ---
+  # --- Helper to convert a color name to a color code ---
   to_hex <- function(color_str) {
     if (grepl("^#", color_str)) return(color_str)
     tryCatch(
@@ -90,7 +98,7 @@ plot_adjacency <- function(B,
     )
   }
 
-  # --- 全ての色をカラーコードに変換 ---
+  # --- Convert all colors to color codes ---
   fillcolor       <- to_hex(fillcolor)
   edge_color      <- to_hex(edge_color)
   edge_label_color <- to_hex(edge_label_color)
@@ -104,7 +112,7 @@ plot_adjacency <- function(B,
     bordercolor <- to_hex(bordercolor)
   }
 
-  # --- 引数のバリデーション ---
+  # --- Validate arguments ---
   rankdir <- match.arg(rankdir, c("LR", "RL", "TB", "BT"))
 
   valid_shapes <- c(
@@ -127,14 +135,14 @@ plot_adjacency <- function(B,
 
   if (is.null(labels)) labels <- paste0("x", seq_len(p) - 1)
 
-  # --- title のエスケープ ---
+  # --- Escape the title ---
   safe_label <- gsub("'", "\\\\'", title)
 
-  # --- エッジ記述の生成 ---
+  # --- Generate edge descriptions ---
   edge_lines <- c()
 
   if (is.null(true_B)) {
-    # 通常モード: 全エッジを同色で描画
+    # Normal mode: draw all edges in the same color
     for (i in seq_len(p)) {
       for (j in seq_len(p)) {
         if (abs(B[i, j]) > threshold) {
@@ -146,7 +154,7 @@ plot_adjacency <- function(B,
       }
     }
   } else {
-    # 比較モード: TP / FP / FN を色分け
+    # Comparison mode: color-code TP / FP / FN
     estimated <- abs(B) > threshold
     true_exist <- abs(true_B) > 0
 
@@ -160,21 +168,21 @@ plot_adjacency <- function(B,
         if (!is_est && !is_true) next
 
         if (is_est && is_true) {
-          # TP: 正解エッジ（緑・実線）
+          # TP: correct edge (green, solid line)
           coef_label <- sprintf("%.2f", B[i, j])
           edge_lines <- c(edge_lines, sprintf(
             "  %s -> %s [label = ' %s', color = '%s', fontcolor = '%s']",
             labels[j], labels[i], coef_label, color_tp, color_tp
           ))
         } else if (is_est && !is_true) {
-          # FP: 過検出（赤・実線）
+          # FP: false positive (red, solid line)
           coef_label <- sprintf("%.2f", B[i, j])
           edge_lines <- c(edge_lines, sprintf(
             "  %s -> %s [label = ' %s', color = '%s', fontcolor = '%s']",
             labels[j], labels[i], coef_label, color_fp, color_fp
           ))
         } else {
-          # FN: 見逃し（オレンジ・破線、真の係数を表示）
+          # FN: missed edge (orange, dashed line, showing the true coefficient)
           coef_label <- sprintf("%.2f", true_B[i, j])
           edge_lines <- c(edge_lines, sprintf(
             "  %s -> %s [label = ' %s', color = '%s', fontcolor = '%s', style = 'dashed']",
@@ -190,8 +198,9 @@ plot_adjacency <- function(B,
     return(invisible(NULL))
   }
 
-  # --- DOT 記述の構築 ---
-  # true_B 指定時はエッジごとに色を上書きするので、グローバル edge 色は中立色にする
+  # --- Build the DOT description ---
+  # When true_B is specified, per-edge colors are overridden, so set the
+  # global edge color to a neutral color
   global_edge_color       <- if (is.null(true_B)) edge_color       else "#888888"
   global_edge_label_color <- if (is.null(true_B)) edge_label_color else "#888888"
 

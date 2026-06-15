@@ -1,5 +1,5 @@
 # =============================================================================
-# Direct LiNGAM - 隣接行列の推定と回帰バックエンド (OLS / LASSO / Adaptive LASSO)
+# Direct LiNGAM - Adjacency matrix estimation and regression backends (OLS / LASSO / Adaptive LASSO)
 # Based on the Python implementation from the LiNGAM Project
 # https://sites.google.com/view/sshimizu06/lingam
 # https://github.com/cdt15/lingam
@@ -14,20 +14,22 @@
 # =============================================================================
 
 
-# glmnet に渡す lambda の探索範囲。
-# デフォルトの自動生成だと早期打ち切りが起こりうるため明示的に指定する。
-# fit_lasso() と fit_adaptive_lasso() で共通。
+# Search range for the lambda values passed to glmnet.
+# Specified explicitly because the default automatic generation can stop early.
+# Shared by fit_lasso() and fit_adaptive_lasso().
 lasso_lambda_seq <- exp(seq(2, -7, length.out = 80))
 
-# Ridge 用の lambda グリッド。LASSO より大きい値が最適になりうるため広めに設定。
+# Lambda grid for Ridge. Set wider because larger values than LASSO can be optimal.
 ridge_lambda_seq <- exp(seq(6, -7, length.out = 100))
 
 
-#' glmnet が利用可能か確認する
+#' Check whether glmnet is available
 #'
-#' 利用できない場合は、どの回帰手法で必要になったかを示すエラーを出す。
+#' If it is not available, raise an error indicating which regression method
+#' required it.
 #'
-#' @param method glmnet を必要とする回帰手法名（エラーメッセージ用）
+#' @param method name of the regression method that requires glmnet (for the
+#'   error message)
 #' @keywords internal
 check_glmnet_available <- function(method) {
   if (!requireNamespace("glmnet", quietly = TRUE)) {
@@ -39,26 +41,26 @@ check_glmnet_available <- function(method) {
 }
 
 
-#' 因果順序から隣接行列を推定
+#' Estimate the adjacency matrix from a causal order
 #'
-#' @param X 元データ
-#' @param causal_order 因果順序 (1-based index のベクトル)
-#' @param prior_knowledge 事前知識行列 (NULL可)
-#' @param method 回帰手法
-#'   "ols"           : 通常の最小二乗法（デフォルト）
-#'   "lasso"         : LASSO回帰（glmnet）
-#'   "adaptive_lasso": Adaptive LASSO（2段階）
-#'   "ridge"         : Ridge回帰（glmnet）
-#' @param init_method Adaptive LASSOの初期重みの推定手法
-#'   "ols"   :最小二乗法（デフォルト）
-#'   "ridge" :Ridge回帰
-#' @param lambda LASSO のペナルティ (NULL = 交差検証で自動選択)
-#'   "lambda.min" : 予測誤差最小
-#'   "lambda.1se" : 1SE ルール（よりスパース）
-#'   "AIC"       : AIC最小（CVなし、高速）
-#'   "BIC"        : BIC最小（CVなし、高速、最もスパース）デフォルト
-#'   "oracle"     : Adaptive LASSO 専用。Ridge では使用不可。
-#' @return 隣接行列 B (n_features x n_features)
+#' @param X original data
+#' @param causal_order causal order (vector of 1-based indices)
+#' @param prior_knowledge prior-knowledge matrix (NULL allowed)
+#' @param method regression method
+#'   "ols"           : ordinary least squares (default)
+#'   "lasso"         : LASSO regression (glmnet)
+#'   "adaptive_lasso": Adaptive LASSO (two-stage)
+#'   "ridge"         : Ridge regression (glmnet)
+#' @param init_method estimation method for the initial weights of Adaptive LASSO
+#'   "ols"   : ordinary least squares (default)
+#'   "ridge" : Ridge regression
+#' @param lambda LASSO penalty (NULL = automatic selection by cross-validation)
+#'   "lambda.min" : minimum prediction error
+#'   "lambda.1se" : 1SE rule (sparser)
+#'   "AIC"       : minimum AIC (no CV, fast)
+#'   "BIC"        : minimum BIC (no CV, fast, sparsest), default
+#'   "oracle"     : Adaptive LASSO only. Not usable with Ridge.
+#' @return adjacency matrix B (n_features x n_features)
 #' @keywords internal
 estimate_adjacency_matrix <- function(X,
                                       causal_order,
@@ -74,7 +76,7 @@ estimate_adjacency_matrix <- function(X,
     ))
   }
 
-  # glmnet の確認（OLS は base R のみで動作するため不要）
+  # Check glmnet (not needed for OLS, which runs with base R only)
   if (method != "ols") {
     check_glmnet_available(method)
   }
@@ -86,10 +88,10 @@ estimate_adjacency_matrix <- function(X,
     target <- causal_order[idx]
     if (idx == 1) next
 
-    # 因果順序でこの変数より前の変数
+    # variables that precede this variable in the causal order
     predictors <- causal_order[1:(idx - 1)]
 
-    # 事前知識で制約
+    # constrain by prior knowledge
     if (!is.null(prior_knowledge)) {
       keep <- sapply(predictors, function(p) {
         val <- prior_knowledge[target, p]
@@ -103,7 +105,7 @@ estimate_adjacency_matrix <- function(X,
     y <- X[, target]
     Xp <- X[, predictors, drop = FALSE]
 
-    # --- 回帰手法の分岐 ---
+    # --- branch by regression method ---
     coefs <- switch(method,
       "ols"            = fit_ols(y, Xp),
       "lasso"          = fit_lasso(y, Xp, lambda = lambda),
@@ -162,16 +164,16 @@ ic_glmnet <- function(glmnet_model) {
 }
 
 
-#' LASSO 回帰（情報量基準 or CV でラムダ選択）
+#' LASSO regression (lambda selection by information criterion or CV)
 #'
-#' @param y 目的変数
-#' @param Xp 説明変数行列
-#' @param lambda ラムダ選択方法
-#'   "lambda.min" : CV予測誤差最小
-#'   "lambda.1se" : CV 1SEルール
-#'   "AIC"       : AIC最小
-#'   "BIC"        : BIC最小。デフォルト
-#' @return 係数ベクトル
+#' @param y response variable
+#' @param Xp predictor matrix
+#' @param lambda lambda selection method
+#'   "lambda.min" : minimum CV prediction error
+#'   "lambda.1se" : CV 1SE rule
+#'   "AIC"       : minimum AIC
+#'   "BIC"        : minimum BIC, default
+#' @return coefficient vector
 #' @keywords internal
 fit_lasso <- function(y, Xp, lambda = "BIC") {
   if (ncol(Xp) == 1) {
@@ -190,8 +192,9 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
     )
 
     ic <- ic_glmnet(fit)
-    # 選んだ lambda は fit$lambda 上の1点なので、coef(fit, s = ...) の
-    # 補間を経由せず列インデックスで直接取り出す（結果は同一で高速）
+    # The selected lambda is a single point on fit$lambda, so extract it
+    # directly by column index instead of going through the interpolation in
+    # coef(fit, s = ...) (the result is identical and faster).
     k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
     coef_vec <- as.numeric(fit$beta[, k_best])
 
@@ -210,17 +213,17 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
 }
 
 
-#' Ridge 回帰（情報量基準 or CV でラムダ選択）
+#' Ridge regression (lambda selection by information criterion or CV)
 #'
-#' @param y 目的変数
-#' @param Xp 説明変数行列
-#' @param lambda ラムダ選択方法
-#'   "lambda.min" : CV予測誤差最小
-#'   "lambda.1se" : CV 1SEルール
-#'   "AIC"       : AIC最小
-#'   "BIC"        : BIC最小。デフォルト
-#'   "oracle"は使用不可（Adaptive LASSO 専用）。
-#' @return 係数ベクトル
+#' @param y response variable
+#' @param Xp predictor matrix
+#' @param lambda lambda selection method
+#'   "lambda.min" : minimum CV prediction error
+#'   "lambda.1se" : CV 1SE rule
+#'   "AIC"       : minimum AIC
+#'   "BIC"        : minimum BIC, default
+#'   "oracle" is not usable (Adaptive LASSO only).
+#' @return coefficient vector
 #' @keywords internal
 fit_ridge_reg <- function(y, Xp, lambda = "BIC") {
   if (ncol(Xp) == 1) {
@@ -263,12 +266,12 @@ fit_ridge_reg <- function(y, Xp, lambda = "BIC") {
 
 
 #' Adaptive LASSO
-#' @param y 目的変数
-#' @param Xp 説明変数行列
-#' @param lambda ラムダ選択方法 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")
-#' @param gamma_weight 重みの指数
-#' @param init_method 初期重みの推定手法 ("ols" または "ridge")
-#' @return 係数ベクトル
+#' @param y response variable
+#' @param Xp predictor matrix
+#' @param lambda lambda selection method ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")
+#' @param gamma_weight exponent of the weights
+#' @param init_method estimation method for the initial weights ("ols" or "ridge")
+#' @return coefficient vector
 #' @keywords internal
 fit_adaptive_lasso <- function(y, Xp,
                                lambda = "BIC",
@@ -278,9 +281,9 @@ fit_adaptive_lasso <- function(y, Xp,
   check_glmnet_available("adaptive_lasso")
 
   Xp_mat <- as.matrix(Xp)
-  n <- nrow(Xp_mat) # サンプルサイズ n を取得
+  n <- nrow(Xp_mat) # obtain the sample size n
 
-  # --- Step 1: 初期推定量 (元のスケール) の計算 ---
+  # --- Step 1: compute the initial estimator (in the original scale) ---
   if (init_method == "ols") {
     init_fit <- stats::lm.fit(x = cbind(1, Xp_mat), y = y)
     init_coefs <- as.numeric(init_fit$coefficients[-1])
@@ -293,7 +296,7 @@ fit_adaptive_lasso <- function(y, Xp,
   }
   init_coefs[is.na(init_coefs)] <- 0
 
-  # --- Step 2: penalty.factor の計算 ---
+  # --- Step 2: compute penalty.factor ---
   x_sds <- apply(Xp_mat, 2, sd_pop)
   x_sds[x_sds < 1e-10] <- 1e-10
 
@@ -302,7 +305,7 @@ fit_adaptive_lasso <- function(y, Xp,
   pf <- 1 / (abs(init_coefs_std)^gamma_weight)
   pf[is.infinite(pf) | is.na(pf)] <- 1e10
 
-  # --- Step 3: Adaptive LASSO の実行 ---
+  # --- Step 3: run Adaptive LASSO ---
   fit <- glmnet::glmnet(
     x = Xp_mat, y = y, alpha = 1,
     intercept = TRUE, standardize = TRUE,
@@ -312,14 +315,15 @@ fit_adaptive_lasso <- function(y, Xp,
 
   if (lambda %in% c("AIC", "BIC")) {
     ic <- ic_glmnet(fit)
-    # fit$lambda 上の1点なので補間せず列インデックスで直接取り出す
+    # A single point on fit$lambda, so extract it directly by column index
+    # without interpolation.
     k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
     coef_vec <- as.numeric(fit$beta[, k_best])
     return(coef_vec)
   }
 
   if (lambda == "oracle") {
-    # オラクル lambda は探索グリッド上にないため coef() で補間する
+    # The oracle lambda is not on the search grid, so interpolate with coef().
     lambda_val <- 5 / (n^(1.75))
   } else {
     cv_fit <- glmnet::cv.glmnet(

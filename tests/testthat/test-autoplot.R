@@ -15,7 +15,7 @@ test_that("autoplot.LingamResult works when all edges are filtered out", {
 
   dat <- generate_lingam_sample_6(n = 300, seed = 1)
   res <- lingam_direct(dat$data, reg_method = "ols")
-  pl  <- ggplot2::autoplot(res, threshold = 100)  # 全エッジ除外
+  pl  <- ggplot2::autoplot(res, threshold = 100)  # all edges filtered out
 
   expect_s3_class(pl, "ggplot")
 })

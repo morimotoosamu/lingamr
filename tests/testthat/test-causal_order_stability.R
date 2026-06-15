@@ -5,7 +5,7 @@ test_that("BootstrapResult stores causal_orders", {
 
   expect_false(is.null(bs$causal_orders))
   expect_equal(dim(bs$causal_orders), c(15L, 6L))
-  # 各行は 1:6 の置換
+  # Each row is a permutation of 1:6
   expect_true(all(apply(bs$causal_orders, 1, function(r) setequal(r, 1:6))))
 })
 
@@ -33,7 +33,7 @@ test_that("get_causal_order_stability: x3 is most upstream", {
                                  reg_method = "ols")
   st  <- get_causal_order_stability(bs, labels = names(dat$data))
 
-  # x3 は根なので平均順位が最小（ソート後の先頭）
+  # x3 is the root, so its mean rank is the smallest (first after sorting)
   expect_equal(st$rank_summary$variable[1], "x3")
 })
 
@@ -55,7 +55,7 @@ test_that("get_causal_order_stability errors on legacy result without causal_ord
   dat <- generate_lingam_sample_6(n = 200, seed = 1)
   bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, seed = 1L,
                                  reg_method = "ols")
-  bs$causal_orders <- NULL  # 旧バージョンの結果を模擬
+  bs$causal_orders <- NULL  # Simulate a result from an older version
 
   expect_error(get_causal_order_stability(bs), "causal order")
 })

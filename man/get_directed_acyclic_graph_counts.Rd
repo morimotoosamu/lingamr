@@ -2,7 +2,7 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{get_directed_acyclic_graph_counts}
 \alias{get_directed_acyclic_graph_counts}
-\title{DAG カウントを取得}
+\title{Get DAG counts}
 \usage{
 get_directed_acyclic_graph_counts(
   result,
@@ -12,19 +12,19 @@ get_directed_acyclic_graph_counts(
 )
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{n_dags}{上位何件を返すか (NULL = 全て)}
+\item{n_dags}{How many of the top entries to return (NULL = all)}
 
-\item{min_causal_effect}{因果効果の最小閾値 (NULL = 0)}
+\item{min_causal_effect}{Minimum threshold for the causal effect (NULL = 0)}
 
-\item{split_by_causal_effect_sign}{因果効果の符号で分割するか}
+\item{split_by_causal_effect_sign}{Whether to split by the sign of the causal effect}
 }
 \value{
 list(dag = list of data.frames, count = integer vector)
 }
 \description{
-DAG カウントを取得
+Get DAG counts
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

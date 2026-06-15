@@ -2,36 +2,36 @@
 % Please edit documentation in R/get_error_independence_p_values.r
 \name{get_error_independence_p_values}
 \alias{get_error_independence_p_values}
-\title{誤差の独立性検定の p 値を計算}
+\title{Compute p-values for the independence test of the errors}
 \usage{
 get_error_independence_p_values(X, lingam_result, method = "spearman")
 }
 \arguments{
-\item{X}{元データ (matrix or data.frame)}
+\item{X}{original data (matrix or data.frame)}
 
-\item{lingam_result}{lingam_direct() の返り値}
+\item{lingam_result}{return value of lingam_direct()}
 
-\item{method}{相関係数の種類 ("spearman", "pearson", "kendall")}
+\item{method}{type of correlation coefficient ("spearman", "pearson", "kendall")}
 }
 \value{
-p 値の行列 (n_features x n_features)
+matrix of p-values (n_features x n_features)
 }
 \description{
-誤差の独立性検定の p 値を計算
+Compute p-values for the independence test of the errors
 }
 \examples{
-# サンプルデータの呼び出し
+# Load the sample data
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-# Direct LiNGAM の実行
+# Run Direct LiNGAM
 result <- LiNGAM_sample_1000$data |>
   lingam_direct()
 
-# p 値の計算（デフォルト: Spearman）
+# Compute p-values (default: Spearman)
 p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
 round(p_vals, 3)
 
-# Kendall で計算
+# Compute with Kendall
 p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000$data, result, method = "kendall")
 round(p_vals_k, 3)
 }

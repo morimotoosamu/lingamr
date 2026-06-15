@@ -2,23 +2,23 @@
 % Please edit documentation in R/search_causal_order.r
 \name{residual_vec}
 \alias{residual_vec}
-\title{残差 (xi を xj に回帰したときの残差)
-残差ベクトルの計算}
+\title{Residual (residual when xi is regressed on xj)
+Compute the residual vector}
 \usage{
 residual_vec(xi, xj, standardized = FALSE)
 }
 \arguments{
-\item{xi}{対象変数ベクトル}
+\item{xi}{Target variable vector}
 
-\item{xj}{説明変数ベクトル}
+\item{xj}{Explanatory variable vector}
 
-\item{standardized}{データが標準化済みか (default: FALSE)}
+\item{standardized}{Whether the data is already standardized (default: FALSE)}
 }
 \value{
-回帰後の残差ベクトル
+Residual vector after regression
 }
 \description{
-残差 (xi を xj に回帰したときの残差)
-残差ベクトルの計算
+Residual (residual when xi is regressed on xj)
+Compute the residual vector
 }
 \keyword{internal}

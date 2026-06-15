@@ -2,7 +2,7 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{lingam_direct_bootstrap}
 \alias{lingam_direct_bootstrap}
-\title{Direct LiNGAM のブートストラップ}
+\title{Bootstrap for Direct LiNGAM}
 \usage{
 lingam_direct_bootstrap(
   X,
@@ -20,48 +20,53 @@ lingam_direct_bootstrap(
 )
 }
 \arguments{
-\item{X}{数値行列 (n_samples x n_features)}
+\item{X}{Numeric matrix (n_samples x n_features)}
 
-\item{n_sampling}{ブートストラップの反復回数}
+\item{n_sampling}{Number of bootstrap iterations}
 
-\item{prior_knowledge}{事前知識行列 (NULL可)}
+\item{prior_knowledge}{Prior knowledge matrix (NULL allowed)}
 
-\item{apply_prior_knowledge_softly}{事前知識のソフト適用 (logical)}
+\item{apply_prior_knowledge_softly}{Apply prior knowledge softly (logical)}
 
-\item{measure}{独立性の評価尺度 ("pwling" or "kernel")}
+\item{measure}{Independence measure ("pwling" or "kernel")}
 
-\item{reg_method}{回帰手法 ("ols", "lasso", "adaptive_lasso", "ridge")}
+\item{reg_method}{Regression method ("ols", "lasso", "adaptive_lasso", "ridge")}
 
-\item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")}
+\item{lambda}{Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")}
 
-\item{init_method}{適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
-\code{lingam_direct()} の同名引数と同じ。}
+\item{init_method}{Method for estimating the initial weights of adaptive LASSO
+regression ("ols" or "ridge"). Same as the argument of the same name in
+\code{lingam_direct()}.}
 
-\item{seed}{乱数シード (NULL可)}
+\item{seed}{Random seed (NULL allowed)}
 
-\item{verbose}{進捗を表示するか (logical)}
+\item{verbose}{Whether to display progress (logical)}
 
-\item{parallel}{並列処理を行うか (logical)。\code{TRUE} の場合、各ブートストラップ
-反復を複数コアに分散して実行する。}
+\item{parallel}{Whether to use parallel processing (logical). When \code{TRUE},
+each bootstrap iteration is distributed across multiple cores.}
 
-\item{n_cores}{使用するコア数 (整数, NULL可)。\code{NULL} の場合は安全のため最大 2
-コアに制限される。\code{parallel = FALSE} のときは無視される。}
+\item{n_cores}{Number of cores to use (integer, NULL allowed). When \code{NULL},
+the number of cores is limited to a maximum of 2 for safety. Ignored when
+\code{parallel = FALSE}.}
 }
 \value{
 BootstrapResult (list)
 }
 \description{
-Direct LiNGAM のブートストラップ
+Bootstrap for Direct LiNGAM
 }
 \details{
-\code{parallel = TRUE} を指定すると、\code{parallel::makePSOCKcluster()} による
-ソケットクラスターで反復を分散実行する。クラスターは処理終了時・エラー発生時
-いずれの場合も \code{on.exit()} により必ず解放される。
+When \code{parallel = TRUE} is specified, iterations are distributed across a
+socket cluster created by \code{parallel::makePSOCKcluster()}. The cluster is
+always released via \code{on.exit()}, whether the process finishes normally or
+an error occurs.
 
-\strong{再現性について:} 並列実行時は \code{parallel::clusterSetRNGStream()} による
-L'Ecuyer の並列乱数ストリームを用いる。同じ \code{seed}・同じ \code{n_cores} であれば
-結果は再現するが、逐次実行 (\code{parallel = FALSE}) の結果とは数値的に一致しない。
-厳密に逐次版と同じ結果が必要な場合は \code{parallel = FALSE} を使用すること。
+\strong{On reproducibility:} During parallel execution, L'Ecuyer parallel random
+number streams via \code{parallel::clusterSetRNGStream()} are used. Results are
+reproducible given the same \code{seed} and same \code{n_cores}, but they do not
+numerically match the results of sequential execution (\code{parallel = FALSE}).
+If you need results that exactly match the sequential version, use
+\code{parallel = FALSE}.
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

@@ -2,21 +2,22 @@
 % Please edit documentation in R/tidiers.r
 \name{glance.LingamResult}
 \alias{glance.LingamResult}
-\title{LingamResult の1行サマリを取得}
+\title{Get a one-row summary of a LingamResult}
 \usage{
 \method{glance}{LingamResult}(x, ...)
 }
 \arguments{
-\item{x}{\code{\link[=lingam_direct]{lingam_direct()}} の返り値（\code{LingamResult} オブジェクト）}
+\item{x}{The return value of \code{\link[=lingam_direct]{lingam_direct()}} (a \code{LingamResult} object)}
 
-\item{...}{未使用}
+\item{...}{Unused}
 }
 \value{
-1 行の data.frame(n_variables, n_edges, causal_order)
+A one-row data.frame(n_variables, n_edges, causal_order)
 }
 \description{
-モデル全体を1行に要約する。残差を計算しないためデータ \code{X} は不要。
-残差ベースの診断が必要な場合は \code{\link[=summary_lingam]{summary_lingam()}} を使用すること。
+Summarizes the entire model in a single row. The data \code{X} is not required
+because no residuals are computed. If residual-based diagnostics are needed,
+use \code{\link[=summary_lingam]{summary_lingam()}} instead.
 }
 \examples{
 dat <- generate_lingam_sample_6()

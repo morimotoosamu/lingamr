@@ -2,25 +2,25 @@
 % Please edit documentation in R/fit_regression.r
 \name{fit_lasso}
 \alias{fit_lasso}
-\title{LASSO 回帰（情報量基準 or CV でラムダ選択）}
+\title{LASSO regression (lambda selection by information criterion or CV)}
 \usage{
 fit_lasso(y, Xp, lambda = "BIC")
 }
 \arguments{
-\item{y}{目的変数}
+\item{y}{response variable}
 
-\item{Xp}{説明変数行列}
+\item{Xp}{predictor matrix}
 
-\item{lambda}{ラムダ選択方法
-"lambda.min" : CV予測誤差最小
-"lambda.1se" : CV 1SEルール
-"AIC"       : AIC最小
-"BIC"        : BIC最小。デフォルト}
+\item{lambda}{lambda selection method
+"lambda.min" : minimum CV prediction error
+"lambda.1se" : CV 1SE rule
+"AIC"       : minimum AIC
+"BIC"        : minimum BIC, default}
 }
 \value{
-係数ベクトル
+coefficient vector
 }
 \description{
-LASSO 回帰（情報量基準 or CV でラムダ選択）
+LASSO regression (lambda selection by information criterion or CV)
 }
 \keyword{internal}

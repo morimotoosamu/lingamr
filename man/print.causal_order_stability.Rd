@@ -2,15 +2,15 @@
 % Please edit documentation in R/causal_order_stability.r
 \name{print.causal_order_stability}
 \alias{print.causal_order_stability}
-\title{causal_order_stability の print メソッド}
+\title{print method for causal_order_stability}
 \usage{
 \method{print}{causal_order_stability}(x, ...)
 }
 \arguments{
-\item{x}{\code{causal_order_stability} オブジェクト}
+\item{x}{A \code{causal_order_stability} object}
 
-\item{...}{追加引数（未使用）}
+\item{...}{Additional arguments (unused)}
 }
 \description{
-causal_order_stability の print メソッド
+print method for causal_order_stability
 }

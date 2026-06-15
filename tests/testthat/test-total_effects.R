@@ -8,7 +8,7 @@ test_that("estimate_total_effect errors on invalid lingam_result", {
 test_that("estimate_total_effect errors when X dimensions mismatch", {
   dat <- generate_lingam_sample_6(n = 200, seed = 1)
   res <- lingam_direct(dat$data, reg_method = "ols")
-  X_bad <- dat$data[, 1:4]   # 変数数が違う
+  X_bad <- dat$data[, 1:4]   # different number of variables
 
   expect_error(estimate_total_effect(X_bad, res, 1, 2))
 })
@@ -37,9 +37,9 @@ test_that("estimate_all_total_effects returns correctly shaped matrix", {
 
   expect_true(is.matrix(TE))
   expect_equal(dim(TE), c(6L, 6L))
-  # 対角はゼロ（自己効果なし）
+  # diagonal is zero (no self-effect)
   expect_true(all(diag(TE) == 0))
-  # x3 は外生変数なので列（原因側）はゼロのはず
+  # x3 is exogenous, so its column (cause side) should be zero
   expect_true(all(TE["x3", ] == 0))
 })
 

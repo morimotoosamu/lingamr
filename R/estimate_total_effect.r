@@ -1,13 +1,13 @@
-#' 指定した2変数間の総合因果効果を推定
+#' Estimate the total causal effect between two specified variables
 #'
-#' @param X 元データ (matrix or data.frame)
-#' @param lingam_result lingam_direct() の返り値
-#' @param from_index 原因変数 (1-based index or 変数名)
-#' @param to_index 結果変数 (1-based index or 変数名)
-#' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはadaptive_lasso
-#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")デフォルトはBIC
-#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
-#' @return 推定された総合因果効果
+#' @param X Original data (matrix or data.frame)
+#' @param lingam_result Return value of lingam_direct()
+#' @param from_index Cause variable (1-based index or variable name)
+#' @param to_index Effect variable (1-based index or variable name)
+#' @param method Regression method ("ols", "lasso", "adaptive_lasso"). Default is adaptive_lasso
+#' @param lambda Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle"). Default is BIC
+#' @param init_method Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")
+#' @return Estimated total causal effect
 #' @importFrom stats cov
 #' @export
 #' @examples
@@ -44,7 +44,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
     )
   }
 
-  # --- 変数名 → インデックス変換 ---
+  # --- Convert variable name -> index ---
   resolve_index <- function(idx, arg_name) {
     if (is.character(idx)) {
       if (is.null(col_names)) {
@@ -75,7 +75,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
   adjacency_matrix <- lingam_result$adjacency_matrix
   causal_order <- lingam_result$causal_order
 
-  # --- 因果順序チェック ---
+  # --- Check causal order ---
   from_order <- which(causal_order == from_index)
   to_order <- which(causal_order == to_index)
 
@@ -89,7 +89,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
     ))
   }
 
-  # --- 親変数の特定と回帰 ---
+  # --- Identify parent variables and run regression ---
   parents <- which(abs(adjacency_matrix[from_index, ]) > 0)
   predictors <- unique(c(from_index, parents))
   from_pos <- which(predictors == from_index)
@@ -107,16 +107,16 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 }
 
 
-#' 全変数間の総合因果効果を一括推定
+#' Estimate the total causal effects between all variables at once
 #'
-#' @param X 元データ (n_samples x n_features)
-#' @param lingam_result lingam_direct() の返り値
-#' @param method 回帰手法 ("ols", "lasso", "adaptive_lasso")
-#' @param lambda ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
-#' @param init_method 適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
-#' @return 総合因果効果の行列 (n_features x n_features)。
-#'   **規則: `TE[i, j]` は変数 j から変数 i への総合因果効果（j → i）。**
-#'   隣接行列 `adjacency_matrix` と同じ添字規則。直接効果と間接効果の合計。
+#' @param X Original data (n_samples x n_features)
+#' @param lingam_result Return value of lingam_direct()
+#' @param method Regression method ("ols", "lasso", "adaptive_lasso")
+#' @param lambda Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC")
+#' @param init_method Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")
+#' @return Matrix of total causal effects (n_features x n_features).
+#'   **Convention: `TE[i, j]` is the total causal effect from variable j to variable i (j -> i).**
+#'   Same index convention as the adjacency matrix `adjacency_matrix`. The sum of direct and indirect effects.
 #' @importFrom stats cov
 #' @export
 #' @examples
@@ -156,7 +156,7 @@ estimate_all_total_effects <- function(X,
     colnames(TE) <- colnames(X)
   }
 
-  # 共分散行列はループ不変なので1回だけ計算する（OLS 経路でのみ使用）
+  # The covariance matrix is loop-invariant, so compute it only once (used only in the OLS path)
   cov_mat <- if (method == "ols") cov(X) else NULL
 
   for (i in 1:(n_features - 1)) {
@@ -169,7 +169,7 @@ estimate_all_total_effects <- function(X,
     downstream <- causal_order[(i + 1):n_features]
 
     if (method == "ols") {
-      # --- OLS: 共分散行列ベースで一括計算（最速）---
+      # --- OLS: batch computation based on the covariance matrix (fastest) ---
       cov_xx <- cov_mat[predictors, predictors, drop = FALSE]
       cov_xy <- cov_mat[predictors, downstream, drop = FALSE]
       beta_mat <- solve(cov_xx, cov_xy)

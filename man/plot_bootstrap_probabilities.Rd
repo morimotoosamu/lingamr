@@ -2,7 +2,7 @@
 % Please edit documentation in R/lingam_bootstrap.r
 \name{plot_bootstrap_probabilities}
 \alias{plot_bootstrap_probabilities}
-\title{ブートストラップ確率を DiagrammeR で描画}
+\title{Draw bootstrap probabilities with DiagrammeR}
 \usage{
 plot_bootstrap_probabilities(
   result,
@@ -14,23 +14,23 @@ plot_bootstrap_probabilities(
 )
 }
 \arguments{
-\item{result}{BootstrapResult オブジェクト}
+\item{result}{BootstrapResult object}
 
-\item{labels}{変数名ベクトル (NULL可)}
+\item{labels}{Vector of variable names (NULL allowed)}
 
-\item{min_causal_effect}{表示する最小因果効果}
+\item{min_causal_effect}{Minimum causal effect to display}
 
-\item{min_probability}{表示する最小確率}
+\item{min_probability}{Minimum probability to display}
 
-\item{rankdir}{レイアウト方向}
+\item{rankdir}{Layout direction}
 
-\item{shape}{ノード形状}
+\item{shape}{Node shape}
 }
 \value{
-grViz オブジェクト
+grViz object
 }
 \description{
-ブートストラップ確率を DiagrammeR で描画
+Draw bootstrap probabilities with DiagrammeR
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

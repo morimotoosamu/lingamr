@@ -2,25 +2,28 @@
 % Please edit documentation in R/tidiers.r
 \name{tidy.LingamResult}
 \alias{tidy.LingamResult}
-\title{LingamResult を tidy な data.frame に変換}
+\title{Convert a LingamResult to a tidy data.frame}
 \usage{
 \method{tidy}{LingamResult}(x, threshold = 0, ...)
 }
 \arguments{
-\item{x}{\code{\link[=lingam_direct]{lingam_direct()}} の返り値（\code{LingamResult} オブジェクト）}
+\item{x}{The return value of \code{\link[=lingam_direct]{lingam_direct()}} (a \code{LingamResult} object)}
 
-\item{threshold}{この絶対値以下の係数はエッジとみなさない (default: 0)}
+\item{threshold}{Coefficients with an absolute value at or below this are not
+treated as edges (default: 0)}
 
-\item{...}{未使用}
+\item{...}{Unused}
 }
 \value{
-data.frame(from, to, estimate)。\code{from}/\code{to} は変数名（文字列）、
-\code{estimate} は因果係数。エッジが無ければ 0 行の data.frame。
+data.frame(from, to, estimate). \code{from}/\code{to} are variable names
+(strings) and \code{estimate} is the causal coefficient. Returns a 0-row
+data.frame if there are no edges.
 }
 \description{
-推定された隣接行列を、1 行が 1 エッジの long 形式 data.frame に変換する。
-\code{B[i, j]}（j → i の係数）の規則に従い、\code{from} 列が原因、\code{to} 列が結果となる。
-ggplot2 や ggraph での可視化、dplyr でのフィルタリングに便利。
+Converts the estimated adjacency matrix into a long-format data.frame with
+one edge per row. Following the \code{B[i, j]} convention (the coefficient for
+j -> i), the \code{from} column is the cause and the \code{to} column is the effect.
+Convenient for visualization with ggplot2 or ggraph and for filtering with dplyr.
 }
 \examples{
 dat <- generate_lingam_sample_6()

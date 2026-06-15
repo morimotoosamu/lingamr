@@ -2,7 +2,7 @@
 % Please edit documentation in R/make_prior_knowledge.r
 \name{make_prior_knowledge}
 \alias{make_prior_knowledge}
-\title{事前知識行列を作成}
+\title{Create a prior knowledge matrix}
 \usage{
 make_prior_knowledge(
   n_variables,
@@ -14,35 +14,35 @@ make_prior_knowledge(
 )
 }
 \arguments{
-\item{n_variables}{変数の数}
+\item{n_variables}{Number of variables}
 
-\item{exogenous_variables}{外生変数 (1-based index または変数名, NULL可)
-指定した変数は他のどの変数からも影響を受けないとする}
+\item{exogenous_variables}{Exogenous variables (1-based index or variable name, NULL allowed)
+The specified variables are assumed not to be influenced by any other variable}
 
-\item{sink_variables}{シンク変数 (1-based index または変数名, NULL可)
-指定した変数は他のどの変数にも影響を与えないとする}
+\item{sink_variables}{Sink variables (1-based index or variable name, NULL allowed)
+The specified variables are assumed not to influence any other variable}
 
-\item{paths}{有向パスが存在する変数ペア (NULL可)
-list(c(from, to), ...) の形式。インデックスまたは変数名で指定}
+\item{paths}{Variable pairs that have a directed path (NULL allowed)
+Of the form list(c(from, to), ...). Specified by index or variable name}
 
-\item{no_paths}{有向パスが存在しない変数ペア (NULL可)
-list(c(from, to), ...) の形式。インデックスまたは変数名で指定}
+\item{no_paths}{Variable pairs that have no directed path (NULL allowed)
+Of the form list(c(from, to), ...). Specified by index or variable name}
 
-\item{labels}{変数名ベクトル (NULL可)
-変数名で指定する場合は必須。data.frame の colnames() 等を渡す}
+\item{labels}{Vector of variable names (NULL allowed)
+Required when specifying by variable name. Pass e.g. colnames() of a data.frame}
 }
 \value{
-事前知識行列 (n_variables x n_variables)
--1: 不明, 0: パスなし, 1: パスあり
+Prior knowledge matrix (n_variables x n_variables)
+-1: unknown, 0: no path, 1: path exists
 }
 \description{
-事前知識行列を作成
+Create a prior knowledge matrix
 }
 \examples{
-# インデックスで指定
+# Specify by index
 pk <- make_prior_knowledge(6, exogenous_variables = c(4))
 
-# 変数名で指定
+# Specify by variable name
 pk <- make_prior_knowledge(6,
   exogenous_variables = "x3",
   sink_variables = c("x1", "x4"),

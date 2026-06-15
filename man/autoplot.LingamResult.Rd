@@ -2,7 +2,7 @@
 % Please edit documentation in R/autoplot.r
 \name{autoplot.LingamResult}
 \alias{autoplot.LingamResult}
-\title{LingamResult の因果グラフを ggplot2 で描画}
+\title{Plot the causal graph of a LingamResult with ggplot2}
 \usage{
 \method{autoplot}{LingamResult}(
   object,
@@ -14,30 +14,31 @@
 )
 }
 \arguments{
-\item{object}{\code{\link[=lingam_direct]{lingam_direct()}} の返り値 (\code{LingamResult} オブジェクト)}
+\item{object}{Return value of \code{\link[=lingam_direct]{lingam_direct()}} (a \code{LingamResult} object)}
 
-\item{threshold}{この絶対値以下の係数はエッジとみなさない (default: 0)}
+\item{threshold}{Coefficients with an absolute value at or below this are not treated as edges (default: 0)}
 
-\item{node_size}{ノードの大きさ (default: 16)}
+\item{node_size}{Node size (default: 16)}
 
-\item{node_color}{ノードの塗り色 (default: "lightblue")}
+\item{node_color}{Node fill color (default: "lightblue")}
 
-\item{label_edges}{エッジに係数ラベルを表示するか (default: TRUE)}
+\item{label_edges}{Whether to display coefficient labels on edges (default: TRUE)}
 
-\item{...}{未使用}
+\item{...}{Unused}
 }
 \value{
-ggplot オブジェクト
+A ggplot object
 }
 \description{
-推定された因果構造を ggplot2 ベースの有向グラフとして描画する。ノード配置は
-igraph の階層レイアウト (sugiyama) で計算し、因果の流れが概ね上から下へ並ぶ。
-静的画像として出力されるため RMarkdown / Quarto で安定する。対話的な HTML
-図が必要な場合は \code{\link[=plot_adjacency]{plot_adjacency()}}（DiagrammeR ベース）を使う。
+Draws the estimated causal structure as a ggplot2-based directed graph. Node
+positions are computed with igraph's hierarchical layout (sugiyama), so the
+causal flow is generally arranged from top to bottom. Because the output is a
+static image, it is stable in RMarkdown / Quarto. If you need an interactive
+HTML figure, use \code{\link[=plot_adjacency]{plot_adjacency()}} (DiagrammeR-based).
 }
 \details{
-\code{autoplot()} は ggplot2 のジェネリックなので、利用前に \code{library(ggplot2)} で
-ggplot2 を読み込む必要がある。描画には ggplot2 と igraph が必要。
+\code{autoplot()} is a ggplot2 generic, so you must load ggplot2 with
+\code{library(ggplot2)} before using it. Plotting requires ggplot2 and igraph.
 }
 \examples{
 \donttest{

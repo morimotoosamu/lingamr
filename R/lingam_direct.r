@@ -12,43 +12,43 @@
 # Portions of this work:
 #   Copyright (c) 2026 O.Morimoto
 #
-# 内部実装は以下のファイルに分割されている：
-#   R/search_causal_order.r : 因果順序の探索（pwling / kernel）と事前知識の処理
-#   R/fit_regression.r      : 隣接行列の推定と回帰バックエンド
-#   R/paths.r               : DAG のパス列挙と経路効果
+# The internal implementation is split across the following files:
+#   R/search_causal_order.r : causal order search (pwling / kernel) and prior knowledge handling
+#   R/fit_regression.r      : adjacency matrix estimation and regression backends
+#   R/paths.r               : DAG path enumeration and path effects
 # =============================================================================
 
 
 #' Direct LiNGAM
 #'
-#' @param X 数値行列 (n_samples x n_features), data frame or matrix
-#' @param prior_knowledge 事前知識行列 (n_features x n_features) または NULL。
-#'   0: x_i から x_j への有向パスなし
-#'   1: x_i から x_j への有向パスあり
-#'  -1: 不明
-#' @param apply_prior_knowledge_softly 事前知識をソフトに適用するか (logical)
-#' @param measure 独立性の評価尺度 ("pwling" または "kernel")
-#' @param reg_method 隣接行列推定の回帰手法。
-#' "ols": 最小二乗法、
-#' "lasso": LASSO回帰、
-#' "adaptive_lasso": 適応的LASSO回帰（デフォルト）、
-#' "ridge": Ridge回帰（多重共線性に強い。スパース推定は行わない）。
-#' @param init_method 適応的LASSO回帰の初期重みの推定手法。
-#' "ols": 最小二乗法（デフォルト）、
-#' "ridge": Ridge回帰。
-#' 多重共線性が疑われる場合はRidge回帰がおすすめ。
-#' @param lambda LASSO のペナルティ（ラムダ）選択。
-#' "lambda.min" : CV予測誤差最小, 予測精度優先。
-#' "lambda.1se" : CV 1SEルール、ロバストで過学習しにくい。
-#' "AIC": AIC最小。高速。
-#' "BIC": BIC最小。高速、最もスパース。デフォルト。
-#' "oracle" ：適応的LASSO回帰のみ。オラクル性を担保したλを選択。高速。
-#' @return `LingamResult` オブジェクト（リスト）。以下の要素を含む：
-#' * `adjacency_matrix`: 隣接行列 B (n_features x n_features)。
-#'   **規則: `B[i, j]` は変数 j から変数 i への因果係数（j → i）。**
-#'   ゼロ要素は因果関係なしを意味する。
-#' * `causal_order`: 推定された因果順序（1-based インデックスの整数ベクトル）。
-#'   先頭ほど上流（外生変数に近い）。
+#' @param X Numeric matrix (n_samples x n_features), data frame or matrix
+#' @param prior_knowledge Prior knowledge matrix (n_features x n_features) or NULL.
+#'   0: no directed path from x_i to x_j
+#'   1: directed path from x_i to x_j
+#'  -1: unknown
+#' @param apply_prior_knowledge_softly Whether to apply prior knowledge softly (logical)
+#' @param measure Independence evaluation measure ("pwling" or "kernel")
+#' @param reg_method Regression method for adjacency matrix estimation.
+#' "ols": ordinary least squares,
+#' "lasso": LASSO regression,
+#' "adaptive_lasso": adaptive LASSO regression (default),
+#' "ridge": Ridge regression (robust to multicollinearity; does not perform sparse estimation).
+#' @param init_method Method for estimating the initial weights of adaptive LASSO regression.
+#' "ols": ordinary least squares (default),
+#' "ridge": Ridge regression.
+#' Ridge regression is recommended when multicollinearity is suspected.
+#' @param lambda LASSO penalty (lambda) selection.
+#' "lambda.min" : minimum CV prediction error, prioritizes prediction accuracy.
+#' "lambda.1se" : CV 1SE rule, robust and less prone to overfitting.
+#' "AIC": minimum AIC. Fast.
+#' "BIC": minimum BIC. Fast, sparsest. Default.
+#' "oracle" : adaptive LASSO regression only. Selects a lambda that guarantees the oracle property. Fast.
+#' @return A `LingamResult` object (list) containing the following elements:
+#' * `adjacency_matrix`: adjacency matrix B (n_features x n_features).
+#'   **Convention: `B[i, j]` is the causal coefficient from variable j to variable i (j -> i).**
+#'   Zero elements indicate no causal relationship.
+#' * `causal_order`: estimated causal order (integer vector of 1-based indices).
+#'   Earlier elements are more upstream (closer to exogenous variables).
 #' @importFrom stats sd lm.fit cov median quantile
 #' @export
 #' @examples
@@ -93,7 +93,7 @@ lingam_direct <- function(X,
 
   n_samples <- nrow(X)
   n_features <- ncol(X)
-  # --- 事前知識の前処理 ---
+  # --- Prior knowledge preprocessing ---
   Aknw <- NULL
   partial_orders <- NULL
   if (!is.null(prior_knowledge)) {
@@ -115,7 +115,7 @@ lingam_direct <- function(X,
       (col - mean(col)) / pop_sd
     })
   }
-  # --- 因果順序の探索 ---
+  # --- Causal order search ---
   for (iter in seq_len(n_features)) {
     cand <- search_candidate(U, Aknw, apply_prior_knowledge_softly, partial_orders)
     m <- if (measure == "kernel") {
@@ -134,7 +134,7 @@ lingam_direct <- function(X,
       }
     }
   }
-  # --- 隣接行列の推定（回帰手法を選択可能）---
+  # --- Adjacency matrix estimation (regression method is selectable) ---
   B <- estimate_adjacency_matrix(X, K, Aknw,
     method = reg_method,
     lambda = lambda,
@@ -147,11 +147,11 @@ lingam_direct <- function(X,
 }
 
 
-#' LingamResult の print メソッド
+#' Print method for LingamResult
 #'
-#' @param x LingamResult オブジェクト
-#' @param digits 表示桁数
-#' @param ... 追加引数（未使用）
+#' @param x LingamResult object
+#' @param digits Number of digits to display
+#' @param ... Additional arguments (unused)
 #' @export
 print.LingamResult <- function(x, digits = 3, ...) {
   n <- length(x$causal_order)
@@ -171,10 +171,10 @@ print.LingamResult <- function(x, digits = 3, ...) {
 
 
 # =============================================================================
-# 共有内部ユーティリティ
+# Shared internal utilities
 # =============================================================================
 
-#' lingam_direct() の返り値を検証する
+#' Validate the return value of lingam_direct()
 #' @keywords internal
 validate_lingam_result <- function(x) {
   if (!inherits(x, "LingamResult")) {
@@ -182,7 +182,7 @@ validate_lingam_result <- function(x) {
   }
 }
 
-#' Population standard deviation (n割り)
+#' Population standard deviation (divided by n)
 #' @keywords internal
 sd_pop <- function(x) {
   sqrt(mean((x - mean(x))^2))

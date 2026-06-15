@@ -2,24 +2,25 @@
 % Please edit documentation in R/paths.r
 \name{find_all_paths}
 \alias{find_all_paths}
-\title{DAG 中の全パスを深さ優先探索で列挙する}
+\title{Enumerate all paths in a DAG via depth-first search}
 \usage{
 find_all_paths(adjacency_matrix, from_index, to_index, min_causal_effect = 0)
 }
 \arguments{
-\item{adjacency_matrix}{隣接行列 (n x n)。\code{B[i,j]} は j → i の係数。}
+\item{adjacency_matrix}{Adjacency matrix (n x n). \code{B[i,j]} is the coefficient of j -> i.}
 
-\item{from_index}{始点インデックス (1-based)}
+\item{from_index}{Start index (1-based)}
 
-\item{to_index}{終点インデックス (1-based)}
+\item{to_index}{End index (1-based)}
 
-\item{min_causal_effect}{このしきい値以下の係数は存在しないエッジとみなす}
+\item{min_causal_effect}{Coefficients at or below this threshold are treated as nonexistent edges}
 }
 \value{
 list(paths, effects)
 }
 \description{
-\code{B[i, j]} が j → i を表す隣接行列を受け取り、\code{from_index} から
-\code{to_index} に至る全パスとそれぞれの経路効果（係数の積）を返す。
+Takes an adjacency matrix where \code{B[i, j]} represents j -> i, and returns
+all paths from \code{from_index} to \code{to_index} together with each path effect
+(the product of the coefficients).
 }
 \keyword{internal}

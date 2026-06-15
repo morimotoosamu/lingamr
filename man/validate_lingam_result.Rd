@@ -2,11 +2,11 @@
 % Please edit documentation in R/lingam_direct.r
 \name{validate_lingam_result}
 \alias{validate_lingam_result}
-\title{lingam_direct() の返り値を検証する}
+\title{Validate the return value of lingam_direct()}
 \usage{
 validate_lingam_result(x)
 }
 \description{
-lingam_direct() の返り値を検証する
+Validate the return value of lingam_direct()
 }
 \keyword{internal}

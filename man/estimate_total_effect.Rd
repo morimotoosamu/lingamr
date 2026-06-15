@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_total_effect.r
 \name{estimate_total_effect}
 \alias{estimate_total_effect}
-\title{指定した2変数間の総合因果効果を推定}
+\title{Estimate the total causal effect between two specified variables}
 \usage{
 estimate_total_effect(
   X,
@@ -15,25 +15,25 @@ estimate_total_effect(
 )
 }
 \arguments{
-\item{X}{元データ (matrix or data.frame)}
+\item{X}{Original data (matrix or data.frame)}
 
-\item{lingam_result}{lingam_direct() の返り値}
+\item{lingam_result}{Return value of lingam_direct()}
 
-\item{from_index}{原因変数 (1-based index or 変数名)}
+\item{from_index}{Cause variable (1-based index or variable name)}
 
-\item{to_index}{結果変数 (1-based index or 変数名)}
+\item{to_index}{Effect variable (1-based index or variable name)}
 
-\item{method}{回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはadaptive_lasso}
+\item{method}{Regression method ("ols", "lasso", "adaptive_lasso"). Default is adaptive_lasso}
 
-\item{lambda}{ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")デフォルトはBIC}
+\item{lambda}{Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle"). Default is BIC}
 
-\item{init_method}{適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")}
+\item{init_method}{Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")}
 }
 \value{
-推定された総合因果効果
+Estimated total causal effect
 }
 \description{
-指定した2変数間の総合因果効果を推定
+Estimate the total causal effect between two specified variables
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()

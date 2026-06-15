@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_adjacency.r
 \name{plot_adjacency}
 \alias{plot_adjacency}
-\title{隣接行列から DiagrammeR で因果グラフを描画}
+\title{Plot a causal graph from an adjacency matrix with DiagrammeR}
 \usage{
 plot_adjacency(
   B,
@@ -25,55 +25,62 @@ plot_adjacency(
 )
 }
 \arguments{
-\item{B}{隣接行列 (n_features x n_features)。
-\strong{規則: \code{B[i, j]} は変数 j から変数 i への因果係数（j → i）。}
-\code{lingam_direct()} の \code{adjacency_matrix} をそのまま渡せる。}
+\item{B}{Adjacency matrix (n_features x n_features).
+\strong{Convention: \code{B[i, j]} is the causal coefficient from variable j to
+variable i (j -> i).} The \code{adjacency_matrix} from \code{lingam_direct()} can
+be passed directly.}
 
-\item{labels}{変数名ベクトル (NULL の場合は x0, x1, ... を自動生成)}
+\item{labels}{Vector of variable names (if NULL, x0, x1, ... are generated
+automatically)}
 
-\item{threshold}{表示する最小係数の絶対値 (default: 0)}
+\item{threshold}{Minimum absolute coefficient value to display (default: 0)}
 
-\item{rankdir}{レイアウト方向 (default: "LR")
-"LR" = 左→右, "RL" = 右→左, "TB" = 上→下, "BT" = 下→上}
+\item{rankdir}{Layout direction (default: "LR")
+"LR" = left -> right, "RL" = right -> left, "TB" = top -> bottom,
+"BT" = bottom -> top}
 
-\item{title}{グラフのタイトル (default: "Estimated Causal Structure")}
+\item{title}{Graph title (default: "Estimated Causal Structure")}
 
-\item{shape}{ノードの形状 (default: "circle")
+\item{shape}{Node shape (default: "circle")
 "circle", "box", "ellipse", "diamond", "plaintext",
-"square", "triangle", "hexagon", "octagon" など}
+"square", "triangle", "hexagon", "octagon", etc.}
 
-\item{fillcolor}{ノードの塗りつぶし色 (default: "lightyellow")}
+\item{fillcolor}{Node fill color (default: "lightyellow")}
 
-\item{bordercolor}{枠線の色}
+\item{bordercolor}{Border color}
 
-\item{fontsize_node}{ノードのフォントサイズ (default: 14)}
+\item{fontsize_node}{Node font size (default: 14)}
 
-\item{fontsize_edge}{エッジラベルのフォントサイズ (default: 10)}
+\item{fontsize_edge}{Edge label font size (default: 10)}
 
-\item{edge_color}{エッジの色 (default: "gray40")。\code{true_B} 指定時は未使用。}
+\item{edge_color}{Edge color (default: "gray40"). Unused when \code{true_B} is
+specified.}
 
-\item{edge_label_color}{エッジラベルの色 (default: "red")。\code{true_B} 指定時は未使用。}
+\item{edge_label_color}{Edge label color (default: "red"). Unused when
+\code{true_B} is specified.}
 
-\item{true_B}{真の隣接行列 (NULL 可)。指定するとエッジを3色で分類する：
+\item{true_B}{True adjacency matrix (may be NULL). When specified, edges are
+classified into three colors:
 \itemize{
-\item 正解エッジ（推定あり・真あり）: \code{color_tp} の実線
-\item 過検出（推定あり・真なし）: \code{color_fp} の実線
-\item 見逃し（推定なし・真あり）: \code{color_fn} の破線（真の係数を表示）
+\item Correct edges (estimated and true): solid line in \code{color_tp}
+\item False positives (estimated but not true): solid line in \code{color_fp}
+\item Missed edges (not estimated but true): dashed line in \code{color_fn}
+(showing the true coefficient)
 }}
 
-\item{color_tp}{正解エッジの色 (default: "forestgreen")}
+\item{color_tp}{Color for correct edges (default: "forestgreen")}
 
-\item{color_fp}{過検出エッジの色 (default: "firebrick")}
+\item{color_fp}{Color for false-positive edges (default: "firebrick")}
 
-\item{color_fn}{見逃しエッジの色 (default: "darkorange")}
+\item{color_fn}{Color for missed edges (default: "darkorange")}
 
-\item{debug}{デバッグモードの有効化 (logical)}
+\item{debug}{Enable debug mode (logical)}
 }
 \value{
-grViz オブジェクト（DiagrammeR が利用可能な場合）
+A grViz object (when DiagrammeR is available)
 }
 \description{
-隣接行列から DiagrammeR で因果グラフを描画
+Plot a causal graph from an adjacency matrix with DiagrammeR
 }
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -88,7 +95,8 @@ model$adjacency_matrix |>
   plot_adjacency()
 
 \donttest{
-# 真の構造と比較（正解=緑, 過検出=赤, 見逃し=オレンジ破線）
+# Compare with the true structure
+# (correct = green, false positive = red, missed = orange dashed)
 model$adjacency_matrix |>
   plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
 }
