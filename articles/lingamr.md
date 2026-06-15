@@ -10,10 +10,24 @@ library(lingamr)
 
 ## サンプルデータ
 
+`lingamr` には 5 種類のサンプルデータ生成関数があります。 いずれも
+`data`（データフレーム）と
+`true_adjacency`（真の隣接行列）を含むリストを返します。
+
+| 関数 | 変数数 | デフォルト n | 特徴 |
+|----|:--:|:--:|----|
+| [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md) | 6 | 1,000 | 標準的な固定構造。このビニェットの主な例 |
+| [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md) | 10 | 1,000 | 6 変数の拡張版（[より大きなデータセット](#%E3%82%88%E3%82%8A%E5%A4%A7%E3%81%8D%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%8810-%E5%A4%89%E6%95%B0)で使用） |
+| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | 多重共線性が強い難しい設定（後述） |
+| [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md) | 可変 | 1,000 | 任意の変数数のランダムスパース DAG（[スケーラビリティの壁](#%E5%A4%89%E6%95%B0%E3%81%8C%E5%A4%9A%E3%81%84%E5%A0%B4%E5%90%88%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%81%AE%E5%A3%81)で使用） |
+| [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md) | 4 | 2,000 | 測定誤差パラドックス（[パラドックスの例](#directlingam-%E3%81%8C%E8%8B%A6%E6%88%A6%E3%81%99%E3%82%8B%E4%BE%8B%E6%B8%AC%E5%AE%9A%E8%AA%A4%E5%B7%AE%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9)で使用） |
+
+### generate_lingam_sample_6()
+
 [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
 は 6 変数の LiNGAM モデルに従う人工データと、
-その真の隣接行列を返します。
-データはdataに、隣接行列はtrue_adjacencyに格納されています。
+その真の隣接行列を返します。 データは `data` に、隣接行列は
+`true_adjacency` に格納されています。
 
 ``` r
 
@@ -32,7 +46,7 @@ x1k$data |>
 
 ``` r
 
-x1k$true_adjacency 
+x1k$true_adjacency
 #>    x0 x1 x2 x3 x4 x5
 #> x0  0  0  0  3  0  0
 #> x1  3  0  2  0  0  0
@@ -42,7 +56,8 @@ x1k$true_adjacency
 #> x5  4  0  0  0  0  0
 ```
 
-plot_adjacency関数を使うと、隣接行列に基づいた因果グラフを描画できます。
+[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+で隣接行列に基づいた因果グラフを描画できます。
 
 ``` r
 
@@ -55,6 +70,96 @@ x1k$true_adjacency |>
   )
 ```
 
+### generate_lingam_hard_sample()
+
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+は、多重共線性が強い設定（デフォルト: `collinearity = 0.95`）
+で生成した難しい 9 変数データです。x0〜x4 は強い共通因子を持ち、 x5〜x8
+はそれらの線形結合で構成されます。
+
+``` r
+
+hard <- generate_lingam_hard_sample(n = 500, seed = 42)
+
+# 真の隣接行列（エッジのある部分のみ表示）
+round(hard$true_adjacency, 1)
+#>     x0  x1  x2 x3 x4 x5 x6 x7 x8
+#> x0 0.0 0.0 0.0  0  0  0  0  0  0
+#> x1 0.0 0.0 0.0  0  0  0  0  0  0
+#> x2 0.0 0.0 0.0  0  0  0  0  0  0
+#> x3 0.0 0.0 0.0  0  0  0  0  0  0
+#> x4 0.0 0.0 0.0  0  0  0  0  0  0
+#> x5 1.5 1.5 1.5  0  0  0  0  0  0
+#> x6 0.0 1.0 1.0  1  1  0  0  0  0
+#> x7 2.0 0.0 0.0  2  0  0  0  0  0
+#> x8 0.0 0.0 0.0  0  0  1  1  0  0
+```
+
+多重共線性が強い場合、OLS は係数推定が不安定になりがちです。
+`reg_method = "ridge"` を使うと、Ridge 回帰（$`\ell_2`$ 正則化）が
+多重共線性を直接吸収するため、係数の安定性が向上します。
+
+``` r
+
+# OLS（全エッジを推定。多重共線性に弱い）
+fit_ols   <- lingam_direct(hard$data, reg_method = "ols")
+
+# Ridge（正則化で係数を安定化）
+fit_ridge <- lingam_direct(hard$data, reg_method = "ridge")
+```
+
+多重共線性が強いデータでは、因果順序の推定はどちらの手法でも困難です。
+重要な違いは**係数（隣接行列）の推定精度**にあります。 OLS
+は多重共線性下で係数が大きく振れますが、 Ridge は $`\ell_2`$
+正則化によって係数を縮小・安定させます。
+
+``` r
+
+# 真の隣接行列
+round(hard$true_adjacency, 2)
+#>     x0  x1  x2 x3 x4 x5 x6 x7 x8
+#> x0 0.0 0.0 0.0  0  0  0  0  0  0
+#> x1 0.0 0.0 0.0  0  0  0  0  0  0
+#> x2 0.0 0.0 0.0  0  0  0  0  0  0
+#> x3 0.0 0.0 0.0  0  0  0  0  0  0
+#> x4 0.0 0.0 0.0  0  0  0  0  0  0
+#> x5 1.5 1.5 1.5  0  0  0  0  0  0
+#> x6 0.0 1.0 1.0  1  1  0  0  0  0
+#> x7 2.0 0.0 0.0  2  0  0  0  0  0
+#> x8 0.0 0.0 0.0  0  0  1  1  0  0
+
+# OLS による推定
+round(fit_ols$adjacency_matrix, 2)
+#>      x0   x1    x2    x3    x4 x5    x6   x7    x8
+#> x0 0.00 0.06  0.07  0.23  0.20  0 -0.06 0.00  0.08
+#> x1 0.00 0.00  0.04  0.13  0.00  0  0.00 0.00  0.10
+#> x2 0.00 0.00  0.00  0.13  0.00  0  0.00 0.00  0.10
+#> x3 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.11
+#> x4 0.00 0.16  0.10  0.26  0.00  0  0.00 0.00  0.05
+#> x5 0.62 0.77  0.75 -0.05  0.12  0 -0.51 0.01  0.50
+#> x6 0.00 0.16  0.17  0.51  0.50  0  0.00 0.00  0.31
+#> x7 1.94 0.03 -0.07  2.14 -0.06  0  0.03 0.00 -0.01
+#> x8 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.00
+
+# Ridge による推定
+round(fit_ridge$adjacency_matrix, 2)
+#>      x0   x1    x2    x3    x4 x5    x6   x7    x8
+#> x0 0.00 0.07  0.08  0.23  0.20  0 -0.05 0.00  0.07
+#> x1 0.00 0.00  0.06  0.14  0.00  0  0.00 0.00  0.09
+#> x2 0.00 0.00  0.00  0.15  0.00  0  0.00 0.00  0.09
+#> x3 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.11
+#> x4 0.00 0.17  0.11  0.26  0.00  0  0.00 0.00  0.05
+#> x5 0.64 0.78  0.76 -0.06  0.11  0 -0.48 0.01  0.48
+#> x6 0.00 0.19  0.19  0.51  0.51  0  0.00 0.00  0.30
+#> x7 1.92 0.03 -0.07  2.12 -0.05  0  0.03 0.00 -0.01
+#> x8 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.00
+```
+
+多重共線性が疑われる場合は `reg_method = "ridge"` を試してみてください。
+スパース推定（不要なエッジをゼロに落とす）も必要な場合は
+`reg_method = "adaptive_lasso"` + `init_method = "ridge"`
+の組み合わせが有効です。
+
 ## 因果探索 (Causal Discovery)
 
 [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
@@ -62,14 +167,14 @@ x1k$true_adjacency |>
 (mutual information) を用い、パス係数の算出には適応的 LASSO 回帰が
 使われます。
 
-独立性の評価にHSICを使うには 引数measure に “kernel” を指定します。
-処理に大変時間がかかることに注意が必要です。
-
 ``` r
 
 model <- x1k$data |>
   lingam_direct()
 ```
+
+独立性の評価にHSICを使うには 引数measure に “kernel” を指定します。
+HSICを使うと処理に大変時間がかかることに注意が必要です。
 
 ### 因果の順序 (Causal Order)
 
@@ -106,7 +211,7 @@ model$adjacency_matrix |>
 
 ### 因果グラフの描画
 
-推定された隣接行列に基づいて、因果グラフを描きます。
+Direct LiNGAMで推定された隣接行列に基づいて、因果グラフを描きます。
 
 ``` r
 
@@ -170,13 +275,15 @@ ggplot2::autoplot(model)
 
 ## 総合因果効果 (Total Causal Effect)
 
-推定されたすべての総合効果を算出します。
+**総合因果効果**とは、ある変数を 1 単位変化させたとき、直接経路と
+すべての間接経路（媒介変数を通じた経路）を合わせた最終的な影響量です。
 
 ``` r
 
-x1k$data |>
-  estimate_all_total_effects(model) |>
-  round(3)
+total_effects <- x1k$data |>
+  estimate_all_total_effects(model)
+
+round(total_effects, 3)
 #>       x0 x1     x2     x3 x4 x5
 #> x0 0.000  0  0.000  3.033  0  0
 #> x1 2.897  0  1.910 21.059  0  0
@@ -186,24 +293,104 @@ x1k$data |>
 #> x5 4.015  0  0.000 12.179  0  0
 ```
 
+### 重回帰係数との比較
+
+重回帰係数と総合因果効果は、媒介変数が存在すると一致しません。
+
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+の真の因果構造では、x3 から x1 への経路が 2 本あります（x3 から x1
+への**直接**エッジはありません）。
+
+- x3 → x0 → x1（間接効果: 3.0 × 3.0 = **9.0**）
+- x3 → x2 → x1（間接効果: 6.0 × 2.0 = **12.0**）
+- **x3 の x1 への総合因果効果 = 9.0 + 12.0 = 21.0**
+
+x1 を目的変数として OLS で全変数を投入した場合の係数と、
+[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
+の結果を比較します。
+
+``` r
+
+# 重回帰：全変数を投入して x1 を予測
+lm_coefs <- coef(lm(x1 ~ ., data = x1k$data))
+
+# 比較（x1 に因果的に関係する変数：x0, x2, x3）
+data.frame(
+  variable           = c("x0", "x2", "x3"),
+  OLS_coefficient    = round(lm_coefs[c("x0", "x2", "x3")], 3),
+  total_causal_effect = round(total_effects["x1", c("x0", "x2", "x3")], 3)
+)
+#>    variable OLS_coefficient total_causal_effect
+#> x0       x0           3.237               2.897
+#> x2       x2           1.965               1.910
+#> x3       x3           0.014              21.059
+```
+
+x3 の OLS 係数はほぼ **0** です。x0 と
+x2（媒介変数）をモデルに含めることで、 x3 の「媒介を通じた影響」が
+x0・x2 の係数に吸収されているためです。
+
+対して、[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
+の x3 の値は **≈ 21** で、 x3 を 1 単位動かしたとき x1
+が最終的にどれだけ変わるかを正しく表しています。
+
+| 問い                                                      | 使うべき指標   |
+|-----------------------------------------------------------|----------------|
+| 「x0・x2 を固定したまま x3 を動かすと x1 はどう変わる？」 | OLS 重回帰係数 |
+| 「x3 を動かすと、すべての経路を通じて x1 はどう変わる？」 | 総合因果効果   |
+
+「ある変数に介入したときの最終的な影響」を知りたい場面では、
+重回帰係数ではなく総合因果効果を使います。
+
 ## 事前知識を用いた推論 (Prior Knowledge)
 
-事前知識を用いた実行例です。
+[`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md)
+を使うと、変数間の因果関係に関するドメイン知識を Direct LiNGAM
+に組み込めます。探索空間が絞られ、推定が安定します。
 
-### インデックスでの指定
+### 事前知識行列の書式
 
-- 変数の数は 6 個
-- x3 is an exogenous variable.
-- x1, x4, and x5 are sink variables.
-- x0 to x2 are no path.
+[`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md)
+は $`p \times p`$ の整数行列を返します。 **行 = 結果変数（to）、列 =
+原因変数（from）** という添字規則で、 隣接行列と同じ規約です。
+
+| 値   | 意味                                           |
+|------|------------------------------------------------|
+| `-1` | 不明（デフォルト。Direct LiNGAM が自由に探索） |
+| `0`  | このエッジは存在しない                         |
+| `1`  | このエッジは確実に存在する                     |
+
+各引数が行列に与える影響を示します。
+
+| 引数 | 設定される値 | 意味 |
+|----|----|----|
+| `exogenous_variables` | 指定した変数の**行**全体 → `0` | どの変数からも影響を受けない（根変数） |
+| `sink_variables` | 指定した変数の**列**全体 → `0` | どの変数にも影響を与えない（末端変数） |
+| `paths` | `pk[to, from] = 1` | このエッジが存在することを指定 |
+| `no_paths` | `pk[to, from] = 0` | このエッジが存在しないことを指定 |
+
+変数の指定は **1-based インデックス**または**変数名**（`labels`
+引数が必要）の どちらでも可能です。
+
+### 使用例
+
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+の真の構造に関するドメイン知識を与えます。
+
+- **x3**（インデックス 4）は外生変数——他のどの変数からも影響を受けない
+- **x1, x4, x5**（インデックス 2, 5,
+  6）は末端変数——他の変数に影響を与えない
+- **x0 と x2 の間**には経路がない（双方向とも）
+
+#### インデックスで指定
 
 ``` r
 
 pk1 <- make_prior_knowledge(
   n_variables         = 6,
-  exogenous_variables = 4,
-  sink_variables      = c(2, 5, 6),
-  no_paths            = list(c(3, 1), c(1, 3))
+  exogenous_variables = 4,          # x3
+  sink_variables      = c(2, 5, 6), # x1, x4, x5
+  no_paths            = list(c(3, 1), c(1, 3)) # x2↔x0 なし
 )
 
 pk1
@@ -216,8 +403,32 @@ pk1
 #> [6,]   -1    0   -1   -1    0   -1
 ```
 
-Direct LiNGAM を実行する際に、引数 `prior_knowledge`
-に事前知識を指定します。
+行列の見方：`pk1["x1", "x3"]` が `-1` なら「x3→x1 は不明（LiNGAM
+が探索）」、 `0` なら「x3→x1 は存在しない」です。
+
+#### 変数名で指定
+
+`labels`
+を渡すと変数名で指定できます。可読性が上がり、列の追加・並べ替えに強くなります。
+
+``` r
+
+pk1_named <- make_prior_knowledge(
+  n_variables         = 6,
+  exogenous_variables = "x3",
+  sink_variables      = c("x1", "x4", "x5"),
+  no_paths            = list(c("x2", "x0"), c("x0", "x2")),
+  labels              = colnames(x1k$data)
+)
+
+# 内容は pk1 と等価
+identical(pk1, pk1_named)
+#> [1] FALSE
+```
+
+### 事前知識を使った Direct LiNGAM の実行
+
+`prior_knowledge` 引数に渡すだけで探索に反映されます。
 
 ``` r
 
@@ -227,8 +438,6 @@ model_pk1 <- x1k$data |>
 cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
 #> Causal Order:  x3 x2 x0 x4 x5 x1
 ```
-
-結果の隣接行列に基づいて因果グラフを描きます。
 
 ``` r
 
@@ -251,6 +460,120 @@ model_pk1$adjacency_matrix |>
     fillcolor = "lightgreen"
   )
 ```
+
+## 回帰手法の使い分け (reg_method)
+
+Direct LiNGAM では、因果順序が確定した後に隣接行列を回帰で推定します。
+`reg_method` 引数でその回帰手法を選択できます。
+
+| `reg_method` | `glmnet` | スパース化 | 特徴 |
+|----|----|----|----|
+| `"ols"` | 不要 | なし | 全エッジを推定。動作確認やパッケージ不要な環境向け |
+| `"lasso"` | 必要 | あり | 弱いエッジを 0 に圧縮 |
+| `"adaptive_lasso"` | 必要 | あり（強） | **デフォルト**。オラクル性質あり——真にゼロのエッジを確実に 0 に |
+| `"ridge"` | 必要 | なし | $`\ell_2`$ 正則化で係数を安定化。多重共線性に強い。スパース化は行わない |
+
+オラクル性質とは「サンプルが増えれば真の構造を確実に回復できる」理論的保証で、
+通常は `"adaptive_lasso"` が推奨です。多重共線性が強い場合は `"ridge"`
+が有効で、 さらにスパース化も必要なら `"adaptive_lasso"` +
+`init_method = "ridge"` を組み合わせてください。
+
+### 4 手法の比較
+
+``` r
+
+fit_ols    <- lingam_direct(x1k$data, reg_method = "ols")
+fit_lasso  <- lingam_direct(x1k$data, reg_method = "lasso",          lambda = "BIC")
+fit_alasso <- lingam_direct(x1k$data, reg_method = "adaptive_lasso", lambda = "BIC")
+fit_ridge  <- lingam_direct(x1k$data, reg_method = "ridge",          lambda = "BIC")
+
+# 隣接行列の絶対値を並べて比較
+round(fit_ols$adjacency_matrix,    3)
+#>       x0 x1     x2     x3     x4    x5
+#> x0 0.000  0 -0.040  3.274  0.000 0.000
+#> x1 3.237  0  1.965  0.014 -0.034 0.006
+#> x2 0.000  0  0.000  5.993  0.000 0.000
+#> x3 0.000  0  0.000  0.000  0.000 0.000
+#> x4 7.992  0 -1.062  0.394  0.000 0.000
+#> x5 3.873  0  0.069 -0.315  0.018 0.000
+round(fit_lasso$adjacency_matrix,  3)
+#>       x0 x1     x2    x3 x4 x5
+#> x0 0.000  0  0.000 3.030  0  0
+#> x1 2.938  0  1.965 0.184  0  0
+#> x2 0.000  0  0.000 5.993  0  0
+#> x3 0.000  0  0.000 0.000  0  0
+#> x4 7.979  0 -0.989 0.000  0  0
+#> x5 3.977  0  0.000 0.000  0  0
+round(fit_alasso$adjacency_matrix, 3)
+#>       x0 x1     x2    x3 x4 x5
+#> x0 0.000  0  0.000 3.033  0  0
+#> x1 2.988  0  2.002 0.000  0  0
+#> x2 0.000  0  0.000 5.993  0  0
+#> x3 0.000  0  0.000 0.000  0  0
+#> x4 8.017  0 -1.009 0.000  0  0
+#> x5 4.015  0  0.000 0.000  0  0
+round(fit_ridge$adjacency_matrix,  3)
+#>       x0 x1     x2     x3    x4    x5
+#> x0 0.000  0 -0.016  3.123 0.000 0.000
+#> x1 2.172  0  2.043  0.170 0.057 0.084
+#> x2 0.000  0  0.000  5.993 0.000 0.000
+#> x3 0.000  0  0.000  0.000 0.000 0.000
+#> x4 7.986  0 -1.028  0.209 0.000 0.000
+#> x5 2.858  0  0.204 -0.329 0.143 0.000
+```
+
+OLS・Ridge は全エッジに非ゼロ係数が残りやすく、LASSO・Adaptive LASSO は
+余分なエッジを 0 に圧縮します。Ridge
+は係数の**大きさ**を縮小しますが、ゼロにはなりません。
+
+### lambda の選択（LASSO / Adaptive LASSO 共通）
+
+ペナルティ強度 $`\lambda`$ の選択は推定のスパース度に直結します。
+
+| `lambda` | 方法 | スパース度 | 用途 |
+|----|----|----|----|
+| `"BIC"` | 情報量基準 | 最大 | **デフォルト**。小さなサンプルでも安定 |
+| `"AIC"` | 情報量基準 | 大 | BIC より少しエッジが残る |
+| `"lambda.min"` | CV（予測誤差最小） | 小 | 予測精度優先。エッジが多め |
+| `"lambda.1se"` | CV（1SE ルール） | 中〜大 | CV 版でロバスト |
+| `"oracle"` | 解析式（adaptive_lasso 専用） | ― | $`\lambda = 5 / n^{1.75}`$。理論的オラクル性を保証 |
+
+``` r
+
+# BIC（デフォルト・最スパース）と lambda.min（予測誤差最小）の比較
+fit_bic     <- lingam_direct(x1k$data, lambda = "BIC")
+fit_lam_min <- lingam_direct(x1k$data, lambda = "lambda.min")
+
+# 非ゼロエッジ数
+sum(fit_bic$adjacency_matrix     != 0)
+#> [1] 7
+sum(fit_lam_min$adjacency_matrix != 0)
+#> [1] 7
+```
+
+### 多重共線性がある場合
+
+多重共線性が強い場合の対応策は 2 つあります。
+
+**`reg_method = "ridge"`**（シンプル） Ridge 回帰が隣接行列推定全体に
+$`\ell_2`$ 正則化を適用します。
+スパース化は行わないため係数がゼロになりませんが、
+係数の安定性を優先したい場合に適しています。
+
+**`reg_method = "adaptive_lasso"` +
+`init_method = "ridge"`**（スパース化も必要な場合） Adaptive LASSO の第
+1 段階（OLS 初期推定）は多重共線性に弱く、
+係数が不安定になることがあります。`init_method = "ridge"` に切り替えると
+Ridge 回帰で初期重みを安定させ、かつ最終推定はスパース化されます。
+
+多重共線性の強いデータ（`collinearity = 0.95`）での OLS vs Ridge
+の係数比較は、 「サンプルデータ」節の
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+を参照してください。
+なお、因果順序の推定はどちらの手法でも困難であり、係数精度の改善が主な利点です。
+
+標準的なデータでは
+`reg_method = "adaptive_lasso"`（デフォルト）のままで構いません。
 
 ## 誤差変数間の独立性 (Independence between error variables)
 
@@ -450,7 +773,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.5 seconds.
+#> Completed in 3.2 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -866,7 +1189,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 秒
 #> p = 15 : 0.06 秒
-#> 理論倍率 3.4 倍 に対して 実測 2.2 倍
+#> 理論倍率 3.4 倍 に対して 実測 2.1 倍
 ```
 
 ICA-LiNGAM を同じデータで実行して速度を直接比較します。
@@ -1036,7 +1359,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.6 seconds.
 
 # 各方向の出現確率（行 = to, 列 = from）
 bs_paradox |>
@@ -1059,3 +1382,39 @@ bs_paradox |>
 > という仮定）が破られている場合、手法は誤った構造を**安定的に**復元してしまう
 > ことがあります。残差の独立性・正規性の検定や、データ生成過程についての
 > ドメイン知識と併せて、結果を批判的に評価することが重要です。
+
+## LiNGAM が使えない場面
+
+LiNGAM（および `lingamr`）はいくつかの前提条件を要求します。
+これらが満たされない場合は推定が失敗するか、誤った構造を系統的に復元します。
+
+| 前提条件 | 問題が起きる状況 | 対処・代替 |
+|----|----|----|
+| **非ガウス誤差** | すべての誤差がガウス分布に従う場合、因果方向が識別不能になる | 本 vignette「非ガウス性という前提」節参照。ICA-LiNGAM / Direct LiNGAM は等しく失敗する |
+| **非循環グラフ（DAG）** | フィードバックループ（x → y → x）が存在する場合 | Cyclic LiNGAM（Python 版に実装）を検討する |
+| **潜在的共通原因なし** | 観測されていない共通原因（隠れ交絡変数）が存在する場合 | LvLiNGAM（Latent variable LiNGAM）を検討する |
+| **線形な因果関係** | 変数間の関係が非線形の場合 | 加法的ノイズモデル（ANM）や非線形 ICA を検討する |
+| **測定誤差なし（上流変数）** | 根に近い変数に重い測定誤差が乗っている場合、向きが系統的に逆転する | 本 vignette「測定誤差のパラドックス」節参照 |
+| **独立同分布（i.i.d.）** | 時系列データ・階層データ・クラスタ構造がある場合 | VAR-LiNGAM（時系列）、MultiBench（マルチドメイン）等を検討する |
+| **十分なサンプルサイズ** | $`n`$ が変数数 $`p`$ に対して極端に少ない場合（目安: $`n < 10p`$）、推定が不安定になりやすい | 変数を減らす・`reg_method = "adaptive_lasso"` でスパース化する |
+
+### 事前に確認するチェックリスト
+
+実際の分析を始める前に、以下を確認することを推奨します。
+
+1.  **グラフの非循環性** —
+    専門知識からフィードバックループが否定できるか？
+2.  **潜在変数の不在** — 主要な観測変数は揃っているか？
+3.  **誤差の非ガウス性** —
+    [`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
+    で確認できる（ただし推定後の診断）。
+    事前に各変数のヒストグラム・歪度を目視するのが簡易的。
+4.  **測定誤差の有無** —
+    根に近い変数に測定誤差がないか？ある場合は慎重に解釈する。
+5.  **サンプルサイズ** — $`n \geq 10p`$
+    を目安に。不足する場合は結果を過信しない。
+
+> **まとめ:** LiNGAM
+> は「線形・非巡回・非ガウス・潜在変数なし・i.i.d.」という 5
+> つの前提がすべて成り立つときに強力です。
+> 分析前にこれらをドメイン知識と残差診断で検証することが、信頼できる因果推論の第一歩です。

@@ -69,9 +69,62 @@
 <div class="section level2">
 <h2 id="サンプルデータ">サンプルデータ<a class="anchor" aria-label="anchor" href="#%E3%82%B5%E3%83%B3%E3%83%97%E3%83%AB%E3%83%87%E3%83%BC%E3%82%BF"></a>
 </h2>
+<p><code>lingamr</code> には 5 種類のサンプルデータ生成関数があります。
+いずれも <code>data</code>（データフレーム）と
+<code>true_adjacency</code>（真の隣接行列）を含むリストを返します。</p>
+<table class="table">
+<colgroup>
+<col width="18%">
+<col width="24%">
+<col width="39%">
+<col width="18%">
+</colgroup>
+<thead><tr class="header">
+<th>関数</th>
+<th align="center">変数数</th>
+<th align="center">デフォルト n</th>
+<th>特徴</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code></td>
+<td align="center">6</td>
+<td align="center">1,000</td>
+<td>標準的な固定構造。このビニェットの主な例</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/generate_lingam_sample_10.html">generate_lingam_sample_10()</a></code></td>
+<td align="center">10</td>
+<td align="center">1,000</td>
+<td>6 変数の拡張版（<a href="#%E3%82%88%E3%82%8A%E5%A4%A7%E3%81%8D%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%8810-%E5%A4%89%E6%95%B0">より大きなデータセット</a>で使用）</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/generate_lingam_hard_sample.html">generate_lingam_hard_sample()</a></code></td>
+<td align="center">9</td>
+<td align="center">200</td>
+<td>多重共線性が強い難しい設定（後述）</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample()</a></code></td>
+<td align="center">可変</td>
+<td align="center">1,000</td>
+<td>任意の変数数のランダムスパース DAG（<a href="#%E5%A4%89%E6%95%B0%E3%81%8C%E5%A4%9A%E3%81%84%E5%A0%B4%E5%90%88%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%81%AE%E5%A3%81">スケーラビリティの壁</a>で使用）</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/generate_lingam_paradox_data.html">generate_lingam_paradox_data()</a></code></td>
+<td align="center">4</td>
+<td align="center">2,000</td>
+<td>測定誤差パラドックス（<a href="#directlingam-%E3%81%8C%E8%8B%A6%E6%88%A6%E3%81%99%E3%82%8B%E4%BE%8B%E6%B8%AC%E5%AE%9A%E8%AA%A4%E5%B7%AE%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9">パラドックスの例</a>で使用）</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="generate_lingam_sample_6">generate_lingam_sample_6()<a class="anchor" aria-label="anchor" href="#generate_lingam_sample_6"></a>
+</h3>
 <p><code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code> は 6 変数の LiNGAM
-モデルに従う人工データと、 その真の隣接行列を返します。
-データはdataに、隣接行列はtrue_adjacencyに格納されています。</p>
+モデルに従う人工データと、 その真の隣接行列を返します。 データは
+<code>data</code> に、隣接行列は <code>true_adjacency</code>
+に格納されています。</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span></span>
@@ -85,7 +138,7 @@
 <span><span class="co">#&gt; 5 1.698178  9.698147 2.145058 0.3521443 11.673495  7.366258</span></span>
 <span><span class="co">#&gt; 6 1.412372  8.640107 1.929980 0.2977585 10.024075  6.340899</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">true_adjacency</span> </span>
+<code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">true_adjacency</span></span>
 <span><span class="co">#&gt;    x0 x1 x2 x3 x4 x5</span></span>
 <span><span class="co">#&gt; x0  0  0  0  3  0  0</span></span>
 <span><span class="co">#&gt; x1  3  0  2  0  0  0</span></span>
@@ -93,7 +146,8 @@
 <span><span class="co">#&gt; x3  0  0  0  0  0  0</span></span>
 <span><span class="co">#&gt; x4  8  0 -1  0  0  0</span></span>
 <span><span class="co">#&gt; x5  4  0  0  0  0  0</span></span></code></pre></div>
-<p>plot_adjacency関数を使うと、隣接行列に基づいた因果グラフを描画できます。</p>
+<p><code><a href="../reference/plot_adjacency.html">plot_adjacency()</a></code>
+で隣接行列に基づいた因果グラフを描画できます。</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
@@ -105,6 +159,89 @@
 <div class="grViz html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:576px;height:480px;"></div>
 <script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True causal structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.00\"]\n  x0 -> x1 [label = \" 3.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
+<div class="section level3">
+<h3 id="generate_lingam_hard_sample">generate_lingam_hard_sample()<a class="anchor" aria-label="anchor" href="#generate_lingam_hard_sample"></a>
+</h3>
+<p><code><a href="../reference/generate_lingam_hard_sample.html">generate_lingam_hard_sample()</a></code>
+は、多重共線性が強い設定（デフォルト: <code>collinearity = 0.95</code>）
+で生成した難しい 9 変数データです。x0〜x4 は強い共通因子を持ち、 x5〜x8
+はそれらの線形結合で構成されます。</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hard</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_hard_sample.html">generate_lingam_hard_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 真の隣接行列（エッジのある部分のみ表示）</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">hard</span><span class="op">$</span><span class="va">true_adjacency</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     x0  x1  x2 x3 x4 x5 x6 x7 x8</span></span>
+<span><span class="co">#&gt; x0 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x1 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x2 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x3 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x4 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x5 1.5 1.5 1.5  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x6 0.0 1.0 1.0  1  1  0  0  0  0</span></span>
+<span><span class="co">#&gt; x7 2.0 0.0 0.0  2  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x8 0.0 0.0 0.0  0  0  1  1  0  0</span></span></code></pre></div>
+<p>多重共線性が強い場合、OLS は係数推定が不安定になりがちです。
+<code>reg_method = "ridge"</code> を使うと、Ridge
+回帰（<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\ell_2</annotation></semantics></math>
+正則化）が 多重共線性を直接吸収するため、係数の安定性が向上します。</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># OLS（全エッジを推定。多重共線性に弱い）</span></span>
+<span><span class="va">fit_ols</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">hard</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Ridge（正則化で係数を安定化）</span></span>
+<span><span class="va">fit_ridge</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">hard</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ridge"</span><span class="op">)</span></span></code></pre></div>
+<p>多重共線性が強いデータでは、因果順序の推定はどちらの手法でも困難です。
+重要な違いは<strong>係数（隣接行列）の推定精度</strong>にあります。 OLS
+は多重共線性下で係数が大きく振れますが、 Ridge は
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\ell_2</annotation></semantics></math>
+正則化によって係数を縮小・安定させます。</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 真の隣接行列</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">hard</span><span class="op">$</span><span class="va">true_adjacency</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     x0  x1  x2 x3 x4 x5 x6 x7 x8</span></span>
+<span><span class="co">#&gt; x0 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x1 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x2 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x3 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x4 0.0 0.0 0.0  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x5 1.5 1.5 1.5  0  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x6 0.0 1.0 1.0  1  1  0  0  0  0</span></span>
+<span><span class="co">#&gt; x7 2.0 0.0 0.0  2  0  0  0  0  0</span></span>
+<span><span class="co">#&gt; x8 0.0 0.0 0.0  0  0  1  1  0  0</span></span>
+<span></span>
+<span><span class="co"># OLS による推定</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_ols</span><span class="op">$</span><span class="va">adjacency_matrix</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      x0   x1    x2    x3    x4 x5    x6   x7    x8</span></span>
+<span><span class="co">#&gt; x0 0.00 0.06  0.07  0.23  0.20  0 -0.06 0.00  0.08</span></span>
+<span><span class="co">#&gt; x1 0.00 0.00  0.04  0.13  0.00  0  0.00 0.00  0.10</span></span>
+<span><span class="co">#&gt; x2 0.00 0.00  0.00  0.13  0.00  0  0.00 0.00  0.10</span></span>
+<span><span class="co">#&gt; x3 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.11</span></span>
+<span><span class="co">#&gt; x4 0.00 0.16  0.10  0.26  0.00  0  0.00 0.00  0.05</span></span>
+<span><span class="co">#&gt; x5 0.62 0.77  0.75 -0.05  0.12  0 -0.51 0.01  0.50</span></span>
+<span><span class="co">#&gt; x6 0.00 0.16  0.17  0.51  0.50  0  0.00 0.00  0.31</span></span>
+<span><span class="co">#&gt; x7 1.94 0.03 -0.07  2.14 -0.06  0  0.03 0.00 -0.01</span></span>
+<span><span class="co">#&gt; x8 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.00</span></span>
+<span></span>
+<span><span class="co"># Ridge による推定</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_ridge</span><span class="op">$</span><span class="va">adjacency_matrix</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      x0   x1    x2    x3    x4 x5    x6   x7    x8</span></span>
+<span><span class="co">#&gt; x0 0.00 0.07  0.08  0.23  0.20  0 -0.05 0.00  0.07</span></span>
+<span><span class="co">#&gt; x1 0.00 0.00  0.06  0.14  0.00  0  0.00 0.00  0.09</span></span>
+<span><span class="co">#&gt; x2 0.00 0.00  0.00  0.15  0.00  0  0.00 0.00  0.09</span></span>
+<span><span class="co">#&gt; x3 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.11</span></span>
+<span><span class="co">#&gt; x4 0.00 0.17  0.11  0.26  0.00  0  0.00 0.00  0.05</span></span>
+<span><span class="co">#&gt; x5 0.64 0.78  0.76 -0.06  0.11  0 -0.48 0.01  0.48</span></span>
+<span><span class="co">#&gt; x6 0.00 0.19  0.19  0.51  0.51  0  0.00 0.00  0.30</span></span>
+<span><span class="co">#&gt; x7 1.92 0.03 -0.07  2.12 -0.05  0  0.03 0.00 -0.01</span></span>
+<span><span class="co">#&gt; x8 0.00 0.00  0.00  0.00  0.00  0  0.00 0.00  0.00</span></span></code></pre></div>
+<p>多重共線性が疑われる場合は <code>reg_method = "ridge"</code>
+を試してみてください。
+スパース推定（不要なエッジをゼロに落とす）も必要な場合は
+<code>reg_method = "adaptive_lasso"</code> +
+<code>init_method = "ridge"</code> の組み合わせが有効です。</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="因果探索-causal-discovery">因果探索 (Causal Discovery)<a class="anchor" aria-label="anchor" href="#%E5%9B%A0%E6%9E%9C%E6%8E%A2%E7%B4%A2-causal-discovery"></a>
 </h2>
@@ -112,17 +249,17 @@
 を実行します。独立性の評価はデフォルトでは 相互情報量 (mutual
 information) を用い、パス係数の算出には適応的 LASSO 回帰が
 使われます。</p>
-<p>独立性の評価にHSICを使うには 引数measure に “kernel” を指定します。
-処理に大変時間がかかることに注意が必要です。</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>独立性の評価にHSICを使うには 引数measure に “kernel” を指定します。
+HSICを使うと処理に大変時間がかかることに注意が必要です。</p>
 <div class="section level3">
 <h3 id="因果の順序-causal-order">因果の順序 (Causal Order)<a class="anchor" aria-label="anchor" href="#%E5%9B%A0%E6%9E%9C%E3%81%AE%E9%A0%86%E5%BA%8F-causal-order"></a>
 </h3>
 <p>推定された因果の順序は causal_order
 にインデックス番号として格納されています。</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># index number</span></span>
 <span><span class="va">model</span><span class="op">$</span><span class="va">causal_order</span></span>
 <span><span class="co">#&gt; [1] 4 3 1 5 6 2</span></span>
@@ -135,7 +272,7 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <h3 id="推定された隣接行列-estimated-adjacency-matrix">推定された隣接行列 (Estimated Adjacency Matrix)<a class="anchor" aria-label="anchor" href="#%E6%8E%A8%E5%AE%9A%E3%81%95%E3%82%8C%E3%81%9F%E9%9A%A3%E6%8E%A5%E8%A1%8C%E5%88%97-estimated-adjacency-matrix"></a>
 </h3>
 <p>推定された効果の量を確認します。デフォルトでは適応的LASSO回帰の回帰係数が用いられます。</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       x0 x1     x2    x3 x4 x5</span></span>
@@ -149,8 +286,9 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <div class="section level3">
 <h3 id="因果グラフの描画">因果グラフの描画<a class="anchor" aria-label="anchor" href="#%E5%9B%A0%E6%9E%9C%E3%82%B0%E3%83%A9%E3%83%95%E3%81%AE%E6%8F%8F%E7%94%BB"></a>
 </h3>
-<p>推定された隣接行列に基づいて、因果グラフを描きます。</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p>Direct
+LiNGAMで推定された隣接行列に基づいて、因果グラフを描きます。</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span>,</span>
@@ -180,7 +318,7 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <strong>オレンジ（破線）</strong>:
 見逃したエッジ（推定なし・真あり、真の係数を表示）</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span>,</span>
@@ -207,7 +345,7 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 呼び出すか、事前に <code><a href="https://ggplot2.tidyverse.org" class="external-link">library(ggplot2)</a></code>
 で読み込みます（描画には <code>ggplot2</code> と <code>igraph</code>
 が必要です）。</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lingamr_files/figure-html/autoplot-1.png" class="r-plt" alt="" width="576"></p>
 </div>
@@ -215,11 +353,14 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <div class="section level2">
 <h2 id="総合因果効果-total-causal-effect">総合因果効果 (Total Causal Effect)<a class="anchor" aria-label="anchor" href="#%E7%B7%8F%E5%90%88%E5%9B%A0%E6%9E%9C%E5%8A%B9%E6%9E%9C-total-causal-effect"></a>
 </h2>
-<p>推定されたすべての総合効果を算出します。</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/estimate_all_total_effects.html">estimate_all_total_effects</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
+<p><strong>総合因果効果</strong>とは、ある変数を 1
+単位変化させたとき、直接経路と
+すべての間接経路（媒介変数を通じた経路）を合わせた最終的な影響量です。</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">total_effects</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/estimate_all_total_effects.html">estimate_all_total_effects</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">total_effects</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       x0 x1     x2     x3 x4 x5</span></span>
 <span><span class="co">#&gt; x0 0.000  0  0.000  3.033  0  0</span></span>
 <span><span class="co">#&gt; x1 2.897  0  1.910 21.059  0  0</span></span>
@@ -227,26 +368,163 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <span><span class="co">#&gt; x3 0.000  0  0.000  0.000  0  0</span></span>
 <span><span class="co">#&gt; x4 8.001  0 -1.308 18.276  0  0</span></span>
 <span><span class="co">#&gt; x5 4.015  0  0.000 12.179  0  0</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="重回帰係数との比較">重回帰係数との比較<a class="anchor" aria-label="anchor" href="#%E9%87%8D%E5%9B%9E%E5%B8%B0%E4%BF%82%E6%95%B0%E3%81%A8%E3%81%AE%E6%AF%94%E8%BC%83"></a>
+</h3>
+<p>重回帰係数と総合因果効果は、媒介変数が存在すると一致しません。</p>
+<p><code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code> の真の因果構造では、x3 から
+x1 への経路が 2 本あります（x3 から x1
+への<strong>直接</strong>エッジはありません）。</p>
+<ul>
+<li>x3 → x0 → x1（間接効果: 3.0 × 3.0 = <strong>9.0</strong>）</li>
+<li>x3 → x2 → x1（間接効果: 6.0 × 2.0 = <strong>12.0</strong>）</li>
+<li><strong>x3 の x1 への総合因果効果 = 9.0 + 12.0 = 21.0</strong></li>
+</ul>
+<p>x1 を目的変数として OLS で全変数を投入した場合の係数と、
+<code><a href="../reference/estimate_all_total_effects.html">estimate_all_total_effects()</a></code> の結果を比較します。</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 重回帰：全変数を投入して x1 を予測</span></span>
+<span><span class="va">lm_coefs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">x1</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 比較（x1 に因果的に関係する変数：x0, x2, x3）</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  variable           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x0"</span>, <span class="st">"x2"</span>, <span class="st">"x3"</span><span class="op">)</span>,</span>
+<span>  OLS_coefficient    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">lm_coefs</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x0"</span>, <span class="st">"x2"</span>, <span class="st">"x3"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>  total_causal_effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">total_effects</span><span class="op">[</span><span class="st">"x1"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x0"</span>, <span class="st">"x2"</span>, <span class="st">"x3"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;    variable OLS_coefficient total_causal_effect</span></span>
+<span><span class="co">#&gt; x0       x0           3.237               2.897</span></span>
+<span><span class="co">#&gt; x2       x2           1.965               1.910</span></span>
+<span><span class="co">#&gt; x3       x3           0.014              21.059</span></span></code></pre></div>
+<p>x3 の OLS 係数はほぼ <strong>0</strong> です。x0 と
+x2（媒介変数）をモデルに含めることで、 x3 の「媒介を通じた影響」が
+x0・x2 の係数に吸収されているためです。</p>
+<p>対して、<code><a href="../reference/estimate_all_total_effects.html">estimate_all_total_effects()</a></code> の x3 の値は
+<strong>≈ 21</strong> で、 x3 を 1 単位動かしたとき x1
+が最終的にどれだけ変わるかを正しく表しています。</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="66%">
+</colgroup>
+<thead><tr class="header">
+<th>問い</th>
+<th>使うべき指標</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>「x0・x2 を固定したまま x3 を動かすと x1 はどう変わる？」</td>
+<td>OLS 重回帰係数</td>
+</tr>
+<tr class="even">
+<td>「x3 を動かすと、すべての経路を通じて x1 はどう変わる？」</td>
+<td>総合因果効果</td>
+</tr>
+</tbody>
+</table>
+<p>「ある変数に介入したときの最終的な影響」を知りたい場面では、
+重回帰係数ではなく総合因果効果を使います。</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="事前知識を用いた推論-prior-knowledge">事前知識を用いた推論 (Prior Knowledge)<a class="anchor" aria-label="anchor" href="#%E4%BA%8B%E5%89%8D%E7%9F%A5%E8%AD%98%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E6%8E%A8%E8%AB%96-prior-knowledge"></a>
 </h2>
-<p>事前知識を用いた実行例です。</p>
+<p><code><a href="../reference/make_prior_knowledge.html">make_prior_knowledge()</a></code>
+を使うと、変数間の因果関係に関するドメイン知識を Direct LiNGAM
+に組み込めます。探索空間が絞られ、推定が安定します。</p>
 <div class="section level3">
-<h3 id="インデックスでの指定">インデックスでの指定<a class="anchor" aria-label="anchor" href="#%E3%82%A4%E3%83%B3%E3%83%87%E3%83%83%E3%82%AF%E3%82%B9%E3%81%A7%E3%81%AE%E6%8C%87%E5%AE%9A"></a>
+<h3 id="事前知識行列の書式">事前知識行列の書式<a class="anchor" aria-label="anchor" href="#%E4%BA%8B%E5%89%8D%E7%9F%A5%E8%AD%98%E8%A1%8C%E5%88%97%E3%81%AE%E6%9B%B8%E5%BC%8F"></a>
 </h3>
+<p><code><a href="../reference/make_prior_knowledge.html">make_prior_knowledge()</a></code> は
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>×</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">p \times p</annotation></semantics></math>
+の整数行列を返します。 <strong>行 = 結果変数（to）、列 =
+原因変数（from）</strong> という添字規則で、
+隣接行列と同じ規約です。</p>
+<table class="table">
+<thead><tr class="header">
+<th>値</th>
+<th>意味</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>-1</code></td>
+<td>不明（デフォルト。Direct LiNGAM が自由に探索）</td>
+</tr>
+<tr class="even">
+<td><code>0</code></td>
+<td>このエッジは存在しない</td>
+</tr>
+<tr class="odd">
+<td><code>1</code></td>
+<td>このエッジは確実に存在する</td>
+</tr>
+</tbody>
+</table>
+<p>各引数が行列に与える影響を示します。</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="50%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>引数</th>
+<th>設定される値</th>
+<th>意味</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>exogenous_variables</code></td>
+<td>指定した変数の<strong>行</strong>全体 → <code>0</code>
+</td>
+<td>どの変数からも影響を受けない（根変数）</td>
+</tr>
+<tr class="even">
+<td><code>sink_variables</code></td>
+<td>指定した変数の<strong>列</strong>全体 → <code>0</code>
+</td>
+<td>どの変数にも影響を与えない（末端変数）</td>
+</tr>
+<tr class="odd">
+<td><code>paths</code></td>
+<td><code>pk[to, from] = 1</code></td>
+<td>このエッジが存在することを指定</td>
+</tr>
+<tr class="even">
+<td><code>no_paths</code></td>
+<td><code>pk[to, from] = 0</code></td>
+<td>このエッジが存在しないことを指定</td>
+</tr>
+</tbody>
+</table>
+<p>変数の指定は <strong>1-based
+インデックス</strong>または<strong>変数名</strong>（<code>labels</code>
+引数が必要）の どちらでも可能です。</p>
+</div>
+<div class="section level3">
+<h3 id="使用例">使用例<a class="anchor" aria-label="anchor" href="#%E4%BD%BF%E7%94%A8%E4%BE%8B"></a>
+</h3>
+<p><code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code>
+の真の構造に関するドメイン知識を与えます。</p>
 <ul>
-<li>変数の数は 6 個</li>
-<li>x3 is an exogenous variable.</li>
-<li>x1, x4, and x5 are sink variables.</li>
-<li>x0 to x2 are no path.</li>
+<li>
+<strong>x3</strong>（インデックス
+4）は外生変数——他のどの変数からも影響を受けない</li>
+<li>
+<strong>x1, x4, x5</strong>（インデックス 2, 5,
+6）は末端変数——他の変数に影響を与えない</li>
+<li>
+<strong>x0 と x2 の間</strong>には経路がない（双方向とも）</li>
 </ul>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="section level4">
+<h4 id="インデックスで指定">インデックスで指定<a class="anchor" aria-label="anchor" href="#%E3%82%A4%E3%83%B3%E3%83%87%E3%83%83%E3%82%AF%E3%82%B9%E3%81%A7%E6%8C%87%E5%AE%9A"></a>
+</h4>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pk1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_prior_knowledge.html">make_prior_knowledge</a></span><span class="op">(</span></span>
 <span>  n_variables         <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>  exogenous_variables <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  sink_variables      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>,</span>
-<span>  no_paths            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span>  exogenous_variables <span class="op">=</span> <span class="fl">4</span>,          <span class="co"># x3</span></span>
+<span>  sink_variables      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">5</span>, <span class="fl">6</span><span class="op">)</span>, <span class="co"># x1, x4, x5</span></span>
+<span>  no_paths            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="co"># x2↔x0 なし</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pk1</span></span>
@@ -257,16 +535,40 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 <span><span class="co">#&gt; [4,]    0    0    0   -1    0    0</span></span>
 <span><span class="co">#&gt; [5,]   -1    0   -1   -1   -1    0</span></span>
 <span><span class="co">#&gt; [6,]   -1    0   -1   -1    0   -1</span></span></code></pre></div>
-<p>Direct LiNGAM を実行する際に、引数 <code>prior_knowledge</code>
-に事前知識を指定します。</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<p>行列の見方：<code>pk1["x1", "x3"]</code> が <code>-1</code>
+なら「x3→x1 は不明（LiNGAM が探索）」、 <code>0</code> なら「x3→x1
+は存在しない」です。</p>
+</div>
+<div class="section level4">
+<h4 id="変数名で指定">変数名で指定<a class="anchor" aria-label="anchor" href="#%E5%A4%89%E6%95%B0%E5%90%8D%E3%81%A7%E6%8C%87%E5%AE%9A"></a>
+</h4>
+<p><code>labels</code>
+を渡すと変数名で指定できます。可読性が上がり、列の追加・並べ替えに強くなります。</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pk1_named</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_prior_knowledge.html">make_prior_knowledge</a></span><span class="op">(</span></span>
+<span>  n_variables         <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>  exogenous_variables <span class="op">=</span> <span class="st">"x3"</span>,</span>
+<span>  sink_variables      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x1"</span>, <span class="st">"x4"</span>, <span class="st">"x5"</span><span class="op">)</span>,</span>
+<span>  no_paths            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x2"</span>, <span class="st">"x0"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x0"</span>, <span class="st">"x2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  labels              <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 内容は pk1 と等価</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">pk1</span>, <span class="va">pk1_named</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="事前知識を使った-direct-lingam-の実行">事前知識を使った Direct LiNGAM の実行<a class="anchor" aria-label="anchor" href="#%E4%BA%8B%E5%89%8D%E7%9F%A5%E8%AD%98%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F-direct-lingam-%E3%81%AE%E5%AE%9F%E8%A1%8C"></a>
+</h3>
+<p><code>prior_knowledge</code> 引数に渡すだけで探索に反映されます。</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_pk1</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span>prior_knowledge <span class="op">=</span> <span class="va">pk1</span>, lambda <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Causal Order: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">[</span><span class="va">model_pk1</span><span class="op">$</span><span class="va">causal_order</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Causal Order:  x3 x2 x0 x4 x5 x1</span></span></code></pre></div>
-<p>結果の隣接行列に基づいて因果グラフを描きます。</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_pk1</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       x0 x1     x2    x3 x4 x5</span></span>
@@ -290,12 +592,201 @@ information) を用い、パス係数の算出には適応的 LASSO 回帰が
 </div>
 </div>
 <div class="section level2">
+<h2 id="回帰手法の使い分け-reg_method">回帰手法の使い分け (reg_method)<a class="anchor" aria-label="anchor" href="#%E5%9B%9E%E5%B8%B0%E6%89%8B%E6%B3%95%E3%81%AE%E4%BD%BF%E3%81%84%E5%88%86%E3%81%91-reg_method"></a>
+</h2>
+<p>Direct LiNGAM
+では、因果順序が確定した後に隣接行列を回帰で推定します。
+<code>reg_method</code> 引数でその回帰手法を選択できます。</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th><code>reg_method</code></th>
+<th><code>glmnet</code></th>
+<th>スパース化</th>
+<th>特徴</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>"ols"</code></td>
+<td>不要</td>
+<td>なし</td>
+<td>全エッジを推定。動作確認やパッケージ不要な環境向け</td>
+</tr>
+<tr class="even">
+<td><code>"lasso"</code></td>
+<td>必要</td>
+<td>あり</td>
+<td>弱いエッジを 0 に圧縮</td>
+</tr>
+<tr class="odd">
+<td><code>"adaptive_lasso"</code></td>
+<td>必要</td>
+<td>あり（強）</td>
+<td>
+<strong>デフォルト</strong>。オラクル性質あり——真にゼロのエッジを確実に
+0 に</td>
+</tr>
+<tr class="even">
+<td><code>"ridge"</code></td>
+<td>必要</td>
+<td>なし</td>
+<td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\ell_2</annotation></semantics></math>
+正則化で係数を安定化。多重共線性に強い。スパース化は行わない</td>
+</tr>
+</tbody>
+</table>
+<p>オラクル性質とは「サンプルが増えれば真の構造を確実に回復できる」理論的保証で、
+通常は <code>"adaptive_lasso"</code> が推奨です。多重共線性が強い場合は
+<code>"ridge"</code> が有効で、 さらにスパース化も必要なら
+<code>"adaptive_lasso"</code> + <code>init_method = "ridge"</code>
+を組み合わせてください。</p>
+<div class="section level3">
+<h3 id="手法の比較">4 手法の比較<a class="anchor" aria-label="anchor" href="#%E6%89%8B%E6%B3%95%E3%81%AE%E6%AF%94%E8%BC%83"></a>
+</h3>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_ols</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
+<span><span class="va">fit_lasso</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"lasso"</span>,          lambda <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
+<span><span class="va">fit_alasso</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"adaptive_lasso"</span>, lambda <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
+<span><span class="va">fit_ridge</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ridge"</span>,          lambda <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 隣接行列の絶対値を並べて比較</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_ols</span><span class="op">$</span><span class="va">adjacency_matrix</span>,    <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       x0 x1     x2     x3     x4    x5</span></span>
+<span><span class="co">#&gt; x0 0.000  0 -0.040  3.274  0.000 0.000</span></span>
+<span><span class="co">#&gt; x1 3.237  0  1.965  0.014 -0.034 0.006</span></span>
+<span><span class="co">#&gt; x2 0.000  0  0.000  5.993  0.000 0.000</span></span>
+<span><span class="co">#&gt; x3 0.000  0  0.000  0.000  0.000 0.000</span></span>
+<span><span class="co">#&gt; x4 7.992  0 -1.062  0.394  0.000 0.000</span></span>
+<span><span class="co">#&gt; x5 3.873  0  0.069 -0.315  0.018 0.000</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_lasso</span><span class="op">$</span><span class="va">adjacency_matrix</span>,  <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       x0 x1     x2    x3 x4 x5</span></span>
+<span><span class="co">#&gt; x0 0.000  0  0.000 3.030  0  0</span></span>
+<span><span class="co">#&gt; x1 2.938  0  1.965 0.184  0  0</span></span>
+<span><span class="co">#&gt; x2 0.000  0  0.000 5.993  0  0</span></span>
+<span><span class="co">#&gt; x3 0.000  0  0.000 0.000  0  0</span></span>
+<span><span class="co">#&gt; x4 7.979  0 -0.989 0.000  0  0</span></span>
+<span><span class="co">#&gt; x5 3.977  0  0.000 0.000  0  0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_alasso</span><span class="op">$</span><span class="va">adjacency_matrix</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       x0 x1     x2    x3 x4 x5</span></span>
+<span><span class="co">#&gt; x0 0.000  0  0.000 3.033  0  0</span></span>
+<span><span class="co">#&gt; x1 2.988  0  2.002 0.000  0  0</span></span>
+<span><span class="co">#&gt; x2 0.000  0  0.000 5.993  0  0</span></span>
+<span><span class="co">#&gt; x3 0.000  0  0.000 0.000  0  0</span></span>
+<span><span class="co">#&gt; x4 8.017  0 -1.009 0.000  0  0</span></span>
+<span><span class="co">#&gt; x5 4.015  0  0.000 0.000  0  0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">fit_ridge</span><span class="op">$</span><span class="va">adjacency_matrix</span>,  <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       x0 x1     x2     x3    x4    x5</span></span>
+<span><span class="co">#&gt; x0 0.000  0 -0.016  3.123 0.000 0.000</span></span>
+<span><span class="co">#&gt; x1 2.172  0  2.043  0.170 0.057 0.084</span></span>
+<span><span class="co">#&gt; x2 0.000  0  0.000  5.993 0.000 0.000</span></span>
+<span><span class="co">#&gt; x3 0.000  0  0.000  0.000 0.000 0.000</span></span>
+<span><span class="co">#&gt; x4 7.986  0 -1.028  0.209 0.000 0.000</span></span>
+<span><span class="co">#&gt; x5 2.858  0  0.204 -0.329 0.143 0.000</span></span></code></pre></div>
+<p>OLS・Ridge は全エッジに非ゼロ係数が残りやすく、LASSO・Adaptive LASSO
+は 余分なエッジを 0 に圧縮します。Ridge
+は係数の<strong>大きさ</strong>を縮小しますが、ゼロにはなりません。</p>
+</div>
+<div class="section level3">
+<h3 id="lambda-の選択lasso-adaptive-lasso-共通">lambda の選択（LASSO / Adaptive LASSO 共通）<a class="anchor" aria-label="anchor" href="#lambda-%E3%81%AE%E9%81%B8%E6%8A%9Elasso-adaptive-lasso-%E5%85%B1%E9%80%9A"></a>
+</h3>
+<p>ペナルティ強度
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+の選択は推定のスパース度に直結します。</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th><code>lambda</code></th>
+<th>方法</th>
+<th>スパース度</th>
+<th>用途</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>"BIC"</code></td>
+<td>情報量基準</td>
+<td>最大</td>
+<td>
+<strong>デフォルト</strong>。小さなサンプルでも安定</td>
+</tr>
+<tr class="even">
+<td><code>"AIC"</code></td>
+<td>情報量基準</td>
+<td>大</td>
+<td>BIC より少しエッジが残る</td>
+</tr>
+<tr class="odd">
+<td><code>"lambda.min"</code></td>
+<td>CV（予測誤差最小）</td>
+<td>小</td>
+<td>予測精度優先。エッジが多め</td>
+</tr>
+<tr class="even">
+<td><code>"lambda.1se"</code></td>
+<td>CV（1SE ルール）</td>
+<td>中〜大</td>
+<td>CV 版でロバスト</td>
+</tr>
+<tr class="odd">
+<td><code>"oracle"</code></td>
+<td>解析式（adaptive_lasso 専用）</td>
+<td>―</td>
+<td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>5</mn><mi>/</mi><msup><mi>n</mi><mn>1.75</mn></msup></mrow><annotation encoding="application/x-tex">\lambda = 5 / n^{1.75}</annotation></semantics></math>。理論的オラクル性を保証</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># BIC（デフォルト・最スパース）と lambda.min（予測誤差最小）の比較</span></span>
+<span><span class="va">fit_bic</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span>, lambda <span class="op">=</span> <span class="st">"BIC"</span><span class="op">)</span></span>
+<span><span class="va">fit_lam_min</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span>, lambda <span class="op">=</span> <span class="st">"lambda.min"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 非ゼロエッジ数</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">fit_bic</span><span class="op">$</span><span class="va">adjacency_matrix</span>     <span class="op">!=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 7</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">fit_lam_min</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">!=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 7</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="多重共線性がある場合">多重共線性がある場合<a class="anchor" aria-label="anchor" href="#%E5%A4%9A%E9%87%8D%E5%85%B1%E7%B7%9A%E6%80%A7%E3%81%8C%E3%81%82%E3%82%8B%E5%A0%B4%E5%90%88"></a>
+</h3>
+<p>多重共線性が強い場合の対応策は 2 つあります。</p>
+<p><strong><code>reg_method = "ridge"</code></strong>（シンプル） Ridge
+回帰が隣接行列推定全体に
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\ell_2</annotation></semantics></math>
+正則化を適用します。 スパース化は行わないため係数がゼロになりませんが、
+係数の安定性を優先したい場合に適しています。</p>
+<p><strong><code>reg_method = "adaptive_lasso"</code> +
+<code>init_method = "ridge"</code></strong>（スパース化も必要な場合）
+Adaptive LASSO の第 1 段階（OLS 初期推定）は多重共線性に弱く、
+係数が不安定になることがあります。<code>init_method = "ridge"</code>
+に切り替えると Ridge
+回帰で初期重みを安定させ、かつ最終推定はスパース化されます。</p>
+<p>多重共線性の強いデータ（<code>collinearity = 0.95</code>）での OLS vs
+Ridge の係数比較は、 「サンプルデータ」節の
+<code><a href="../reference/generate_lingam_hard_sample.html">generate_lingam_hard_sample()</a></code> を参照してください。
+なお、因果順序の推定はどちらの手法でも困難であり、係数精度の改善が主な利点です。</p>
+<p>標準的なデータでは
+<code>reg_method = "adaptive_lasso"</code>（デフォルト）のままで構いません。</p>
+</div>
+</div>
+<div class="section level2">
 <h2 id="誤差変数間の独立性-independence-between-error-variables">誤差変数間の独立性 (Independence between error variables)<a class="anchor" aria-label="anchor" href="#%E8%AA%A4%E5%B7%AE%E5%A4%89%E6%95%B0%E9%96%93%E3%81%AE%E7%8B%AC%E7%AB%8B%E6%80%A7-independence-between-error-variables"></a>
 </h2>
 <p>LiNGAM では残差が独立であることを仮定しています。
 <code><a href="../reference/get_error_independence_p_values.html">get_error_independence_p_values()</a></code> は残差間の独立性の検定の
 p 値を返します。</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -321,7 +812,7 @@ p 値を返します。</p>
 <p><code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code> の <code>noise_dist</code>
 引数で誤差分布を切り替え、この違いを
 実際に確かめてみます。真の構造は次のとおりです（根は x3）。</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>noise_dist <span class="op">=</span> <span class="st">"uniform"</span><span class="op">)</span></span>
 <span></span>
@@ -337,7 +828,7 @@ p 値を返します。</p>
 <div class="section level3">
 <h3 id="非ガウス誤差一様分布-うまくいく場合">非ガウス誤差（一様分布）— うまくいく場合<a class="anchor" aria-label="anchor" href="#%E9%9D%9E%E3%82%AC%E3%82%A6%E3%82%B9%E8%AA%A4%E5%B7%AE%E4%B8%80%E6%A7%98%E5%88%86%E5%B8%83-%E3%81%86%E3%81%BE%E3%81%8F%E3%81%84%E3%81%8F%E5%A0%B4%E5%90%88"></a>
 </h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_uniform</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 推定された因果順序（真の根 x3 が先頭に来る）</span></span>
@@ -359,7 +850,7 @@ p 値を返します。</p>
 <h3 id="ガウス誤差-失敗する場合">ガウス誤差 — 失敗する場合<a class="anchor" aria-label="anchor" href="#%E3%82%AC%E3%82%A6%E3%82%B9%E8%AA%A4%E5%B7%AE-%E5%A4%B1%E6%95%97%E3%81%99%E3%82%8B%E5%A0%B4%E5%90%88"></a>
 </h3>
 <p>同じ因果構造でも、誤差をガウス分布にすると結果が崩れます。</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>noise_dist <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span><span class="va">fit_gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">gauss</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
@@ -389,7 +880,7 @@ p 値を返します。</p>
 <p>残差の正規性の検定を行います。LiNGAM
 は非ガウス性を仮定するため、正規性が <strong>棄却される</strong>（p
 値が小さい）ほうがモデルの前提に合致します。</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Shapiro-Wilk (default)</span></span>
 <span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/test_residual_normality.html">test_residual_normality</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
@@ -413,7 +904,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; All residuals are non-Gaussian. LiNGAM assumption is supported.</span></span></code></pre></div>
 <p>QQ プロットでも残差の正規性を確認します。</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_residual_qq.html">plot_residual_qq</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lingamr_files/figure-html/qqplot-1.png" class="r-plt" alt="" width="576"></p>
@@ -428,7 +919,7 @@ p 値を返します。</p>
 <code><a href="../reference/get_error_independence_p_values.html">get_error_independence_p_values()</a></code> や
 <code><a href="../reference/test_residual_normality.html">test_residual_normality()</a></code>
 を呼ぶ代わりに、診断を1か所で見渡せます。</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/summary_lingam.html">summary_lingam</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === Direct LiNGAM Model Summary ===</span></span>
@@ -452,7 +943,7 @@ p 値を返します。</p>
 <h2 id="ブートストラップ-bootstrap-direct-lingam">ブートストラップ (Bootstrap Direct LiNGAM)<a class="anchor" aria-label="anchor" href="#%E3%83%96%E3%83%BC%E3%83%88%E3%82%B9%E3%83%88%E3%83%A9%E3%83%83%E3%83%97-bootstrap-direct-lingam"></a>
 </h2>
 <p>ブートストラップ法でモデルの確からしさを確認します。</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -467,7 +958,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 3.5 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 3.2 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -475,7 +966,7 @@ p 値を返します。</p>
 を指定するとマルチコアで高速に 実行できます。使用コア数は
 <code>n_cores</code> で指定します（未指定時は安全のため最大 2
 コア）。</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span></span>
 <span>    n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
@@ -491,7 +982,7 @@ p 値を返します。</p>
 <h3 id="ブートストラップの結果確認">ブートストラップの結果確認<a class="anchor" aria-label="anchor" href="#%E3%83%96%E3%83%BC%E3%83%88%E3%82%B9%E3%83%88%E3%83%A9%E3%83%83%E3%83%97%E3%81%AE%E7%B5%90%E6%9E%9C%E7%A2%BA%E8%AA%8D"></a>
 </h3>
 <p>ブートストラップ法の結果から各パスの出現割合や係数の平均値を算出します。</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_causal_direction_counts.html">get_causal_direction_counts</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to count proportion mean_effect median_effect  sd_effect    ci_lower</span></span>
@@ -527,7 +1018,7 @@ p 値を返します。</p>
 <h3 id="平均因果効果の隣接行列">平均因果効果の隣接行列<a class="anchor" aria-label="anchor" href="#%E5%B9%B3%E5%9D%87%E5%9B%A0%E6%9E%9C%E5%8A%B9%E6%9E%9C%E3%81%AE%E9%9A%A3%E6%8E%A5%E8%A1%8C%E5%88%97"></a>
 </h3>
 <p>ブートストラップの結果から隣接行列を作成します。</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_adjacency_matrix</span> <span class="op">&lt;-</span> <span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_adjacency_matrix_summary.html">get_adjacency_matrix_summary</a></span><span class="op">(</span>stat <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span>
 <span></span>
@@ -541,7 +1032,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt; [5,] 8.015 0.907 -1.009 0.000  0.000    0</span></span>
 <span><span class="co">#&gt; [6,] 4.015 0.000  0.000 0.000  0.000    0</span></span></code></pre></div>
 <p>推定された隣接行列の可視化します。</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>,</span>
@@ -557,7 +1048,7 @@ p 値を返します。</p>
 <h3 id="各パスの出現割合の行列">各パスの出現割合の行列<a class="anchor" aria-label="anchor" href="#%E5%90%84%E3%83%91%E3%82%B9%E3%81%AE%E5%87%BA%E7%8F%BE%E5%89%B2%E5%90%88%E3%81%AE%E8%A1%8C%E5%88%97"></a>
 </h3>
 <p>各パスの出現割合の行列を算出します。</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6]</span></span>
@@ -572,7 +1063,7 @@ p 値を返します。</p>
 <h3 id="平均総合効果">平均総合効果<a class="anchor" aria-label="anchor" href="#%E5%B9%B3%E5%9D%87%E7%B7%8F%E5%90%88%E5%8A%B9%E6%9E%9C"></a>
 </h3>
 <p>各パスの平均総合効果を算出します。</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_total_causal_effects.html">get_total_causal_effects</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to      effect probability</span></span>
@@ -599,7 +1090,7 @@ p 値を返します。</p>
 <span><span class="co">#&gt; 21    5  6  0.41846402        0.01</span></span></code></pre></div>
 <p>ブートストラップの結果を因果グラフにします。デフォルトでは 50%
 以上出現している パスのみを表示します。</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_bootstrap_probabilities.html">plot_bootstrap_probabilities</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:576px;height:480px;"></div>
@@ -614,7 +1105,7 @@ p 値を返します。</p>
 先行確率（<code>P[i, j]</code> = 変数 i が j
 より上流に来た割合）、および全体の安定性スコア （0 = ランダム、1 =
 全標本で一致）を返します。</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_causal_order_stability.html">get_causal_order_stability</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === Causal Order Stability ===</span></span>
@@ -650,7 +1141,7 @@ p 値を返します。</p>
 <code>estimate</code>）を、<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>
 はモデル全体の1行サマリを返します。<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> は
 ブートストラップ結果にも使え、その場合は各方向の出現割合などを返します。</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 推定された隣接行列をエッジ一覧に変換</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   from to  estimate</span></span>
@@ -702,7 +1193,7 @@ p 値を返します。</p>
 <h2 id="より大きなデータセット10-変数">より大きなデータセット（10 変数）<a class="anchor" aria-label="anchor" href="#%E3%82%88%E3%82%8A%E5%A4%A7%E3%81%8D%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%8810-%E5%A4%89%E6%95%B0"></a>
 </h2>
 <p>10変数、1万行の大きめのデータセットの例です。</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x10k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_10.html">generate_lingam_sample_10</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">x10k</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
@@ -727,7 +1218,7 @@ p 値を返します。</p>
 </h3>
 <p>同じ 6
 変数データセット（<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1000</mn></mrow><annotation encoding="application/x-tex">n = 1000</annotation></semantics></math>）を両手法で分析します。</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">t_cmp_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="va">res_cmp_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">d_cmp</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
@@ -745,7 +1236,7 @@ p 値を返します。</p>
 の隣接行列と同じ規約です（<code>B[i, j]</code> =
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>j</mi></msub><mo>→</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">x_j \to x_i</annotation></semantics></math>
 の係数）。</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">B_ica</span> <span class="op">&lt;-</span> <span class="va">res_cmp_ica</span><span class="op">$</span><span class="va">Bpruned</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">B_ica</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">B_ica</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">d_cmp</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
@@ -775,7 +1266,7 @@ p 値を返します。</p>
 </h3>
 <p>全エッジの完全外部結合で構造を比較し、真の DAG
 との整合性を確認します。</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">B_true</span>   <span class="op">&lt;-</span> <span class="va">d_cmp</span><span class="op">$</span><span class="va">true_adjacency</span></span>
 <span><span class="va">idx_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">B_true</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>, arr.ind <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">true_key</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">B_true</span><span class="op">)</span><span class="op">[</span><span class="va">idx_true</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">]</span>,</span>
@@ -821,7 +1312,7 @@ p 値を返します。</p>
 <div class="section level3">
 <h3 id="データの生成">データの生成<a class="anchor" aria-label="anchor" href="#%E3%83%87%E3%83%BC%E3%82%BF%E3%81%AE%E7%94%9F%E6%88%90"></a>
 </h3>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">20</span>, n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">d20</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>                    <span class="co"># 1000 行 × 20 列</span></span>
@@ -838,7 +1329,7 @@ p 値を返します。</p>
 が 1.5 倍（10 → 15）になると、独立性検定の回数は
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>15</mn><mn>3</mn></msup><mi>/</mi><msup><mn>10</mn><mn>3</mn></msup><mo>≈</mo><mn>3.4</mn></mrow><annotation encoding="application/x-tex">15^3 / 10^3 \approx 3.4</annotation></semantics></math>
 倍になります。</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">d15</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">15</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
@@ -854,9 +1345,9 @@ p 値を返します。</p>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; p = 10 : 0.03 秒</span></span>
 <span><span class="co">#&gt; p = 15 : 0.06 秒</span></span>
-<span><span class="co">#&gt; 理論倍率 3.4 倍 に対して 実測 2.2 倍</span></span></code></pre></div>
+<span><span class="co">#&gt; 理論倍率 3.4 倍 に対して 実測 2.1 倍</span></span></code></pre></div>
 <p>ICA-LiNGAM を同じデータで実行して速度を直接比較します。</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">t15_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d15</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
 <span></span>
@@ -883,7 +1374,7 @@ p 値を返します。</p>
 <p>スパース DAG
 でも<strong>非ガウス誤差</strong>（デフォルト：一様分布）があれば、
 Direct LiNGAM は正しい因果順序を復元できます。</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 推定された因果順序</span></span>
 <span><span class="va">r10</span><span class="op">$</span><span class="va">causal_order</span></span>
 <span><span class="co">#&gt;  [1]  1  2  3  7  4  5  9  8  6 10</span></span>
@@ -893,7 +1384,7 @@ Direct LiNGAM は正しい因果順序を復元できます。</p>
 <span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
 <p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>
 でエッジ一覧に変換して、推定された係数を確認します。</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">r10</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to   estimate</span></span>
@@ -928,7 +1419,7 @@ propagation）しやすくなる。</li>
 <li>すべての変数が <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code>
 で<strong>標準化</strong>されている（スケール差が無い）。</li>
 </ul>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_paradox_data.html">generate_lingam_paradox_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -946,7 +1437,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;  1  1  1  1</span></span></code></pre></div>
 <p>真の因果グラフを可視化します。係数 0.8 は標準化前の
 潜在スケールでの構造係数です。</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span><span class="op">)</span>,</span>
@@ -956,7 +1447,7 @@ propagation）しやすくなる。</li>
 <span>  <span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:576px;height:480px;"></div>
 <script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"True causal chain (x0 -> x1 -> x2 -> x3)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 0.80\"]\n  x1 -> x2 [label = \" 0.80\"]\n  x2 -> x3 [label = \" 0.80\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>では Direct LiNGAM を適用してみます。</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 推定された因果順序</span></span>
@@ -966,7 +1457,7 @@ propagation）しやすくなる。</li>
 になっていることに注目して
 ください。根に乗った測定誤差のせいで、DirectLiNGAM は x0
 を最初の外生変数として 選び損ねています。</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x0    x1    x2 x3</span></span>
@@ -990,7 +1481,7 @@ propagation）しやすくなる。</li>
 がほぼ末端（sink）のように扱われて しまいます。</p>
 <p>この誤りがたまたま起きたものなのか、それとも系統的なものなのかを、ブートストラップ
 で確認します。</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_paradox</span> <span class="op">&lt;-</span> <span class="va">paradox</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -1005,7 +1496,7 @@ propagation）しやすくなる。</li>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.6 seconds.</span></span>
 <span></span>
 <span><span class="co"># 各方向の出現確率（行 = to, 列 = from）</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
@@ -1027,6 +1518,100 @@ propagation）しやすくなる。</li>
 ことがあります。残差の独立性・正規性の検定や、データ生成過程についての
 ドメイン知識と併せて、結果を批判的に評価することが重要です。</p>
 </blockquote>
+</div>
+<div class="section level2">
+<h2 id="lingam-が使えない場面">LiNGAM が使えない場面<a class="anchor" aria-label="anchor" href="#lingam-%E3%81%8C%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E5%A0%B4%E9%9D%A2"></a>
+</h2>
+<p>LiNGAM（および
+<code>lingamr</code>）はいくつかの前提条件を要求します。
+これらが満たされない場合は推定が失敗するか、誤った構造を系統的に復元します。</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>前提条件</th>
+<th>問題が起きる状況</th>
+<th>対処・代替</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>非ガウス誤差</strong></td>
+<td>すべての誤差がガウス分布に従う場合、因果方向が識別不能になる</td>
+<td>本 vignette「非ガウス性という前提」節参照。ICA-LiNGAM / Direct
+LiNGAM は等しく失敗する</td>
+</tr>
+<tr class="even">
+<td><strong>非循環グラフ（DAG）</strong></td>
+<td>フィードバックループ（x → y → x）が存在する場合</td>
+<td>Cyclic LiNGAM（Python 版に実装）を検討する</td>
+</tr>
+<tr class="odd">
+<td><strong>潜在的共通原因なし</strong></td>
+<td>観測されていない共通原因（隠れ交絡変数）が存在する場合</td>
+<td>LvLiNGAM（Latent variable LiNGAM）を検討する</td>
+</tr>
+<tr class="even">
+<td><strong>線形な因果関係</strong></td>
+<td>変数間の関係が非線形の場合</td>
+<td>加法的ノイズモデル（ANM）や非線形 ICA を検討する</td>
+</tr>
+<tr class="odd">
+<td><strong>測定誤差なし（上流変数）</strong></td>
+<td>根に近い変数に重い測定誤差が乗っている場合、向きが系統的に逆転する</td>
+<td>本 vignette「測定誤差のパラドックス」節参照</td>
+</tr>
+<tr class="even">
+<td><strong>独立同分布（i.i.d.）</strong></td>
+<td>時系列データ・階層データ・クラスタ構造がある場合</td>
+<td>VAR-LiNGAM（時系列）、MultiBench（マルチドメイン）等を検討する</td>
+</tr>
+<tr class="odd">
+<td><strong>十分なサンプルサイズ</strong></td>
+<td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+が変数数
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+に対して極端に少ない場合（目安:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>&lt;</mo><mn>10</mn><mi>p</mi></mrow><annotation encoding="application/x-tex">n &lt; 10p</annotation></semantics></math>）、推定が不安定になりやすい</td>
+<td>変数を減らす・<code>reg_method = "adaptive_lasso"</code>
+でスパース化する</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="事前に確認するチェックリスト">事前に確認するチェックリスト<a class="anchor" aria-label="anchor" href="#%E4%BA%8B%E5%89%8D%E3%81%AB%E7%A2%BA%E8%AA%8D%E3%81%99%E3%82%8B%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%E3%83%AA%E3%82%B9%E3%83%88"></a>
+</h3>
+<p>実際の分析を始める前に、以下を確認することを推奨します。</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>グラフの非循環性</strong> —
+専門知識からフィードバックループが否定できるか？</li>
+<li>
+<strong>潜在変数の不在</strong> —
+主要な観測変数は揃っているか？</li>
+<li>
+<strong>誤差の非ガウス性</strong> —
+<code><a href="../reference/test_residual_normality.html">test_residual_normality()</a></code>
+で確認できる（ただし推定後の診断）。
+事前に各変数のヒストグラム・歪度を目視するのが簡易的。</li>
+<li>
+<strong>測定誤差の有無</strong> —
+根に近い変数に測定誤差がないか？ある場合は慎重に解釈する。</li>
+<li>
+<strong>サンプルサイズ</strong> —
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>≥</mo><mn>10</mn><mi>p</mi></mrow><annotation encoding="application/x-tex">n \geq 10p</annotation></semantics></math>
+を目安に。不足する場合は結果を過信しない。</li>
+</ol>
+<blockquote>
+<p><strong>まとめ:</strong> LiNGAM
+は「線形・非巡回・非ガウス・潜在変数なし・i.i.d.」という 5
+つの前提がすべて成り立つときに強力です。
+分析前にこれらをドメイン知識と残差診断で検証することが、信頼できる因果推論の第一歩です。</p>
+</blockquote>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
