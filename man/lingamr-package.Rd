@@ -15,7 +15,6 @@ tutorial: \code{vignette("lingamr", package = "lingamr")}
 Useful links:
 \itemize{
   \item \url{https://github.com/morimotoosamu/lingamr}
-  \item \url{https://morimotoosamu.github.io/lingamr/}
   \item Report bugs at \url{https://github.com/morimotoosamu/lingamr/issues}
 }
 
