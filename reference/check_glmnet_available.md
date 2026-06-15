@@ -1,6 +1,7 @@
-# glmnet が利用可能か確認する
+# Check whether glmnet is available
 
-利用できない場合は、どの回帰手法で必要になったかを示すエラーを出す。
+If it is not available, raise an error indicating which regression
+method required it.
 
 ## Usage
 
@@ -12,4 +13,5 @@ check_glmnet_available(method)
 
 - method:
 
-  glmnet を必要とする回帰手法名（エラーメッセージ用）
+  name of the regression method that requires glmnet (for the error
+  message)

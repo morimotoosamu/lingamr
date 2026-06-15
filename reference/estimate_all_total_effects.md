@@ -1,6 +1,6 @@
-# 全変数間の総合因果効果を一括推定
+# Estimate the total causal effects between all variables at once
 
-全変数間の総合因果効果を一括推定
+Estimate the total causal effects between all variables at once
 
 ## Usage
 
@@ -18,29 +18,31 @@ estimate_all_total_effects(
 
 - X:
 
-  元データ (n_samples x n_features)
+  Original data (n_samples x n_features)
 
 - lingam_result:
 
-  lingam_direct() の返り値
+  Return value of lingam_direct()
 
 - method:
 
-  回帰手法 ("ols", "lasso", "adaptive_lasso")
+  Regression method ("ols", "lasso", "adaptive_lasso")
 
 - lambda:
 
-  ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC")
+  Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC")
 
 - init_method:
 
-  適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
+  Method for estimating the initial weights of adaptive LASSO regression
+  ("ols" or "ridge")
 
 ## Value
 
-総合因果効果の行列 (n_features x n_features)。 **規則: `TE[i, j]` は変数
-j から変数 i への総合因果効果（j → i）。** 隣接行列 `adjacency_matrix`
-と同じ添字規則。直接効果と間接効果の合計。
+Matrix of total causal effects (n_features x n_features). **Convention:
+`TE[i, j]` is the total causal effect from variable j to variable i (j
+-\> i).** Same index convention as the adjacency matrix
+`adjacency_matrix`. The sum of direct and indirect effects.
 
 ## Examples
 

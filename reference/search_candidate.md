@@ -1,6 +1,6 @@
-# 候補変数の探索
+# Search for candidate variables
 
-候補変数の探索
+Search for candidate variables
 
 ## Usage
 
@@ -12,19 +12,19 @@ search_candidate(U, Aknw, apply_prior_knowledge_softly, partial_orders)
 
 - U:
 
-  現在の未確定変数の集合
+  Set of currently undetermined variables
 
 - Aknw:
 
-  事前知識行列
+  Prior knowledge matrix
 
 - apply_prior_knowledge_softly:
 
-  ソフト適用の有無
+  Whether to apply prior knowledge softly
 
 - partial_orders:
 
-  抽出された部分順序
+  Extracted partial orders
 
 ## Value
 

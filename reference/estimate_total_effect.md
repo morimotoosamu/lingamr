@@ -1,6 +1,6 @@
-# 指定した2変数間の総合因果効果を推定
+# Estimate the total causal effect between two specified variables
 
-指定した2変数間の総合因果効果を推定
+Estimate the total causal effect between two specified variables
 
 ## Usage
 
@@ -20,36 +20,38 @@ estimate_total_effect(
 
 - X:
 
-  元データ (matrix or data.frame)
+  Original data (matrix or data.frame)
 
 - lingam_result:
 
-  lingam_direct() の返り値
+  Return value of lingam_direct()
 
 - from_index:
 
-  原因変数 (1-based index or 変数名)
+  Cause variable (1-based index or variable name)
 
 - to_index:
 
-  結果変数 (1-based index or 変数名)
+  Effect variable (1-based index or variable name)
 
 - method:
 
-  回帰手法 ("ols", "lasso", "adaptive_lasso")デフォルトはadaptive_lasso
+  Regression method ("ols", "lasso", "adaptive_lasso"). Default is
+  adaptive_lasso
 
 - lambda:
 
-  ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC",
-  "oracle")デフォルトはBIC
+  Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle").
+  Default is BIC
 
 - init_method:
 
-  適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")
+  Method for estimating the initial weights of adaptive LASSO regression
+  ("ols" or "ridge")
 
 ## Value
 
-推定された総合因果効果
+Estimated total causal effect
 
 ## Examples
 

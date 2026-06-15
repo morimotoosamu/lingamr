@@ -1,6 +1,6 @@
-# 隣接行列から DiagrammeR で因果グラフを描画
+# Plot a causal graph from an adjacency matrix with DiagrammeR
 
-隣接行列から DiagrammeR で因果グラフを描画
+Plot a causal graph from an adjacency matrix with DiagrammeR
 
 ## Usage
 
@@ -30,87 +30,90 @@ plot_adjacency(
 
 - B:
 
-  隣接行列 (n_features x n_features)。 **規則: `B[i, j]` は変数 j
-  から変数 i への因果係数（j → i）。**
+  Adjacency matrix (n_features x n_features). **Convention: `B[i, j]` is
+  the causal coefficient from variable j to variable i (j -\> i).** The
+  `adjacency_matrix` from
   [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-  の `adjacency_matrix` をそのまま渡せる。
+  can be passed directly.
 
 - labels:
 
-  変数名ベクトル (NULL の場合は x0, x1, ... を自動生成)
+  Vector of variable names (if NULL, x0, x1, ... are generated
+  automatically)
 
 - threshold:
 
-  表示する最小係数の絶対値 (default: 0)
+  Minimum absolute coefficient value to display (default: 0)
 
 - rankdir:
 
-  レイアウト方向 (default: "LR") "LR" = 左→右, "RL" = 右→左, "TB" =
-  上→下, "BT" = 下→上
+  Layout direction (default: "LR") "LR" = left -\> right, "RL" = right
+  -\> left, "TB" = top -\> bottom, "BT" = bottom -\> top
 
 - title:
 
-  グラフのタイトル (default: "Estimated Causal Structure")
+  Graph title (default: "Estimated Causal Structure")
 
 - shape:
 
-  ノードの形状 (default: "circle") "circle", "box", "ellipse",
-  "diamond", "plaintext", "square", "triangle", "hexagon", "octagon"
-  など
+  Node shape (default: "circle") "circle", "box", "ellipse", "diamond",
+  "plaintext", "square", "triangle", "hexagon", "octagon", etc.
 
 - fillcolor:
 
-  ノードの塗りつぶし色 (default: "lightyellow")
+  Node fill color (default: "lightyellow")
 
 - bordercolor:
 
-  枠線の色
+  Border color
 
 - fontsize_node:
 
-  ノードのフォントサイズ (default: 14)
+  Node font size (default: 14)
 
 - fontsize_edge:
 
-  エッジラベルのフォントサイズ (default: 10)
+  Edge label font size (default: 10)
 
 - edge_color:
 
-  エッジの色 (default: "gray40")。`true_B` 指定時は未使用。
+  Edge color (default: "gray40"). Unused when `true_B` is specified.
 
 - edge_label_color:
 
-  エッジラベルの色 (default: "red")。`true_B` 指定時は未使用。
+  Edge label color (default: "red"). Unused when `true_B` is specified.
 
 - true_B:
 
-  真の隣接行列 (NULL 可)。指定するとエッジを3色で分類する：
+  True adjacency matrix (may be NULL). When specified, edges are
+  classified into three colors:
 
-  - 正解エッジ（推定あり・真あり）: `color_tp` の実線
+  - Correct edges (estimated and true): solid line in `color_tp`
 
-  - 過検出（推定あり・真なし）: `color_fp` の実線
+  - False positives (estimated but not true): solid line in `color_fp`
 
-  - 見逃し（推定なし・真あり）: `color_fn` の破線（真の係数を表示）
+  - Missed edges (not estimated but true): dashed line in `color_fn`
+    (showing the true coefficient)
 
 - color_tp:
 
-  正解エッジの色 (default: "forestgreen")
+  Color for correct edges (default: "forestgreen")
 
 - color_fp:
 
-  過検出エッジの色 (default: "firebrick")
+  Color for false-positive edges (default: "firebrick")
 
 - color_fn:
 
-  見逃しエッジの色 (default: "darkorange")
+  Color for missed edges (default: "darkorange")
 
 - debug:
 
-  デバッグモードの有効化 (logical)
+  Enable debug mode (logical)
 
 ## Value
 
-grViz オブジェクト（DiagrammeR が利用可能な場合）
+A grViz object (when DiagrammeR is available)
 
 ## Examples
 
@@ -129,7 +132,8 @@ model$adjacency_matrix |>
 
 {"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated Causal Structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x3 -> x0 [label = \" 3.03\"]\n  x0 -> x1 [label = \" 2.99\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x3 -> x2 [label = \" 5.99\"]\n  x0 -> x4 [label = \" 8.02\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}
 # \donttest{
-# 真の構造と比較（正解=緑, 過検出=赤, 見逃し=オレンジ破線）
+# Compare with the true structure
+# (correct = green, false positive = red, missed = orange dashed)
 model$adjacency_matrix |>
   plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
 

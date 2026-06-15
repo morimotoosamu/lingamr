@@ -1,6 +1,6 @@
-# 因果方向のカウント・割合・因果効果を取得
+# Get counts, proportions, and causal effects of causal directions
 
-因果方向のカウント・割合・因果効果を取得
+Get counts, proportions, and causal effects of causal directions
 
 ## Usage
 
@@ -18,23 +18,24 @@ get_causal_direction_counts(
 
 - result:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - n_directions:
 
-  上位何件を返すか (NULL = 全て)
+  How many of the top entries to return (NULL = all)
 
 - min_causal_effect:
 
-  因果効果の最小閾値 (NULL = 0)
+  Minimum threshold for the causal effect (NULL = 0)
 
 - split_by_causal_effect_sign:
 
-  因果効果の符号で分割するか
+  Whether to split by the sign of the causal effect
 
 - labels:
 
-  変数名ベクトル (NULL可。指定するとfrom_name, to_name列を追加)
+  Vector of variable names (NULL allowed; if provided, adds from_name
+  and to_name columns)
 
 ## Value
 
@@ -78,7 +79,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, s
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 
 get_causal_direction_counts(bs_model, labels = names(LiNGAM_sample_1000$data))
 #>    from to count proportion mean_effect median_effect   sd_effect    ci_lower

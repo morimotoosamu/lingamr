@@ -1,6 +1,6 @@
-# pwling による因果順序の探索
+# Causal order search via pwling
 
-pwling による因果順序の探索
+Causal order search via pwling
 
 ## Usage
 
@@ -12,20 +12,20 @@ search_causal_order_pwling(X, U, Uc, Vj)
 
 - X:
 
-  データ行列
+  Data matrix
 
 - U:
 
-  全変数インデックス
+  Indices of all variables
 
 - Uc:
 
-  候補変数のインデックス
+  Indices of candidate variables
 
 - Vj:
 
-  事前知識に基づく変数集合
+  Variable set based on prior knowledge
 
 ## Value
 
-選ばれた変数のインデックス
+Index of the selected variable

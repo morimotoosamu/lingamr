@@ -1,6 +1,6 @@
-# カーネル法による因果順序の探索
+# Causal order search via the kernel method
 
-カーネル法による因果順序の探索
+Causal order search via the kernel method
 
 ## Usage
 
@@ -12,20 +12,20 @@ search_causal_order_kernel(X, U, Uc, Vj)
 
 - X:
 
-  データ行列
+  Data matrix
 
 - U:
 
-  全変数
+  All variables
 
 - Uc:
 
-  候補変数
+  Candidate variables
 
 - Vj:
 
-  事前知識集合
+  Prior knowledge set
 
 ## Value
 
-選ばれた変数のインデックス
+Index of the selected variable

@@ -1,13 +1,12 @@
-# Direct LiNGAM モデルの適合度を一括要約
+# Summarize the goodness-of-fit of a Direct LiNGAM model at once
 
-推定済みの Direct LiNGAM モデルについて、LiNGAM
-が依拠する2つの主要な前提
-（残差の相互独立性・残差の非ガウス性）の成立度合いを一度に検証し、まとめて
-表示する。内部で
+For a fitted Direct LiNGAM model, this verifies how well the two main
+assumptions on which LiNGAM relies (mutual independence of residuals and
+non-Gaussianity of residuals) hold, all at once, and displays the
+results together. Internally it calls
 [`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md)
-と
-[`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
-を呼び出す。
+and
+[`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md).
 
 ## Usage
 
@@ -25,57 +24,64 @@ summary_lingam(
 
 - X:
 
-  元データ (matrix or data.frame)。`lingam_result` の推定に用いたもの。
+  The original data (matrix or data.frame), the one used to estimate
+  `lingam_result`.
 
 - lingam_result:
 
+  The return value of
   [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-  の返り値（`LingamResult` オブジェクト）
+  (a `LingamResult` object)
 
 - independence_method:
 
-  残差の独立性検定で用いる相関係数の種類 ("spearman", "pearson",
-  "kendall")。[`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md)
-  に渡す。
+  The type of correlation coefficient used in the residual independence
+  test ("spearman", "pearson", "kendall"). Passed to
+  [`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md).
 
 - normality_method:
 
-  残差の正規性検定の手法 ("shapiro", "ks", "ad", "lillie",
-  "jb")。[`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
-  に渡す。
+  The method for the residual normality test ("shapiro", "ks", "ad",
+  "lillie", "jb"). Passed to
+  [`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md).
 
 - alpha:
 
-  有意水準 (default: 0.05)
+  Significance level (default: 0.05)
 
 ## Value
 
-`lingam_summary` クラスのリスト。以下の要素を含む：
+A list of class `lingam_summary`, containing the following elements:
 
-- `n_variables`, `n_samples`: 変数の数・観測数
+- `n_variables`, `n_samples`: Number of variables / number of
+  observations
 
-- `causal_order`: 因果順序（変数名ラベル）
+- `causal_order`: Causal order (variable-name labels)
 
-- `n_edges`: 隣接行列の非ゼロ要素数（推定されたエッジ数）
+- `n_edges`: Number of nonzero elements in the adjacency matrix (number
+  of estimated edges)
 
-- `independence_p_values`: 残差間の独立性検定の p 値行列
+- `independence_p_values`: Matrix of p-values from the independence test
+  between residuals
 
-- `n_dependent_pairs`, `n_pairs`: p \< alpha のペア数 / 全ペア数
+- `n_dependent_pairs`, `n_pairs`: Number of pairs with p \< alpha /
+  total number of pairs
 
-- `min_independence_p`: 独立性検定 p 値の最小値
+- `min_independence_p`: Minimum p-value of the independence test
 
-- `normality`: 正規性検定の結果（`lingam_normality_test` オブジェクト）
+- `normality`: Result of the normality test (a `lingam_normality_test`
+  object)
 
-- `n_non_gaussian`: 非ガウスと判定された変数の数
+- `n_non_gaussian`: Number of variables judged to be non-Gaussian
 
-- `alpha`, `independence_method`, `normality_method`: 用いた設定
+- `alpha`, `independence_method`, `normality_method`: The settings used
 
 ## Details
 
-BIC/AIC のようなガウス尤度ベースの指標は、LiNGAM
-の「誤差は非ガウス」という
-前提と理論的に整合しないため含めていない。代わりに前提そのものの検証結果を
-要約する。
+Gaussian-likelihood-based criteria such as BIC/AIC are not included
+because they are theoretically inconsistent with LiNGAM's assumption
+that "the errors are non-Gaussian". Instead, the verification results of
+the assumptions themselves are summarized.
 
 ## Examples
 

@@ -1,6 +1,6 @@
-# サンプル生成関数の n / seed を検証して整数化する
+# Validate and coerce n / seed for the sample generation functions
 
-サンプル生成関数の n / seed を検証して整数化する
+Validate and coerce n / seed for the sample generation functions
 
 ## Usage
 
@@ -12,12 +12,12 @@ validate_sample_args(n, seed)
 
 - n:
 
-  サンプルサイズ
+  sample size
 
 - seed:
 
-  乱数シード
+  random seed
 
 ## Value
 
-list(n, seed)（いずれも integer）
+list(n, seed) (both integers)

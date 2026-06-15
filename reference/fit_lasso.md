@@ -1,6 +1,6 @@
-# LASSO 回帰（情報量基準 or CV でラムダ選択）
+# LASSO regression (lambda selection by information criterion or CV)
 
-LASSO 回帰（情報量基準 or CV でラムダ選択）
+LASSO regression (lambda selection by information criterion or CV)
 
 ## Usage
 
@@ -12,17 +12,18 @@ fit_lasso(y, Xp, lambda = "BIC")
 
 - y:
 
-  目的変数
+  response variable
 
 - Xp:
 
-  説明変数行列
+  predictor matrix
 
 - lambda:
 
-  ラムダ選択方法 "lambda.min" : CV予測誤差最小 "lambda.1se" : CV
-  1SEルール "AIC" : AIC最小 "BIC" : BIC最小。デフォルト
+  lambda selection method "lambda.min" : minimum CV prediction error
+  "lambda.1se" : CV 1SE rule "AIC" : minimum AIC "BIC" : minimum BIC,
+  default
 
 ## Value
 
-係数ベクトル
+coefficient vector

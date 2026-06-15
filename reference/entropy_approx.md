@@ -1,6 +1,6 @@
-# エントロピーの最大エントロピー近似
+# Maximum-entropy approximation of entropy
 
-エントロピーの最大エントロピー近似
+Maximum-entropy approximation of entropy
 
 ## Usage
 
@@ -12,8 +12,8 @@ entropy_approx(u)
 
 - u:
 
-  入力ベクトル
+  Input vector
 
 ## Value
 
-近似エントロピー値
+Approximate entropy value

@@ -1,6 +1,6 @@
-# Population standard deviation (n割り)
+# Population standard deviation (divided by n)
 
-Population standard deviation (n割り)
+Population standard deviation (divided by n)
 
 ## Usage
 

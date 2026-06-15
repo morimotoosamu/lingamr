@@ -1,6 +1,6 @@
-# lingam_summary の print メソッド
+# print method for lingam_summary
 
-lingam_summary の print メソッド
+print method for lingam_summary
 
 ## Usage
 
@@ -13,8 +13,8 @@ print(x, ...)
 
 - x:
 
-  `lingam_summary` オブジェクト
+  A `lingam_summary` object
 
 - ...:
 
-  追加引数（未使用）
+  Additional arguments (unused)

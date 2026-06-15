@@ -1,33 +1,33 @@
 # Causal Discovery with lingamr
 
-このビニェットでは、`lingamr` を使った因果探索の一連のワークフローを、
-サンプルデータを用いて順に解説します。
+This vignette walks through a complete causal discovery workflow with
+`lingamr`, step by step, using sample data.
 
 ``` r
 
 library(lingamr)
 ```
 
-## サンプルデータ
+## Sample Data
 
-`lingamr` には 5 種類のサンプルデータ生成関数があります。 いずれも
-`data`（データフレーム）と
-`true_adjacency`（真の隣接行列）を含むリストを返します。
+`lingamr` provides five sample data generators. Each returns a list
+containing `data` (a data frame) and `true_adjacency` (the true
+adjacency matrix).
 
-| 関数 | 変数数 | デフォルト n | 特徴 |
+| Function | Variables | Default n | Characteristics |
 |----|:--:|:--:|----|
-| [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md) | 6 | 1,000 | 標準的な固定構造。このビニェットの主な例 |
-| [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md) | 10 | 1,000 | 6 変数の拡張版（[より大きなデータセット](#%E3%82%88%E3%82%8A%E5%A4%A7%E3%81%8D%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%82%BB%E3%83%83%E3%83%8810-%E5%A4%89%E6%95%B0)で使用） |
-| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | 多重共線性が強い難しい設定 |
-| [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md) | 可変 | 1,000 | 任意の変数数のランダムスパース DAG（[スケーラビリティの壁](#%E5%A4%89%E6%95%B0%E3%81%8C%E5%A4%9A%E3%81%84%E5%A0%B4%E5%90%88%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%81%AE%E5%A3%81)で使用） |
-| [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md) | 4 | 2,000 | 測定誤差パラドックス（[パラドックスの例](#directlingam-%E3%81%8C%E8%8B%A6%E6%88%A6%E3%81%99%E3%82%8B%E4%BE%8B%E6%B8%AC%E5%AE%9A%E8%AA%A4%E5%B7%AE%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9)で使用） |
+| [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md) | 6 | 1,000 | Standard fixed structure. The main example in this vignette |
+| [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md) | 10 | 1,000 | An extension of the 6-variable case (used in [A Larger Dataset](#a-larger-dataset-10-variables)) |
+| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | A difficult setting with strong multicollinearity |
+| [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md) | variable | 1,000 | A random sparse DAG with an arbitrary number of variables (used in [The Scalability Wall](#when-there-are-many-variables-the-scalability-wall)) |
+| [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md) | 4 | 2,000 | The measurement error paradox (used in [The Paradox Example](#a-case-where-directlingam-struggles-the-measurement-error-paradox)) |
 
 ### generate_lingam_sample_6()
 
 [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
-は 6 変数の LiNGAM モデルに従う人工データと、
-その真の隣接行列を返します。 データは `data` に、隣接行列は
-`true_adjacency` に格納されています。
+returns artificial data following a 6-variable LiNGAM model, together
+with its true adjacency matrix. The data is stored in `data` and the
+adjacency matrix in `true_adjacency`.
 
 ``` r
 
@@ -57,7 +57,7 @@ x1k$true_adjacency
 ```
 
 [`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
-で隣接行列に基づいた因果グラフを描画できます。
+draws a causal graph based on the adjacency matrix.
 
 ``` r
 
@@ -70,12 +70,12 @@ x1k$true_adjacency |>
   )
 ```
 
-## 因果探索 (Causal Discovery)
+## Causal Discovery
 
 [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-で Direct LiNGAM を実行します。独立性の評価はデフォルトでは 相互情報量
-(mutual information) を用い、パス係数の算出には適応的 LASSO 回帰が
-使われます。
+runs Direct LiNGAM. By default, independence is assessed using mutual
+information, and path coefficients are computed with adaptive LASSO
+regression.
 
 ``` r
 
@@ -83,13 +83,12 @@ model <- x1k$data |>
   lingam_direct()
 ```
 
-独立性の評価にHSICを使うには 引数measure に “kernel” を指定します。
-HSICを使うと処理に大変時間がかかることに注意が必要です。
+To use HSIC for assessing independence, set the `measure` argument to
+“kernel”. Note that HSIC is very computationally expensive.
 
-### 因果の順序 (Causal Order)
+### Causal Order
 
-推定された因果の順序は causal_order
-にインデックス番号として格納されています。
+The estimated causal order is stored in `causal_order` as index numbers.
 
 ``` r
 
@@ -102,9 +101,10 @@ colnames(x1k$data)[model$causal_order]
 #> [1] "x3" "x2" "x0" "x4" "x5" "x1"
 ```
 
-### 推定された隣接行列 (Estimated Adjacency Matrix)
+### Estimated Adjacency Matrix
 
-推定された効果の量を確認します。デフォルトでは適応的LASSO回帰の回帰係数が用いられます。
+We inspect the estimated effect magnitudes. By default, the regression
+coefficients from adaptive LASSO regression are used.
 
 ``` r
 
@@ -119,9 +119,10 @@ model$adjacency_matrix |>
 #> x5 4.015  0  0.000 0.000  0  0
 ```
 
-### 因果グラフの描画
+### Drawing the Causal Graph
 
-Direct LiNGAMで推定された隣接行列に基づいて、因果グラフを描きます。
+We draw the causal graph based on the adjacency matrix estimated by
+Direct LiNGAM.
 
 ``` r
 
@@ -135,17 +136,19 @@ model$adjacency_matrix |>
   )
 ```
 
-### 推定構造と真の構造の比較
+### Comparing the Estimated and True Structures
 
-サンプルデータのように真の構造が分かっている場合は、[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
-の `true_B`
-引数に真の隣接行列を渡すことで、推定されたエッジを真の構造と照合して
-色分けできます。推定精度を一目で確認できるため、手法の検証や教育用途に便利です。
+When the true structure is known, as with sample data, you can pass the
+true adjacency matrix to the `true_B` argument of
+[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+to color-code the estimated edges by comparing them against the true
+structure. This lets you assess estimation accuracy at a glance, which
+is useful for validating methods or for educational purposes.
 
-- **緑（実線）**: 正しく検出されたエッジ（推定あり・真あり）
-- **赤（実線）**: 過検出されたエッジ（推定あり・真なし）
-- **オレンジ（破線）**:
-  見逃したエッジ（推定なし・真あり、真の係数を表示）
+- **Green (solid)**: correctly detected edges (estimated and true)
+- **Red (solid)**: falsely detected edges (estimated but not true)
+- **Orange (dashed)**: missed edges (true but not estimated; the true
+  coefficient is shown)
 
 ``` r
 
@@ -159,22 +162,24 @@ model$adjacency_matrix |>
   )
 ```
 
-### ggplot2 による静的な描画
+### Static Plotting with ggplot2
 
+While
 [`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
-は DiagrammeR による対話的な HTML 図を返しますが、
+returns an interactive HTML figure via DiagrammeR,
 [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
-を使うと同じ因果構造を ggplot2 ベースの静的な図として描けます。
-RMarkdown / Quarto での画像・PDF 出力で安定し、ggplot2 の関数でテーマや
-タイトルを後から重ねられます。ノード配置は `igraph`
-の階層レイアウトで計算され、 因果の流れがおおむね上から下へ並びます。
+draws the same causal structure as a static, ggplot2-based figure. This
+is stable for image and PDF output in R Markdown / Quarto, and you can
+layer ggplot2 functions on top to set themes or titles afterward. Node
+positions are computed using `igraph`’s hierarchical layout, so the
+causal flow generally runs from top to bottom.
 
-[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html) は
-ggplot2
-のジェネリックなので、[`ggplot2::autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
-として 呼び出すか、事前に
-[`library(ggplot2)`](https://ggplot2.tidyverse.org)
-で読み込みます（描画には `ggplot2` と `igraph` が必要です）。
+[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html) is
+a ggplot2 generic, so call it as
+[`ggplot2::autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+or load it beforehand with
+[`library(ggplot2)`](https://ggplot2.tidyverse.org) (plotting requires
+`ggplot2` and `igraph`).
 
 ``` r
 
@@ -183,10 +188,11 @@ ggplot2::autoplot(model)
 
 ![](lingamr_files/figure-html/autoplot-1.png)
 
-## 総合因果効果 (Total Causal Effect)
+## Total Causal Effect
 
-**総合因果効果**とは、ある変数を 1 単位変化させたとき、直接経路と
-すべての間接経路（媒介変数を通じた経路）を合わせた最終的な影響量です。
+The **total causal effect** is the overall impact of changing one
+variable by one unit, combining the direct path and all indirect paths
+(paths through mediating variables).
 
 ``` r
 
@@ -203,28 +209,30 @@ round(total_effects, 3)
 #> x5 4.015  0  0.000 12.179  0  0
 ```
 
-### 重回帰係数との比較
+### Comparison with Multiple Regression Coefficients
 
-重回帰係数と総合因果効果は、媒介変数が存在すると一致しません。
+Multiple regression coefficients and total causal effects do not agree
+when mediating variables are present.
 
-[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
-の真の因果構造では、x3 から x1 への経路が 2 本あります（x3 から x1
-への**直接**エッジはありません）。
+In the true causal structure of
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md),
+there are two paths from x3 to x1 (there is no **direct** edge from x3
+to x1).
 
-- x3 → x0 → x1（間接効果: 3.0 × 3.0 = **9.0**）
-- x3 → x2 → x1（間接効果: 6.0 × 2.0 = **12.0**）
-- **x3 の x1 への総合因果効果 = 9.0 + 12.0 = 21.0**
+- x3 -\> x0 -\> x1 (indirect effect: 3.0 x 3.0 = **9.0**)
+- x3 -\> x2 -\> x1 (indirect effect: 6.0 x 2.0 = **12.0**)
+- **Total causal effect of x3 on x1 = 9.0 + 12.0 = 21.0**
 
-x1 を目的変数として OLS で全変数を投入した場合の係数と、
-[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
-の結果を比較します。
+We compare the coefficients from an OLS regression that includes all
+variables to predict x1 against the results of
+[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md).
 
 ``` r
 
-# 重回帰：全変数を投入して x1 を予測
+# Multiple regression: include all variables to predict x1
 lm_coefs <- coef(lm(x1 ~ ., data = x1k$data))
 
-# 比較（x1 に因果的に関係する変数：x0, x2, x3）
+# Comparison (variables causally related to x1: x0, x2, x3)
 data.frame(
   variable           = c("x0", "x2", "x3"),
   OLS_coefficient    = round(lm_coefs[c("x0", "x2", "x3")], 3),
@@ -236,63 +244,69 @@ data.frame(
 #> x3       x3           0.014              21.059
 ```
 
-x3 の OLS 係数はほぼ **0** です。x0 と
-x2（媒介変数）をモデルに含めることで、 x3 の「媒介を通じた影響」が
-x0・x2 の係数に吸収されているためです。
+The OLS coefficient for x3 is nearly **0**. This is because including x0
+and x2 (the mediating variables) in the model causes x3’s “effect
+through mediation” to be absorbed into the coefficients of x0 and x2.
 
-対して、[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
-の x3 の値は **≈ 21** で、 x3 を 1 単位動かしたとき x1
-が最終的にどれだけ変わるかを正しく表しています。
+In contrast, the value of x3 from
+[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
+is **~21**, which correctly represents how much x1 ultimately changes
+when x3 is moved by one unit.
 
-| 問い                                                      | 使うべき指標   |
-|-----------------------------------------------------------|----------------|
-| 「x0・x2 を固定したまま x3 を動かすと x1 はどう変わる？」 | OLS 重回帰係数 |
-| 「x3 を動かすと、すべての経路を通じて x1 はどう変わる？」 | 総合因果効果   |
+| Question | Metric to use |
+|----|----|
+| “How does x1 change if I move x3 while holding x0 and x2 fixed?” | OLS multiple regression coefficient |
+| “How does x1 change if I move x3, through all paths?” | Total causal effect |
 
-「ある変数に介入したときの最終的な影響」を知りたい場面では、
-重回帰係数ではなく総合因果効果を使います。
+When you want to know “the ultimate impact of intervening on a
+variable,” use the total causal effect rather than the multiple
+regression coefficient.
 
-## 事前知識を用いた推論 (Prior Knowledge)
+## Inference with Prior Knowledge
+
+With
+[`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md),
+you can incorporate domain knowledge about the causal relationships
+among variables into Direct LiNGAM. This narrows the search space and
+stabilizes estimation.
+
+### Format of the Prior Knowledge Matrix
 
 [`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md)
-を使うと、変数間の因果関係に関するドメイン知識を Direct LiNGAM
-に組み込めます。探索空間が絞られ、推定が安定します。
+returns a $`p \times p`$ integer matrix. It uses the indexing convention
+**row = effect variable (to), column = cause variable (from)**, the same
+convention as the adjacency matrix.
 
-### 事前知識行列の書式
+| Value | Meaning                                          |
+|-------|--------------------------------------------------|
+| `-1`  | Unknown (default; Direct LiNGAM searches freely) |
+| `0`   | This edge does not exist                         |
+| `1`   | This edge definitely exists                      |
 
-[`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md)
-は $`p \times p`$ の整数行列を返します。 **行 = 結果変数（to）、列 =
-原因変数（from）** という添字規則で、 隣接行列と同じ規約です。
+The following shows how each argument affects the matrix.
 
-| 値   | 意味                                           |
-|------|------------------------------------------------|
-| `-1` | 不明（デフォルト。Direct LiNGAM が自由に探索） |
-| `0`  | このエッジは存在しない                         |
-| `1`  | このエッジは確実に存在する                     |
-
-各引数が行列に与える影響を示します。
-
-| 引数 | 設定される値 | 意味 |
+| Argument | Value set | Meaning |
 |----|----|----|
-| `exogenous_variables` | 指定した変数の**行**全体 → `0` | どの変数からも影響を受けない（根変数） |
-| `sink_variables` | 指定した変数の**列**全体 → `0` | どの変数にも影響を与えない（末端変数） |
-| `paths` | `pk[to, from] = 1` | このエッジが存在することを指定 |
-| `no_paths` | `pk[to, from] = 0` | このエッジが存在しないことを指定 |
+| `exogenous_variables` | the entire **row** of the specified variable -\> `0` | Receives no influence from any variable (root variable) |
+| `sink_variables` | the entire **column** of the specified variable -\> `0` | Exerts no influence on any variable (sink variable) |
+| `paths` | `pk[to, from] = 1` | Specifies that this edge exists |
+| `no_paths` | `pk[to, from] = 0` | Specifies that this edge does not exist |
 
-変数の指定は **1-based インデックス**または**変数名**（`labels`
-引数が必要）の どちらでも可能です。
+Variables can be specified either by **1-based index** or by **variable
+name** (which requires the `labels` argument).
 
-### 使用例
+### Usage Example
 
-[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
-の真の構造に関するドメイン知識を与えます。
+We supply domain knowledge about the true structure of
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md).
 
-- **x3**（インデックス 4）は外生変数——他のどの変数からも影響を受けない
-- **x1, x4, x5**（インデックス 2, 5,
-  6）は末端変数——他の変数に影響を与えない
-- **x0 と x2 の間**には経路がない（双方向とも）
+- **x3** (index 4) is exogenous – it receives no influence from any
+  other variable
+- **x1, x4, x5** (indices 2, 5, 6) are sink variables – they exert no
+  influence on other variables
+- **Between x0 and x2** there is no path (in either direction)
 
-#### インデックスで指定
+#### Specifying by Index
 
 ``` r
 
@@ -300,7 +314,7 @@ pk1 <- make_prior_knowledge(
   n_variables         = 6,
   exogenous_variables = 4,          # x3
   sink_variables      = c(2, 5, 6), # x1, x4, x5
-  no_paths            = list(c(3, 1), c(1, 3)) # x2↔x0 なし
+  no_paths            = list(c(3, 1), c(1, 3)) # no x2<->x0
 )
 
 pk1
@@ -313,13 +327,14 @@ pk1
 #> [6,]   -1    0   -1   -1    0   -1
 ```
 
-行列の見方：`pk1["x1", "x3"]` が `-1` なら「x3→x1 は不明（LiNGAM
-が探索）」、 `0` なら「x3→x1 は存在しない」です。
+How to read the matrix: if `pk1["x1", "x3"]` is `-1`, then “x3-\>x1 is
+unknown (LiNGAM searches for it)”; if `0`, then “x3-\>x1 does not
+exist”.
 
-#### 変数名で指定
+#### Specifying by Variable Name
 
-`labels`
-を渡すと変数名で指定できます。可読性が上がり、列の追加・並べ替えに強くなります。
+Passing `labels` lets you specify by variable name. This improves
+readability and is robust to adding or reordering columns.
 
 ``` r
 
@@ -331,14 +346,15 @@ pk1_named <- make_prior_knowledge(
   labels              = colnames(x1k$data)
 )
 
-# 内容は pk1 と等価
+# Equivalent in content to pk1
 identical(pk1, pk1_named)
 #> [1] FALSE
 ```
 
-### 事前知識を使った Direct LiNGAM の実行
+### Running Direct LiNGAM with Prior Knowledge
 
-`prior_knowledge` 引数に渡すだけで探索に反映されます。
+Simply pass it to the `prior_knowledge` argument and it is reflected in
+the search.
 
 ``` r
 
@@ -371,22 +387,24 @@ model_pk1$adjacency_matrix |>
   )
 ```
 
-## 回帰手法の使い分け (reg_method)
+## Choosing a Regression Method (reg_method)
 
-Direct LiNGAM では、因果順序が確定した後に隣接行列を回帰で推定します。
-`reg_method` 引数でその回帰手法を選択できます。
+In Direct LiNGAM, the adjacency matrix is estimated by regression after
+the causal order is determined. The `reg_method` argument selects that
+regression method.
 
-| `reg_method` | `glmnet` | スパース化 | 特徴 |
+| `reg_method` | `glmnet` | Sparsification | Characteristics |
 |----|----|----|----|
-| `"ols"` | 不要 | なし | 全エッジを推定。動作確認やパッケージ不要な環境向け |
-| `"lasso"` | 必要 | あり | 弱いエッジを 0 に圧縮 |
-| `"adaptive_lasso"` | 必要 | あり（強） | **デフォルト**。オラクル性質あり——真にゼロのエッジを確実に 0 に |
-| `"ridge"` | 必要 | なし | $`\ell_2`$ 正則化で係数を安定化。多重共線性に強い。スパース化は行わない |
+| `"ols"` | Not required | None | Estimates all edges. For sanity checks or environments without the package |
+| `"lasso"` | Required | Yes | Shrinks weak edges to 0 |
+| `"adaptive_lasso"` | Required | Yes (strong) | **Default**. Has the oracle property – reliably sets truly zero edges to 0 |
+| `"ridge"` | Required | None | Stabilizes coefficients with $`\ell_2`$ regularization. Robust to multicollinearity. Does not sparsify |
 
-オラクル性質とは「サンプルが増えれば真の構造を確実に回復できる」理論的保証で、
-通常は `"adaptive_lasso"` が推奨です。
+The oracle property is the theoretical guarantee that “the true
+structure can be reliably recovered as the sample size grows,” so
+`"adaptive_lasso"` is usually recommended.
 
-### 4 手法の比較
+### Comparison of the Four Methods
 
 ``` r
 
@@ -395,7 +413,7 @@ fit_lasso  <- lingam_direct(x1k$data, reg_method = "lasso",          lambda = "B
 fit_alasso <- lingam_direct(x1k$data, reg_method = "adaptive_lasso", lambda = "BIC")
 fit_ridge  <- lingam_direct(x1k$data, reg_method = "ridge",          lambda = "BIC")
 
-# 隣接行列の絶対値を並べて比較
+# Compare the adjacency matrices side by side
 round(fit_ols$adjacency_matrix,    3)
 #>       x0 x1     x2     x3     x4    x5
 #> x0 0.000  0 -0.040  3.274  0.000 0.000
@@ -430,40 +448,41 @@ round(fit_ridge$adjacency_matrix,  3)
 #> x5 2.858  0  0.204 -0.329 0.143 0.000
 ```
 
-OLS・Ridge は全エッジに非ゼロ係数が残りやすく、LASSO・Adaptive LASSO は
-余分なエッジを 0 に圧縮します。Ridge
-は係数の**大きさ**を縮小しますが、ゼロにはなりません。
+OLS and Ridge tend to leave nonzero coefficients on all edges, whereas
+LASSO and Adaptive LASSO shrink superfluous edges to 0. Ridge reduces
+the **magnitude** of coefficients but does not set them to zero.
 
-### lambda の選択（LASSO / Adaptive LASSO 共通）
+### Choosing lambda (common to LASSO / Adaptive LASSO)
 
-ペナルティ強度 $`\lambda`$ の選択は推定のスパース度に直結します。
+The choice of penalty strength $`\lambda`$ directly determines the
+sparsity of the estimate.
 
-| `lambda` | 方法 | スパース度 | 用途 |
+| `lambda` | Method | Sparsity | Use |
 |----|----|----|----|
-| `"BIC"` | 情報量基準 | 最大 | **デフォルト**。小さなサンプルでも安定 |
-| `"AIC"` | 情報量基準 | 大 | BIC より少しエッジが残る |
-| `"lambda.min"` | CV（予測誤差最小） | 小 | 予測精度優先。エッジが多め |
-| `"lambda.1se"` | CV（1SE ルール） | 中〜大 | CV 版でロバスト |
-| `"oracle"` | 解析式（adaptive_lasso 専用） | ― | $`\lambda = 5 / n^{1.75}`$。理論的オラクル性を保証 |
+| `"BIC"` | Information criterion | Highest | **Default**. Stable even with small samples |
+| `"AIC"` | Information criterion | High | Leaves slightly more edges than BIC |
+| `"lambda.min"` | CV (minimum prediction error) | Low | Prioritizes predictive accuracy. More edges |
+| `"lambda.1se"` | CV (1SE rule) | Medium to high | Robust CV variant |
+| `"oracle"` | Analytic formula (adaptive_lasso only) | \- | $`\lambda = 5 / n^{1.75}`$. Guarantees the theoretical oracle property |
 
 ``` r
 
-# BIC（デフォルト・最スパース）と lambda.min（予測誤差最小）の比較
+# Compare BIC (default, sparsest) and lambda.min (minimum prediction error)
 fit_bic     <- lingam_direct(x1k$data, lambda = "BIC")
 fit_lam_min <- lingam_direct(x1k$data, lambda = "lambda.min")
 
-# 非ゼロエッジ数
+# Number of nonzero edges
 sum(fit_bic$adjacency_matrix     != 0)
 #> [1] 7
 sum(fit_lam_min$adjacency_matrix != 0)
 #> [1] 8
 ```
 
-## 誤差変数間の独立性 (Independence between error variables)
+## Independence between Error Variables
 
-LiNGAM では残差が独立であることを仮定しています。
+LiNGAM assumes that the residuals are independent.
 [`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md)
-は残差間の独立性の検定の p 値を返します。
+returns the p-values from tests of independence between the residuals.
 
 ``` r
 
@@ -483,16 +502,18 @@ round(p_vals, 3)
 #> x5 0.954 0.882 0.124 0.974 0.643    NA
 ```
 
-## 非ガウス性という前提
+## The Non-Gaussianity Assumption
 
-LiNGAM
-の理論的な核心は、**誤差項が非ガウス分布に従う**という仮定です。誤差が
-ガウス分布の場合、因果の**向き**は原理的に識別できなくなり（同じ分布を説明する
-逆向きのモデルが存在してしまう）、推定結果は信頼できません。
+The theoretical heart of LiNGAM is the assumption that **the error terms
+follow a non-Gaussian distribution**. When the errors are Gaussian, the
+**direction** of causation becomes fundamentally unidentifiable (a
+reverse-direction model that explains the same distribution exists), and
+the estimates are unreliable.
 
-[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
-の `noise_dist` 引数で誤差分布を切り替え、この違いを
-実際に確かめてみます。真の構造は次のとおりです（根は x3）。
+We verify this difference in practice by switching the error
+distribution with the `noise_dist` argument of
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md).
+The true structure is as follows (the root is x3).
 
 ``` r
 
@@ -510,17 +531,17 @@ truth$true_adjacency |>
 #> x5  4  0  0  0  0  0
 ```
 
-### 非ガウス誤差（一様分布）— うまくいく場合
+### Non-Gaussian Errors (Uniform Distribution) – When It Works
 
 ``` r
 
 fit_uniform <- lingam_direct(truth$data)
 
-# 推定された因果順序（真の根 x3 が先頭に来る）
+# Estimated causal order (the true root x3 comes first)
 colnames(truth$data)[fit_uniform$causal_order]
 #> [1] "x3" "x2" "x0" "x4" "x5" "x1"
 
-# 推定隣接行列は真の構造をほぼ完全に復元する
+# The estimated adjacency matrix recovers the true structure almost perfectly
 fit_uniform$adjacency_matrix |>
   round(1)
 #>    x0 x1 x2 x3 x4 x5
@@ -532,16 +553,17 @@ fit_uniform$adjacency_matrix |>
 #> x5  4  0  0  0  0  0
 ```
 
-### ガウス誤差 — 失敗する場合
+### Gaussian Errors – When It Fails
 
-同じ因果構造でも、誤差をガウス分布にすると結果が崩れます。
+With the same causal structure, the results break down when the errors
+are Gaussian.
 
 ``` r
 
 gauss <- generate_lingam_sample_6(noise_dist = "gaussian")
 fit_gauss <- lingam_direct(gauss$data)
 
-# 因果順序が真の構造と一致しない（根 x3 が先頭に来ない）
+# The causal order does not match the true structure (root x3 does not come first)
 colnames(gauss$data)[fit_gauss$causal_order]
 #> [1] "x1" "x2" "x5" "x3" "x4" "x0"
 
@@ -556,17 +578,19 @@ fit_gauss$adjacency_matrix |>
 #> x5  0 1.2 -2.2  0 0.0 0.0
 ```
 
-非ガウス誤差では真の隣接行列がそのまま復元されるのに対し、ガウス誤差では因果順序も
-係数も真の構造から大きく外れます。これが「LiNGAM
-はデータの非ガウス性を利用して
-因果の向きを決める」と言われる所以です。実データに適用する際は、次節のように
-**残差の正規性を検定**して、この前提が成り立っているかを確認することが重要です。
+With non-Gaussian errors the true adjacency matrix is recovered as-is,
+whereas with Gaussian errors both the causal order and the coefficients
+deviate greatly from the true structure. This is why it is said that
+“LiNGAM exploits the non-Gaussianity of the data to determine the
+direction of causation.” When applying it to real data, it is important
+to **test the normality of the residuals**, as in the next section, to
+check whether this assumption holds.
 
-## 残差の正規性の検定
+## Testing the Normality of Residuals
 
-残差の正規性の検定を行います。LiNGAM
-は非ガウス性を仮定するため、正規性が **棄却される**（p
-値が小さい）ほうがモデルの前提に合致します。
+We test the normality of the residuals. Because LiNGAM assumes
+non-Gaussianity, having normality **rejected** (a small p-value) is
+consistent with the model’s assumptions.
 
 ``` r
 
@@ -594,7 +618,7 @@ x1k$data |>
 #> All residuals are non-Gaussian. LiNGAM assumption is supported.
 ```
 
-QQ プロットでも残差の正規性を確認します。
+We also check the normality of the residuals with a QQ plot.
 
 ``` r
 
@@ -604,16 +628,17 @@ x1k$data |>
 
 ![](lingamr_files/figure-html/qqplot-1.png)
 
-## 適合度の一括要約 (Model Summary)
+## Model Summary
 
 [`summary_lingam()`](https://morimotoosamu.github.io/lingamr/reference/summary_lingam.md)
-は、残差の独立性検定と正規性検定をまとめて実行し、LiNGAM が
-依拠する2つの前提（残差が互いに独立であること・残差が非ガウスであること）の
-成立度合いを一覧で確認できます。個別に
+runs the residual independence test and the normality test together,
+letting you review at a glance how well the two assumptions LiNGAM
+relies on hold (that the residuals are mutually independent, and that
+the residuals are non-Gaussian). Instead of calling
 [`get_error_independence_p_values()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values.md)
-や
+and
 [`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
-を呼ぶ代わりに、診断を1か所で見渡せます。
+separately, you can survey the diagnostics in one place.
 
 ``` r
 
@@ -637,9 +662,9 @@ x1k$data |>
 #> => All residuals are non-Gaussian (assumption supported).
 ```
 
-## ブートストラップ (Bootstrap Direct LiNGAM)
+## Bootstrap Direct LiNGAM
 
-ブートストラップ法でモデルの確からしさを確認します。
+We assess the reliability of the model using the bootstrap method.
 
 ``` r
 
@@ -657,15 +682,16 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.5 seconds.
+#> Completed in 3.2 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
 ```
 
-反復回数や変数が多い場合は、`parallel = TRUE`
-を指定するとマルチコアで高速に 実行できます。使用コア数は `n_cores`
-で指定します（未指定時は安全のため最大 2 コア）。
+When the number of iterations or variables is large, specifying
+`parallel = TRUE` lets it run faster on multiple cores. The number of
+cores is specified with `n_cores` (when unspecified, it is capped at 2
+cores for safety).
 
 ``` r
 
@@ -678,14 +704,15 @@ bs_model <- x1k$data |>
   )
 ```
 
-なお並列実行時は L’Ecuyer の並列乱数ストリームを使用するため、同じ
-`seed`・同じ `n_cores`
-であれば結果は再現しますが、逐次実行（`parallel = FALSE`）の結果とは
-数値的に一致しません。
+Note that parallel execution uses L’Ecuyer’s parallel random number
+streams, so results are reproducible given the same `seed` and the same
+`n_cores`, but they will not numerically match the results of sequential
+execution (`parallel = FALSE`).
 
-### ブートストラップの結果確認
+### Inspecting the Bootstrap Results
 
-ブートストラップ法の結果から各パスの出現割合や係数の平均値を算出します。
+From the bootstrap results, we compute the frequency of occurrence of
+each path and the mean of the coefficients.
 
 ``` r
 
@@ -721,9 +748,9 @@ bs_model |>
 #> 13 -0.13879324        x4      x2
 ```
 
-### 平均因果効果の隣接行列
+### Adjacency Matrix of Mean Causal Effects
 
-ブートストラップの結果から隣接行列を作成します。
+We construct an adjacency matrix from the bootstrap results.
 
 ``` r
 
@@ -741,7 +768,7 @@ bs_adjacency_matrix |>
 #> [6,] 4.015 0.000  0.000 0.000  0.000    0
 ```
 
-推定された隣接行列の可視化します。
+We visualize the estimated adjacency matrix.
 
 ``` r
 
@@ -755,9 +782,9 @@ bs_adjacency_matrix |>
   )
 ```
 
-### 各パスの出現割合の行列
+### Matrix of Path Occurrence Frequencies
 
-各パスの出現割合の行列を算出します。
+We compute the matrix of occurrence frequencies for each path.
 
 ``` r
 
@@ -772,9 +799,9 @@ bs_model |>
 #> [6,] 1.00 0.00 0.00 0.00 0.00    0
 ```
 
-### 平均総合効果
+### Mean Total Effects
 
-各パスの平均総合効果を算出します。
+We compute the mean total effect of each path.
 
 ``` r
 
@@ -804,8 +831,8 @@ bs_model |>
 #> 21    5  6  0.41846402        0.01
 ```
 
-ブートストラップの結果を因果グラフにします。デフォルトでは 50%
-以上出現している パスのみを表示します。
+We turn the bootstrap results into a causal graph. By default, only
+paths that occur in at least 50% of samples are shown.
 
 ``` r
 
@@ -813,14 +840,15 @@ bs_model |>
   plot_bootstrap_probabilities()
 ```
 
-### 因果順序の安定性
+### Stability of the Causal Order
 
 [`get_causal_order_stability()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.md)
-は、各ブートストラップ標本で推定された因果順序を
-集計し、順序がどれだけ安定しているかを数値化します。各変数の順位分布、変数ペアの
-先行確率（`P[i, j]` = 変数 i が j
-より上流に来た割合）、および全体の安定性スコア （0 = ランダム、1 =
-全標本で一致）を返します。
+aggregates the causal orders estimated in each bootstrap sample and
+quantifies how stable the order is. It returns the rank distribution of
+each variable, the precedence probability for variable pairs (`P[i, j]`
+= the fraction of samples in which variable i came upstream of j), and
+an overall stability score (0 = random, 1 = identical across all
+samples).
 
 ``` r
 
@@ -849,22 +877,24 @@ bs_model |>
 #> x5 0.00 0.66 0.35 0.01 0.57 0.00
 ```
 
-## broom との連携 (tidy / glance)
+## Integration with broom (tidy / glance)
 
-推定結果は `broom` 互換の
+Estimation results can be converted to a data.frame with the
+`broom`-compatible
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) /
-[`glance()`](https://generics.r-lib.org/reference/glance.html) で
-data.frame に変換でき、 `ggplot2` や `dplyr`
-との連携が容易になります。[`tidy()`](https://generics.r-lib.org/reference/tidy.html)
-はエッジ一覧（`from`, `to`,
-`estimate`）を、[`glance()`](https://generics.r-lib.org/reference/glance.html)
-はモデル全体の1行サマリを返します。[`tidy()`](https://generics.r-lib.org/reference/tidy.html)
-は
-ブートストラップ結果にも使え、その場合は各方向の出現割合などを返します。
+[`glance()`](https://generics.r-lib.org/reference/glance.html), making
+integration with `ggplot2` and `dplyr` easy.
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns an
+edge list (`from`, `to`, `estimate`), and
+[`glance()`](https://generics.r-lib.org/reference/glance.html) returns a
+one-row summary of the whole model.
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) also works on
+bootstrap results, in which case it returns the occurrence frequencies
+for each direction, etc.
 
 ``` r
 
-# 推定された隣接行列をエッジ一覧に変換
+# Convert the estimated adjacency matrix to an edge list
 tidy(model)
 #>   from to  estimate
 #> 1   x0 x1  2.987704
@@ -875,12 +905,12 @@ tidy(model)
 #> 6   x3 x0  3.032965
 #> 7   x3 x2  5.992677
 
-# モデル全体の1行サマリ
+# One-row summary of the whole model
 glance(model)
 #>   n_variables n_edges                     causal_order
 #> 1           6       7 x3 -> x2 -> x0 -> x4 -> x5 -> x1
 
-# ブートストラップ結果の方向別サマリ（labels で変数名を付与）
+# Direction-wise summary of the bootstrap results (variable names via labels)
 tidy(bs_model, labels = names(x1k$data))
 #>    from to count proportion mean_effect median_effect  sd_effect    ci_lower
 #> 1     1  6   100       1.00  4.01535064    4.01518466 0.01127031  3.99552486
@@ -912,9 +942,9 @@ tidy(bs_model, labels = names(x1k$data))
 #> 13 -0.13879324        x4      x2
 ```
 
-## より大きなデータセット（10 変数）
+## A Larger Dataset (10 Variables)
 
-10変数、1万行の大きめのデータセットの例です。
+An example of a larger dataset with 10 variables and 10,000 rows.
 
 ``` r
 
@@ -929,17 +959,18 @@ x10k$true_adjacency |>
   )
 ```
 
-## ICA-LiNGAM と Direct LiNGAM の比較
+## Comparing ICA-LiNGAM and Direct LiNGAM
 
-[`pcalg::lingam()`](https://rdrr.io/pkg/pcalg/man/LINGAM.html) は
-FastICA で混合行列を推定し、因果順序と係数を求める オリジナルの LiNGAM
-アルゴリズムです（Shimizu et al. 2006）。
-[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-とは独立したアプローチを取りながら同じ問題を解きます。
+[`pcalg::lingam()`](https://rdrr.io/pkg/pcalg/man/LINGAM.html) is the
+original LiNGAM algorithm, which estimates the mixing matrix with
+FastICA and obtains the causal order and coefficients (Shimizu et
+al. 2006). It solves the same problem while taking an approach
+independent of
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md).
 
-### 両アルゴリズムの実行
+### Running Both Algorithms
 
-同じ 6 変数データセット（$`n = 1000`$）を両手法で分析します。
+We analyze the same 6-variable dataset ($`n = 1000`$) with both methods.
 
 ``` r
 
@@ -948,16 +979,16 @@ d_cmp <- generate_lingam_sample_6(n = 1000, seed = 42)
 t_cmp_direct <- system.time(res_cmp_direct <- lingam_direct(d_cmp$data))
 t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data)))
 
-cat(sprintf("Direct LiNGAM : %.2f 秒\nICA-LiNGAM    : %.2f 秒\n",
+cat(sprintf("Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n",
             t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
-#> Direct LiNGAM : 0.01 秒
-#> ICA-LiNGAM    : 0.02 秒
+#> Direct LiNGAM : 0.01 sec
+#> ICA-LiNGAM    : 0.02 sec
 ```
 
-### 推定係数の比較
+### Comparing the Estimated Coefficients
 
-`$Bpruned` は lingamr の隣接行列と同じ規約です（`B[i, j]` =
-$`x_j \to x_i`$ の係数）。
+`$Bpruned` uses the same convention as the lingamr adjacency matrix
+(`B[i, j]` = coefficient of $`x_j \to x_i`$).
 
 ``` r
 
@@ -986,9 +1017,10 @@ merge(tidy_dir, tidy_ica, by = c("from", "to"), sort = TRUE)
 #> 7   x3 x2  5.993  6.101
 ```
 
-### DAG 構造の比較
+### Comparing the DAG Structures
 
-全エッジの完全外部結合で構造を比較し、真の DAG との整合性を確認します。
+We compare the structures with a full outer join over all edges and
+check consistency with the true DAG.
 
 ``` r
 
@@ -1010,51 +1042,52 @@ cmp
 #> 7   x3 x2  5.993  6.101  TRUE
 ```
 
-`direct`・`ica` 列が `NA`
-の場合、その手法はそのエッジを検出しなかったことを意味します。
-`truth = TRUE` は真の DAG に存在するエッジです。
+When the `direct` or `ica` column is `NA`, it means that method did not
+detect that edge. `truth = TRUE` indicates an edge that exists in the
+true DAG.
 
 ------------------------------------------------------------------------
 
-## 変数が多い場合：スケーラビリティの壁
+## When There Are Many Variables: The Scalability Wall
 
-Direct LiNGAM は各ステップで残りの全変数ペアに独立性検定を実施します。
-ステップ数が $`p`$、各ステップの検定数が最大 $`p(p-1)`$ であるため、
-合計の独立性検定回数はおよそ
+At each step, Direct LiNGAM performs independence tests on all remaining
+pairs of variables. Since the number of steps is $`p`$ and the number of
+tests per step is at most $`p(p-1)`$, the total number of independence
+tests is approximately
 
 ``` math
 \sum_{k=1}^{p} k(k-1) \approx \frac{p^3}{3}
 ```
 
-となり、**$`O(p^3)`$** の計算量になります。 一方、ICA-LiNGAM が用いる
-FastICA は $`O(p^2 n)`$（BLAS 最適化あり）のため、
-変数数が増えるほど差が開いていきます。
+giving a computational cost of **$`O(p^3)`$**. By contrast, the FastICA
+used by ICA-LiNGAM is $`O(p^2 n)`$ (with BLAS optimization), so the gap
+widens as the number of variables grows.
 
 [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md)
-は変数数 `p` を自由に設定できるランダムスパース DAG
-データを生成します。各変数 $`x_i`$（$`i \ge 1`$）は
-$`x_0, \ldots, x_{i-1}`$ の中から `max_parents`
-個以下の親をランダムに持ちます。変数はインデックス順に因果順序が
-保証されているため、隣接行列は常に**下三角行列**です。
+generates random sparse DAG data with a freely configurable number of
+variables `p`. Each variable $`x_i`$ ($`i \ge 1`$) randomly has at most
+`max_parents` parents chosen from $`x_0, \ldots, x_{i-1}`$. Since the
+causal order is guaranteed to follow the index order, the adjacency
+matrix is always a **lower triangular matrix**.
 
-### データの生成
+### Generating the Data
 
 ``` r
 
 d20 <- generate_lingam_large_sample(p = 20, n = 1000, seed = 42)
 
-dim(d20$data)                    # 1000 行 × 20 列
+dim(d20$data)                    # 1000 rows x 20 columns
 #> [1] 1000   20
-sum(d20$true_adjacency != 0)     # 真のエッジ数（スパース DAG）
+sum(d20$true_adjacency != 0)     # number of true edges (sparse DAG)
 #> [1] 32
 d20$true_causal_order            # 0, 1, ..., 19
 #>  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
 ```
 
-### 実行時間の比較
+### Comparing Execution Times
 
-$`p`$ が 1.5 倍（10 → 15）になると、独立性検定の回数は
-$`15^3 / 10^3 \approx 3.4`$ 倍になります。
+When $`p`$ grows by a factor of 1.5 (10 -\> 15), the number of
+independence tests grows by a factor of $`15^3 / 10^3 \approx 3.4`$.
 
 ``` r
 
@@ -1065,18 +1098,18 @@ t10 <- system.time({ r10 <- lingam_direct(d10$data) })
 t15 <- system.time({ r15 <- lingam_direct(d15$data) })
 
 cat(sprintf(
-  "p = 10 : %.2f 秒\np = 15 : %.2f 秒\n理論倍率 %.1f 倍 に対して 実測 %.1f 倍\n",
+  "p = 10 : %.2f sec\np = 15 : %.2f sec\ntheoretical factor %.1fx vs. observed %.1fx\n",
   t10["elapsed"],
   t15["elapsed"],
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.03 秒
-#> p = 15 : 0.06 秒
-#> 理論倍率 3.4 倍 に対して 実測 2.2 倍
+#> p = 10 : 0.03 sec
+#> p = 15 : 0.06 sec
+#> theoretical factor 3.4x vs. observed 2.2x
 ```
 
-ICA-LiNGAM を同じデータで実行して速度を直接比較します。
+We run ICA-LiNGAM on the same data to compare speed directly.
 
 ``` r
 
@@ -1084,37 +1117,40 @@ t10_ica <- system.time({ pcalg::lingam(as.matrix(d10$data)) })
 t15_ica <- system.time({ pcalg::lingam(as.matrix(d15$data)) })
 
 cat(sprintf(
-  "              p = 10   p = 15\nDirect LiNGAM : %5.2f 秒  %5.2f 秒\nICA-LiNGAM    : %5.2f 秒  %5.2f 秒\n",
+  "              p = 10   p = 15\nDirect LiNGAM : %5.2f sec  %5.2f sec\nICA-LiNGAM    : %5.2f sec  %5.2f sec\n",
   t10["elapsed"], t15["elapsed"],
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 秒   0.06 秒
-#> ICA-LiNGAM    :  0.02 秒   0.03 秒
+#> Direct LiNGAM :  0.03 sec   0.06 sec
+#> ICA-LiNGAM    :  0.02 sec   0.02 sec
 ```
 
-$`p`$ が大きくなるほど Direct LiNGAM の $`O(p^3)`$
-コストが効き、両者の差が広がります。 $`p = 30`$ や $`p = 50`$
-など大規模な設定では、この傾向はさらに顕著になります。
+The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
+dominates, and the gap between the two widens. In large-scale settings
+such as $`p = 30`$ or $`p = 50`$, this trend becomes even more
+pronounced.
 
-### 推定精度の確認（p = 10）
+### Checking Estimation Accuracy (p = 10)
 
-スパース DAG でも**非ガウス誤差**（デフォルト：一様分布）があれば、
-Direct LiNGAM は正しい因果順序を復元できます。
+Even with a sparse DAG, as long as there are **non-Gaussian errors**
+(default: uniform distribution), Direct LiNGAM can recover the correct
+causal order.
 
 ``` r
 
-# 推定された因果順序
+# Estimated causal order
 r10$causal_order
 #>  [1]  1  2  3  7  4  5  9  8  6 10
 
-# 真の因果順序 0, 1, ..., 9 と完全一致しているか
+# Whether it matches the true causal order 0, 1, ..., 9 exactly
 all(r10$causal_order == d10$true_causal_order)
 #> [1] FALSE
 ```
 
-[`tidy()`](https://generics.r-lib.org/reference/tidy.html)
-でエッジ一覧に変換して、推定された係数を確認します。
+We convert to an edge list with
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) and inspect
+the estimated coefficients.
 
 ``` r
 
@@ -1133,23 +1169,26 @@ tidy(r10) |>
 #> 10   x2 x3 -1.4986808
 ```
 
-## DirectLiNGAM が苦戦する例：測定誤差のパラドックス
+## A Case Where DirectLiNGAM Struggles: The Measurement Error Paradox
 
-因果探索の手法には前提があり、それが破られると正しい構造を復元できないことが
-あります。[`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md)
-は、そのような難しいケースを意図的に
-作り出すデータセットです。他のサンプル生成関数と同様に、`data` と
-`true_adjacency` を含むリストを返します。
+Causal discovery methods have assumptions, and when those are violated
+they may fail to recover the correct structure.
+[`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md)
+is a dataset designed to deliberately create such a difficult case. As
+with the other sample generators, it returns a list containing `data`
+and `true_adjacency`.
 
-このデータの真の構造は、単純な直列チェーン **x0 → x1 → x2 → x3**（各係数
-0.8） です。ただし次の 2 点に特徴があります。
+The true structure of this data is a simple serial chain **x0 -\> x1 -\>
+x2 -\> x3** (each coefficient 0.8). However, it has two notable
+features.
 
-- **根の変数 x0 に重い測定誤差**が加えられている。これが DirectLiNGAM
-  の初手で
-  行われる独立性の評価を狂わせ、根の選択を誤らせて誤りが連鎖（error
-  propagation）しやすくなる。
-- すべての変数が [`scale()`](https://rdrr.io/r/base/scale.html)
-  で**標準化**されている（スケール差が無い）。
+- **Heavy measurement error is added to the root variable x0.** This
+  disrupts the independence assessment performed in DirectLiNGAM’s first
+  step, causing it to choose the root incorrectly and making error
+  propagation more likely.
+- All variables are **standardized** with
+  [`scale()`](https://rdrr.io/r/base/scale.html) (no differences in
+  scale).
 
 ``` r
 
@@ -1164,14 +1203,14 @@ head(paradox$data)
 #> 5  0.004312424  1.0175487 -0.02532253 -0.3155891
 #> 6  0.658064158  0.4833892  0.25385608  0.0167021
 
-# すべての変数が標準化されている（sd = 1）
+# All variables are standardized (sd = 1)
 sapply(paradox$data, sd)
 #> x0 x1 x2 x3 
 #>  1  1  1  1
 ```
 
-真の因果グラフを可視化します。係数 0.8 は標準化前の
-潜在スケールでの構造係数です。
+We visualize the true causal graph. The coefficient 0.8 is the
+structural coefficient on the latent scale before standardization.
 
 ``` r
 
@@ -1184,21 +1223,20 @@ paradox$true_adjacency |>
   )
 ```
 
-では Direct LiNGAM を適用してみます。
+Now let us apply Direct LiNGAM.
 
 ``` r
 
 model_p <- lingam_direct(paradox$data)
 
-# 推定された因果順序
+# Estimated causal order
 colnames(paradox$data)[model_p$causal_order]
 #> [1] "x1" "x2" "x0" "x3"
 ```
 
-推定された因果順序の**先頭が真の根 x0 ではなく x1**
-になっていることに注目して
-ください。根に乗った測定誤差のせいで、DirectLiNGAM は x0
-を最初の外生変数として 選び損ねています。
+Note that the **head of the estimated causal order is x1, not the true
+root x0**. Because of the measurement error on the root, DirectLiNGAM
+fails to select x0 as the first exogenous variable.
 
 ``` r
 
@@ -1220,12 +1258,13 @@ model_p$adjacency_matrix |>
   )
 ```
 
-下流の **x1 → x2 → x3** は正しく復元される一方で、**x0 と x1
-の間の向きが逆転** し（真は x0 → x1 だが、推定では x1 → x0）、x0
-がほぼ末端（sink）のように扱われて しまいます。
+While the downstream **x1 -\> x2 -\> x3** is recovered correctly, the
+**direction between x0 and x1 is reversed** (the truth is x0 -\> x1, but
+the estimate is x1 -\> x0), and x0 ends up being treated almost like a
+sink.
 
-この誤りがたまたま起きたものなのか、それとも系統的なものなのかを、ブートストラップ
-で確認します。
+We use the bootstrap to check whether this error occurred by chance or
+is systematic.
 
 ``` r
 
@@ -1243,9 +1282,9 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.6 seconds.
 
-# 各方向の出現確率（行 = to, 列 = from）
+# Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
   get_probabilities() |>
   round(2)
@@ -1256,49 +1295,54 @@ bs_paradox |>
 #> [4,]    0    0 1.00 0.00
 ```
 
-誤った向き **x1 → x0** がほぼ 100%
-の確率で再現されている点が重要です。つまり
-この誤りは偶然ではなく**系統的**であり、ブートストラップで安定して出現します。
+The important point is that the incorrect direction **x1 -\> x0** is
+reproduced with nearly 100% probability. In other words, this error is
+not coincidental but **systematic**, and it appears stably across
+bootstrap samples.
 
-> **教訓:**
-> ブートストラップによる安定性（高い再現確率）は、推定結果の*正しさ*を
-> 保証するものではありません。モデルの前提（ここでは「上流変数に測定誤差が無い」
-> という仮定）が破られている場合、手法は誤った構造を**安定的に**復元してしまう
-> ことがあります。残差の独立性・正規性の検定や、データ生成過程についての
-> ドメイン知識と併せて、結果を批判的に評価することが重要です。
+> **Lesson:** Bootstrap stability (high reproduction probability) does
+> not guarantee the *correctness* of the estimate. When the model’s
+> assumptions (here, the assumption that “upstream variables have no
+> measurement error”) are violated, the method may **stably** recover an
+> incorrect structure. It is important to evaluate results critically,
+> together with tests of residual independence and normality and domain
+> knowledge about the data-generating process.
 
-## LiNGAM が使えない場面
+## When LiNGAM Cannot Be Used
 
-LiNGAM（および `lingamr`）はいくつかの前提条件を要求します。
-これらが満たされない場合は推定が失敗するか、誤った構造を系統的に復元します。
+LiNGAM (and `lingamr`) requires several assumptions. When these are not
+met, estimation either fails or systematically recovers an incorrect
+structure.
 
-| 前提条件 | 問題が起きる状況 | 対処・代替 |
+| Assumption | When problems arise | Remedy / alternative |
 |----|----|----|
-| **非ガウス誤差** | すべての誤差がガウス分布に従う場合、因果方向が識別不能になる | 本 vignette「非ガウス性という前提」節参照。ICA-LiNGAM / Direct LiNGAM は等しく失敗する |
-| **非循環グラフ（DAG）** | フィードバックループ（x → y → x）が存在する場合 | Cyclic LiNGAM（Python 版に実装）を検討する |
-| **潜在的共通原因なし** | 観測されていない共通原因（隠れ交絡変数）が存在する場合 | LvLiNGAM（Latent variable LiNGAM）を検討する |
-| **線形な因果関係** | 変数間の関係が非線形の場合 | 加法的ノイズモデル（ANM）や非線形 ICA を検討する |
-| **測定誤差なし（上流変数）** | 根に近い変数に重い測定誤差が乗っている場合、向きが系統的に逆転する | 本 vignette「測定誤差のパラドックス」節参照 |
-| **独立同分布（i.i.d.）** | 時系列データ・階層データ・クラスタ構造がある場合 | VAR-LiNGAM（時系列）、MultiBench（マルチドメイン）等を検討する |
-| **十分なサンプルサイズ** | $`n`$ が変数数 $`p`$ に対して極端に少ない場合（目安: $`n < 10p`$）、推定が不安定になりやすい | 変数を減らす・`reg_method = "adaptive_lasso"` でスパース化する |
+| **Non-Gaussian errors** | When all errors follow a Gaussian distribution, the causal direction becomes unidentifiable | See the “The Non-Gaussianity Assumption” section of this vignette. ICA-LiNGAM and Direct LiNGAM fail equally |
+| **Acyclic graph (DAG)** | When feedback loops (x -\> y -\> x) exist | Consider Cyclic LiNGAM (implemented in the Python version) |
+| **No latent common causes** | When unobserved common causes (hidden confounders) exist | Consider LvLiNGAM (Latent variable LiNGAM) |
+| **Linear causal relationships** | When the relationships among variables are nonlinear | Consider additive noise models (ANM) or nonlinear ICA |
+| **No measurement error (upstream variables)** | When heavy measurement error is present on variables near the root, the direction is systematically reversed | See the “The Measurement Error Paradox” section of this vignette |
+| **Independent and identically distributed (i.i.d.)** | When there is time-series data, hierarchical data, or cluster structure | Consider VAR-LiNGAM (time series), MultiBench (multi-domain), etc. |
+| **Sufficient sample size** | When $`n`$ is extremely small relative to the number of variables $`p`$ (rule of thumb: $`n < 10p`$), estimation tends to be unstable | Reduce the number of variables; sparsify with `reg_method = "adaptive_lasso"` |
 
-### 事前に確認するチェックリスト
+### A Checklist to Verify in Advance
 
-実際の分析を始める前に、以下を確認することを推奨します。
+Before starting an actual analysis, we recommend confirming the
+following.
 
-1.  **グラフの非循環性** —
-    専門知識からフィードバックループが否定できるか？
-2.  **潜在変数の不在** — 主要な観測変数は揃っているか？
-3.  **誤差の非ガウス性** —
+1.  **Acyclicity of the graph** – Can feedback loops be ruled out from
+    domain expertise?
+2.  **Absence of latent variables** – Are the key observed variables all
+    present?
+3.  **Non-Gaussianity of the errors** – Can be checked with
     [`test_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.md)
-    で確認できる（ただし推定後の診断）。
-    事前に各変数のヒストグラム・歪度を目視するのが簡易的。
-4.  **測定誤差の有無** —
-    根に近い変数に測定誤差がないか？ある場合は慎重に解釈する。
-5.  **サンプルサイズ** — $`n \geq 10p`$
-    を目安に。不足する場合は結果を過信しない。
+    (though this is a post-estimation diagnostic). As a quick check
+    beforehand, visually inspect each variable’s histogram and skewness.
+4.  **Presence of measurement error** – Is there measurement error on
+    variables near the root? If so, interpret with care.
+5.  **Sample size** – Aim for $`n \geq 10p`$. If it falls short, do not
+    over-trust the results.
 
-> **まとめ:** LiNGAM
-> は「線形・非巡回・非ガウス・潜在変数なし・i.i.d.」という 5
-> つの前提がすべて成り立つときに強力です。
-> 分析前にこれらをドメイン知識と残差診断で検証することが、信頼できる因果推論の第一歩です。
+> **Summary:** LiNGAM is powerful when all five assumptions – linear,
+> acyclic, non-Gaussian, no latent variables, and i.i.d. – hold.
+> Verifying these with domain knowledge and residual diagnostics before
+> analysis is the first step toward reliable causal inference.

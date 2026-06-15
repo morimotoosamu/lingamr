@@ -1,12 +1,12 @@
-# LingamResult の因果グラフを ggplot2 で描画
+# Plot the causal graph of a LingamResult with ggplot2
 
-推定された因果構造を ggplot2
-ベースの有向グラフとして描画する。ノード配置は igraph の階層レイアウト
-(sugiyama) で計算し、因果の流れが概ね上から下へ並ぶ。
-静的画像として出力されるため RMarkdown / Quarto で安定する。対話的な
-HTML 図が必要な場合は
-[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)（DiagrammeR
-ベース）を使う。
+Draws the estimated causal structure as a ggplot2-based directed graph.
+Node positions are computed with igraph's hierarchical layout
+(sugiyama), so the causal flow is generally arranged from top to bottom.
+Because the output is a static image, it is stable in RMarkdown /
+Quarto. If you need an interactive HTML figure, use
+[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+(DiagrammeR-based).
 
 ## Usage
 
@@ -26,39 +26,41 @@ autoplot(
 
 - object:
 
+  Return value of
   [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-  の返り値 (`LingamResult` オブジェクト)
+  (a `LingamResult` object)
 
 - threshold:
 
-  この絶対値以下の係数はエッジとみなさない (default: 0)
+  Coefficients with an absolute value at or below this are not treated
+  as edges (default: 0)
 
 - node_size:
 
-  ノードの大きさ (default: 16)
+  Node size (default: 16)
 
 - node_color:
 
-  ノードの塗り色 (default: "lightblue")
+  Node fill color (default: "lightblue")
 
 - label_edges:
 
-  エッジに係数ラベルを表示するか (default: TRUE)
+  Whether to display coefficient labels on edges (default: TRUE)
 
 - ...:
 
-  未使用
+  Unused
 
 ## Value
 
-ggplot オブジェクト
+A ggplot object
 
 ## Details
 
-[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html) は
-ggplot2 のジェネリックなので、利用前に
-[`library(ggplot2)`](https://ggplot2.tidyverse.org) で ggplot2
-を読み込む必要がある。描画には ggplot2 と igraph が必要。
+[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html) is
+a ggplot2 generic, so you must load ggplot2 with
+[`library(ggplot2)`](https://ggplot2.tidyverse.org) before using it.
+Plotting requires ggplot2 and igraph.
 
 ## Examples
 

@@ -12,11 +12,11 @@ plot_residual_qq(X, lingam_result, ncol = 3, nrow = NULL)
 
 - X:
 
-  元データ (matrix or data.frame)
+  original data (matrix or data.frame)
 
 - lingam_result:
 
-  lingam_direct() の返り値
+  return value of lingam_direct()
 
 - ncol:
 
@@ -29,10 +29,10 @@ plot_residual_qq(X, lingam_result, ncol = 3, nrow = NULL)
 ## Examples
 
 ``` r
-# サンプルデータの呼び出し
+# Load the sample data
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-# Direct LiNGAM の実行
+# Run Direct LiNGAM
 result <- lingam_direct(LiNGAM_sample_1000$data)
 
 plot_residual_qq(LiNGAM_sample_1000$data, result)

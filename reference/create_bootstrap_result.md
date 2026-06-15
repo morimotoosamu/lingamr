@@ -1,6 +1,6 @@
-# BootstrapResult を作成
+# Create a BootstrapResult
 
-BootstrapResult を作成
+Create a BootstrapResult
 
 ## Usage
 
@@ -29,7 +29,8 @@ create_bootstrap_result(
 
 - causal_orders:
 
-  matrix (n_sampling x n_features)。各行が1標本の因果順序。
+  matrix (n_sampling x n_features). Each row is the causal order of one
+  sample.
 
 ## Value
 

@@ -102,17 +102,17 @@ adjacency matrix is strictly lower-triangular.
 ## Examples
 
 ``` r
-# 20変数のデータを生成してスパース性を確認
+# Generate 20-variable data and check its sparsity
 dataset <- generate_lingam_large_sample(p = 20, n = 500)
 dim(dataset$data)                    # 500 x 20
 #> [1] 500  20
-sum(dataset$true_adjacency != 0)     # 辺の本数
+sum(dataset$true_adjacency != 0)     # number of edges
 #> [1] 32
 dataset$true_causal_order            # 0, 1, ..., 19
 #>  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
 
 # \donttest{
-# 変数数が増えると Direct LiNGAM の実行時間が急増する
+# As the number of variables grows, Direct LiNGAM's run time increases sharply
 t10 <- system.time(lingam_direct(generate_lingam_large_sample(p = 10)$data))
 t20 <- system.time(lingam_direct(generate_lingam_large_sample(p = 20)$data))
 cat(sprintf("p=10: %.1f sec,  p=20: %.1f sec\n", t10["elapsed"], t20["elapsed"]))

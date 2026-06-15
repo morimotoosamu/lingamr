@@ -1,6 +1,6 @@
-# 歪度（n割り）
+# Skewness (divided by n)
 
-歪度（n割り）
+Skewness (divided by n)
 
 ## Usage
 
@@ -12,4 +12,4 @@ skewness_pop(x)
 
 - x:
 
-  数値ベクトル
+  numeric vector

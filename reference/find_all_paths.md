@@ -1,7 +1,8 @@
-# DAG 中の全パスを深さ優先探索で列挙する
+# Enumerate all paths in a DAG via depth-first search
 
-`B[i, j]` が j → i を表す隣接行列を受け取り、`from_index` から
-`to_index` に至る全パスとそれぞれの経路効果（係数の積）を返す。
+Takes an adjacency matrix where `B[i, j]` represents j -\> i, and
+returns all paths from `from_index` to `to_index` together with each
+path effect (the product of the coefficients).
 
 ## Usage
 
@@ -13,19 +14,20 @@ find_all_paths(adjacency_matrix, from_index, to_index, min_causal_effect = 0)
 
 - adjacency_matrix:
 
-  隣接行列 (n x n)。`B[i,j]` は j → i の係数。
+  Adjacency matrix (n x n). `B[i,j]` is the coefficient of j -\> i.
 
 - from_index:
 
-  始点インデックス (1-based)
+  Start index (1-based)
 
 - to_index:
 
-  終点インデックス (1-based)
+  End index (1-based)
 
 - min_causal_effect:
 
-  このしきい値以下の係数は存在しないエッジとみなす
+  Coefficients at or below this threshold are treated as nonexistent
+  edges
 
 ## Value
 

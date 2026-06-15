@@ -1,6 +1,7 @@
-# 指定した2変数間の全パスとブートストラップ確率を取得
+# Get all paths between two specified variables and their bootstrap probabilities
 
-指定した2変数間の全パスとブートストラップ確率を取得
+Get all paths between two specified variables and their bootstrap
+probabilities
 
 ## Usage
 
@@ -12,19 +13,19 @@ get_paths(result, from_index, to_index, min_causal_effect = NULL)
 
 - result:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - from_index:
 
-  始点インデックス (1-based)
+  Start index (1-based)
 
 - to_index:
 
-  終点インデックス (1-based)
+  End index (1-based)
 
 - min_causal_effect:
 
-  因果効果の最小閾値 (NULL = 0)
+  Minimum threshold for the causal effect (NULL = 0)
 
 ## Value
 

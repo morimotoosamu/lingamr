@@ -1,6 +1,7 @@
-# ブートストラップ結果から因果効果の代表値の隣接行列を作成
+# Create an adjacency matrix of representative causal-effect values from bootstrap results
 
-ブートストラップ結果から因果効果の代表値の隣接行列を作成
+Create an adjacency matrix of representative causal-effect values from
+bootstrap results
 
 ## Usage
 
@@ -18,30 +19,31 @@ get_adjacency_matrix_summary(
 
 - result:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - stat:
 
-  代表値 ("mean" or "median")
+  Representative statistic ("mean" or "median")
 
 - min_causal_effect:
 
-  因果効果の最小閾値（これ以下はゼロ扱い）(NULL = 0)
+  Minimum threshold for the causal effect (values at or below this are
+  treated as zero) (NULL = 0)
 
 - min_probability:
 
-  この確率未満のエッジはゼロにする (NULL = 0)
+  Edges below this probability are set to zero (NULL = 0)
 
 - labels:
 
-  変数名ベクトル (NULL可)
+  Vector of variable names (NULL allowed)
 
 ## Value
 
-隣接行列 (n_features x n_features)。 **規則: `B[i, j]` は変数 j から変数
-i への因果係数（j → i）。**
-[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-の `adjacency_matrix` と同じ規則。
+Adjacency matrix (n_features x n_features). **Rule: `B[i, j]` is the
+causal coefficient from variable j to variable i (j -\> i).** Same rule
+as the `adjacency_matrix` of
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md).
 
 ## Examples
 

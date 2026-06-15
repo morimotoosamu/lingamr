@@ -1,6 +1,6 @@
-# 総合因果効果リストを取得
+# Get a list of total causal effects
 
-総合因果効果リストを取得
+Get a list of total causal effects
 
 ## Usage
 
@@ -12,11 +12,11 @@ get_total_causal_effects(result, min_causal_effect = NULL)
 
 - result:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - min_causal_effect:
 
-  因果効果の最小閾値 (NULL = 0)
+  Minimum threshold for the causal effect (NULL = 0)
 
 ## Value
 
@@ -33,7 +33,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, s
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 
 get_total_causal_effects(bs_model)
 #>    from to      effect probability

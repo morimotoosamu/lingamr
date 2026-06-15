@@ -1,6 +1,6 @@
-# 相互情報量の差
+# Difference of mutual information
 
-相互情報量の差
+Difference of mutual information
 
 ## Usage
 
@@ -12,20 +12,20 @@ diff_mutual_info(xi_std, xj_std, ri_j, rj_i)
 
 - xi_std:
 
-  標準化された xi
+  Standardized xi
 
 - xj_std:
 
-  標準化された xj
+  Standardized xj
 
 - ri_j:
 
-  xi を xj で回帰した残差
+  Residual of xi regressed on xj
 
 - rj_i:
 
-  xj を xi で回帰した残差
+  Residual of xj regressed on xi
 
 ## Value
 
-相互情報量の差
+Difference of mutual information

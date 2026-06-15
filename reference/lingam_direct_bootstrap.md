@@ -1,6 +1,6 @@
-# Direct LiNGAM のブートストラップ
+# Bootstrap for Direct LiNGAM
 
-Direct LiNGAM のブートストラップ
+Bootstrap for Direct LiNGAM
 
 ## Usage
 
@@ -25,55 +25,56 @@ lingam_direct_bootstrap(
 
 - X:
 
-  数値行列 (n_samples x n_features)
+  Numeric matrix (n_samples x n_features)
 
 - n_sampling:
 
-  ブートストラップの反復回数
+  Number of bootstrap iterations
 
 - prior_knowledge:
 
-  事前知識行列 (NULL可)
+  Prior knowledge matrix (NULL allowed)
 
 - apply_prior_knowledge_softly:
 
-  事前知識のソフト適用 (logical)
+  Apply prior knowledge softly (logical)
 
 - measure:
 
-  独立性の評価尺度 ("pwling" or "kernel")
+  Independence measure ("pwling" or "kernel")
 
 - reg_method:
 
-  回帰手法 ("ols", "lasso", "adaptive_lasso", "ridge")
+  Regression method ("ols", "lasso", "adaptive_lasso", "ridge")
 
 - lambda:
 
-  ラムダ選択 ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
+  Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC","oracle")
 
 - init_method:
 
-  適応的LASSO回帰の初期重みの推定手法 ("ols" または "ridge")。
-  [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-  の同名引数と同じ。
+  Method for estimating the initial weights of adaptive LASSO regression
+  ("ols" or "ridge"). Same as the argument of the same name in
+  [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md).
 
 - seed:
 
-  乱数シード (NULL可)
+  Random seed (NULL allowed)
 
 - verbose:
 
-  進捗を表示するか (logical)
+  Whether to display progress (logical)
 
 - parallel:
 
-  並列処理を行うか (logical)。`TRUE` の場合、各ブートストラップ
-  反復を複数コアに分散して実行する。
+  Whether to use parallel processing (logical). When `TRUE`, each
+  bootstrap iteration is distributed across multiple cores.
 
 - n_cores:
 
-  使用するコア数 (整数, NULL可)。`NULL` の場合は安全のため最大 2
-  コアに制限される。`parallel = FALSE` のときは無視される。
+  Number of cores to use (integer, NULL allowed). When `NULL`, the
+  number of cores is limited to a maximum of 2 for safety. Ignored when
+  `parallel = FALSE`.
 
 ## Value
 
@@ -81,19 +82,20 @@ BootstrapResult (list)
 
 ## Details
 
-`parallel = TRUE`
-を指定すると、[`parallel::makePSOCKcluster()`](https://rdrr.io/r/parallel/makeCluster.html)
-による
-ソケットクラスターで反復を分散実行する。クラスターは処理終了時・エラー発生時
-いずれの場合も [`on.exit()`](https://rdrr.io/r/base/on.exit.html)
-により必ず解放される。
+When `parallel = TRUE` is specified, iterations are distributed across a
+socket cluster created by
+[`parallel::makePSOCKcluster()`](https://rdrr.io/r/parallel/makeCluster.html).
+The cluster is always released via
+[`on.exit()`](https://rdrr.io/r/base/on.exit.html), whether the process
+finishes normally or an error occurs.
 
-**再現性について:** 並列実行時は
+**On reproducibility:** During parallel execution, L'Ecuyer parallel
+random number streams via
 [`parallel::clusterSetRNGStream()`](https://rdrr.io/r/parallel/RngStream.html)
-による L'Ecuyer の並列乱数ストリームを用いる。同じ `seed`・同じ
-`n_cores` であれば 結果は再現するが、逐次実行 (`parallel = FALSE`)
-の結果とは数値的に一致しない。 厳密に逐次版と同じ結果が必要な場合は
-`parallel = FALSE` を使用すること。
+are used. Results are reproducible given the same `seed` and same
+`n_cores`, but they do not numerically match the results of sequential
+execution (`parallel = FALSE`). If you need results that exactly match
+the sequential version, use `parallel = FALSE`.
 
 ## Examples
 
@@ -130,7 +132,7 @@ bs_lasso <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 
 # Parallel execution on 2 cores
 bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,

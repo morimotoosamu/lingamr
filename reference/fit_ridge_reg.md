@@ -1,6 +1,6 @@
-# Ridge 回帰（情報量基準 or CV でラムダ選択）
+# Ridge regression (lambda selection by information criterion or CV)
 
-Ridge 回帰（情報量基準 or CV でラムダ選択）
+Ridge regression (lambda selection by information criterion or CV)
 
 ## Usage
 
@@ -12,18 +12,18 @@ fit_ridge_reg(y, Xp, lambda = "BIC")
 
 - y:
 
-  目的変数
+  response variable
 
 - Xp:
 
-  説明変数行列
+  predictor matrix
 
 - lambda:
 
-  ラムダ選択方法 "lambda.min" : CV予測誤差最小 "lambda.1se" : CV
-  1SEルール "AIC" : AIC最小 "BIC" : BIC最小。デフォルト
-  "oracle"は使用不可（Adaptive LASSO 専用）。
+  lambda selection method "lambda.min" : minimum CV prediction error
+  "lambda.1se" : CV 1SE rule "AIC" : minimum AIC "BIC" : minimum BIC,
+  default "oracle" is not usable (Adaptive LASSO only).
 
 ## Value
 
-係数ベクトル
+coefficient vector

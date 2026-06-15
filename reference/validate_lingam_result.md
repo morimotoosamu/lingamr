@@ -1,6 +1,6 @@
-# lingam_direct() の返り値を検証する
+# Validate the return value of lingam_direct()
 
-lingam_direct() の返り値を検証する
+Validate the return value of lingam_direct()
 
 ## Usage
 

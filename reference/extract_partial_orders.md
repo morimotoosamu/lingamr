@@ -1,6 +1,6 @@
-# 事前知識から部分順序を抽出
+# Extract partial orders from prior knowledge
 
-事前知識から部分順序を抽出
+Extract partial orders from prior knowledge
 
 ## Usage
 
@@ -12,8 +12,8 @@ extract_partial_orders(pk)
 
 - pk:
 
-  事前知識行列 (NaN = 不明)
+  Prior knowledge matrix (NaN = unknown)
 
 ## Value
 
-matrix (n x 2), 各行は (from, to) の部分順序
+matrix (n x 2), each row is a (from, to) partial order

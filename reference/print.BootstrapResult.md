@@ -1,6 +1,6 @@
-# BootstrapResult の内容を表示
+# Display the contents of a BootstrapResult
 
-BootstrapResult の内容を表示
+Display the contents of a BootstrapResult
 
 ## Usage
 
@@ -13,11 +13,11 @@ print(x, ...)
 
 - x:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - ...:
 
-  追加の引数 (S3メソッド互換用)
+  Additional arguments (for S3 method compatibility)
 
 ## Examples
 

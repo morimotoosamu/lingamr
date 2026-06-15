@@ -1,6 +1,6 @@
-# ブートストラップ確率を取得
+# Get bootstrap probabilities
 
-ブートストラップ確率を取得
+Get bootstrap probabilities
 
 ## Usage
 
@@ -12,15 +12,15 @@ get_probabilities(result, min_causal_effect = NULL)
 
 - result:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - min_causal_effect:
 
-  因果効果の最小閾値 (NULL = 0)
+  Minimum threshold for the causal effect (NULL = 0)
 
 ## Value
 
-確率行列 (n_features x n_features)
+Probability matrix (n_features x n_features)
 
 ## Examples
 

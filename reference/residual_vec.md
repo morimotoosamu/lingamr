@@ -1,6 +1,7 @@
-# 残差 (xi を xj に回帰したときの残差) 残差ベクトルの計算
+# Residual (residual when xi is regressed on xj) Compute the residual vector
 
-残差 (xi を xj に回帰したときの残差) 残差ベクトルの計算
+Residual (residual when xi is regressed on xj) Compute the residual
+vector
 
 ## Usage
 
@@ -12,16 +13,16 @@ residual_vec(xi, xj, standardized = FALSE)
 
 - xi:
 
-  対象変数ベクトル
+  Target variable vector
 
 - xj:
 
-  説明変数ベクトル
+  Explanatory variable vector
 
 - standardized:
 
-  データが標準化済みか (default: FALSE)
+  Whether the data is already standardized (default: FALSE)
 
 ## Value
 
-回帰後の残差ベクトル
+Residual vector after regression

@@ -1,6 +1,6 @@
-# DAG カウントを取得
+# Get DAG counts
 
-DAG カウントを取得
+Get DAG counts
 
 ## Usage
 
@@ -17,19 +17,19 @@ get_directed_acyclic_graph_counts(
 
 - result:
 
-  BootstrapResult オブジェクト
+  BootstrapResult object
 
 - n_dags:
 
-  上位何件を返すか (NULL = 全て)
+  How many of the top entries to return (NULL = all)
 
 - min_causal_effect:
 
-  因果効果の最小閾値 (NULL = 0)
+  Minimum threshold for the causal effect (NULL = 0)
 
 - split_by_causal_effect_sign:
 
-  因果効果の符号で分割するか
+  Whether to split by the sign of the causal effect
 
 ## Value
 
@@ -46,7 +46,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, s
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 
 get_directed_acyclic_graph_counts(bs_model)
 #> $dag

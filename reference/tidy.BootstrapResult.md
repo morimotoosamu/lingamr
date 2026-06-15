@@ -1,8 +1,9 @@
-# BootstrapResult を tidy な data.frame に変換
+# Convert a BootstrapResult to a tidy data.frame
 
-各因果方向の出現回数・割合・効果量の要約を返す。内部で
-[`get_causal_direction_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.md)
-を呼び出すため、同関数の引数を `...` で渡せる。
+Returns a summary of the occurrence count, proportion, and effect size
+for each causal direction. Internally it calls
+[`get_causal_direction_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.md),
+so that function's arguments can be passed through `...`.
 
 ## Usage
 
@@ -15,14 +16,16 @@ tidy(x, ...)
 
 - x:
 
+  The return value of
   [`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md)
-  の返り値（`BootstrapResult` オブジェクト）
+  (a `BootstrapResult` object)
 
 - ...:
 
+  Arguments passed to
   [`get_causal_direction_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.md)
-  に渡す引数 (`n_directions`, `min_causal_effect`,
-  `split_by_causal_effect_sign`, `labels` など)
+  (such as `n_directions`, `min_causal_effect`,
+  `split_by_causal_effect_sign`, `labels`)
 
 ## Value
 
@@ -38,7 +41,7 @@ bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 tidy(bs)
 #>    from to count proportion mean_effect median_effect   sd_effect    ci_lower
 #> 1     1  6    30 1.00000000  4.02010918    4.01886128 0.009510235  4.00298581

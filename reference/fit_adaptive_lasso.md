@@ -18,24 +18,25 @@ fit_adaptive_lasso(
 
 - y:
 
-  目的変数
+  response variable
 
 - Xp:
 
-  説明変数行列
+  predictor matrix
 
 - lambda:
 
-  ラムダ選択方法 ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle")
+  lambda selection method ("lambda.min", "lambda.1se", "AIC", "BIC",
+  "oracle")
 
 - gamma_weight:
 
-  重みの指数
+  exponent of the weights
 
 - init_method:
 
-  初期重みの推定手法 ("ols" または "ridge")
+  estimation method for the initial weights ("ols" or "ridge")
 
 ## Value
 
-係数ベクトル
+coefficient vector

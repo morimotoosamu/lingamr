@@ -1,6 +1,6 @@
-# 事前知識行列を作成
+# Create a prior knowledge matrix
 
-事前知識行列を作成
+Create a prior knowledge matrix
 
 ## Usage
 
@@ -19,45 +19,46 @@ make_prior_knowledge(
 
 - n_variables:
 
-  変数の数
+  Number of variables
 
 - exogenous_variables:
 
-  外生変数 (1-based index または変数名, NULL可)
-  指定した変数は他のどの変数からも影響を受けないとする
+  Exogenous variables (1-based index or variable name, NULL allowed) The
+  specified variables are assumed not to be influenced by any other
+  variable
 
 - sink_variables:
 
-  シンク変数 (1-based index または変数名, NULL可)
-  指定した変数は他のどの変数にも影響を与えないとする
+  Sink variables (1-based index or variable name, NULL allowed) The
+  specified variables are assumed not to influence any other variable
 
 - paths:
 
-  有向パスが存在する変数ペア (NULL可) list(c(from, to), ...)
-  の形式。インデックスまたは変数名で指定
+  Variable pairs that have a directed path (NULL allowed) Of the form
+  list(c(from, to), ...). Specified by index or variable name
 
 - no_paths:
 
-  有向パスが存在しない変数ペア (NULL可) list(c(from, to), ...)
-  の形式。インデックスまたは変数名で指定
+  Variable pairs that have no directed path (NULL allowed) Of the form
+  list(c(from, to), ...). Specified by index or variable name
 
 - labels:
 
-  変数名ベクトル (NULL可) 変数名で指定する場合は必須。data.frame の
-  colnames() 等を渡す
+  Vector of variable names (NULL allowed) Required when specifying by
+  variable name. Pass e.g. colnames() of a data.frame
 
 ## Value
 
-事前知識行列 (n_variables x n_variables) -1: 不明, 0: パスなし, 1:
-パスあり
+Prior knowledge matrix (n_variables x n_variables) -1: unknown, 0: no
+path, 1: path exists
 
 ## Examples
 
 ``` r
-# インデックスで指定
+# Specify by index
 pk <- make_prior_knowledge(6, exogenous_variables = c(4))
 
-# 変数名で指定
+# Specify by variable name
 pk <- make_prior_knowledge(6,
   exogenous_variables = "x3",
   sink_variables = c("x1", "x4"),

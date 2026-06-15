@@ -1,8 +1,10 @@
-# カーネル法の相互情報量：変数1側の前計算
+# Kernel-based mutual information: precomputation for variable 1
 
-[`kernel_mi_core()`](https://morimotoosamu.github.io/lingamr/reference/kernel_mi_core.md)
-で使う行列 `E1 = tmp1^-1 K1`（`tmp1 = K1 + n*kappa/2 * I`）
-を計算する。候補変数ごとに1回だけ呼べばよく、ペアごとの再計算を避けられる。
+Computes the matrix `E1 = tmp1^-1 K1` (`tmp1 = K1 + n*kappa/2 * I`) used
+in
+[`kernel_mi_core()`](https://morimotoosamu.github.io/lingamr/reference/kernel_mi_core.md).
+It only needs to be called once per candidate variable, avoiding
+per-pair recomputation.
 
 ## Usage
 
@@ -14,16 +16,16 @@ kernel_mi_prepare(x, kappa, sigma)
 
 - x:
 
-  変数1のベクトル
+  Vector of variable 1
 
 - kappa:
 
-  正則化パラメータ
+  Regularization parameter
 
 - sigma:
 
-  ガウスカーネルの幅
+  Width of the Gaussian kernel
 
 ## Value
 
-行列 E1 (n x n)
+Matrix E1 (n x n)

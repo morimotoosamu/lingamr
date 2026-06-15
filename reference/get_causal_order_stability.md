@@ -1,9 +1,9 @@
-# ブートストラップによる因果順序の安定性を評価
+# Evaluate the stability of the causal order from bootstrap
 
-各ブートストラップ標本で推定された因果順序 (causal_order)
-を集計し、順序が
-どれだけ安定しているかを数値化する。各変数の順位分布、変数ペアの先行確率、
-および全体の安定性スコアを返す。
+Aggregates the causal order (causal_order) estimated in each bootstrap
+sample and quantifies how stable the order is. Returns the rank
+distribution of each variable, the precedence probabilities for variable
+pairs, and an overall stability score.
 
 ## Usage
 
@@ -15,27 +15,30 @@ get_causal_order_stability(result, labels = NULL)
 
 - result:
 
-  BootstrapResult オブジェクト（現行バージョンで実行したもの）
+  A BootstrapResult object (run with the current version)
 
 - labels:
 
-  変数名ベクトル (NULL の場合は x0, x1, ... を自動生成)
+  A vector of variable names (if NULL, x0, x1, ... are generated
+  automatically)
 
 ## Value
 
-`causal_order_stability` クラスのリスト。以下を含む：
+A list of class `causal_order_stability`, containing:
 
-- `rank_summary`: 各変数の順位の要約 (variable, mean_rank, sd_rank,
-  median_rank, mode_rank)。mean_rank 昇順（上流から）にソート済み。
-  順位は 1 が最も上流。
+- `rank_summary`: A summary of the rank of each variable (variable,
+  mean_rank, sd_rank, median_rank, mode_rank). Sorted in ascending order
+  of mean_rank (from upstream). A rank of 1 is the most upstream.
 
-- `precedence_matrix`: 先行確率行列。`P[i, j]` は変数 i が変数 j
-  より上流 （先）に位置したブートストラップ標本の割合。
+- `precedence_matrix`: A precedence probability matrix. `P[i, j]` is the
+  proportion of bootstrap samples in which variable i was located
+  upstream of (before) variable j.
 
-- `stability_score`: 全体の安定性スコア。0（順序がランダム）〜
-  1（全標本で順序が一致）。各変数ペアの先行確率が 0/1 に近いほど高い。
+- `stability_score`: An overall stability score, from 0 (random order)
+  to 1 (order agrees across all samples). The closer the precedence
+  probability of each variable pair is to 0/1, the higher the score.
 
-- `n_sampling`: ブートストラップ標本数。
+- `n_sampling`: The number of bootstrap samples.
 
 ## Examples
 
@@ -47,7 +50,7 @@ bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 get_causal_order_stability(bs, labels = names(dat$data))
 #> === Causal Order Stability ===
 #> Bootstrap samples:       30

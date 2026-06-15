@@ -1,7 +1,8 @@
-# 隣接行列から2変数間の総合因果効果を計算する
+# Compute the total causal effect between two variables from an adjacency matrix
 
-[`find_all_paths()`](https://morimotoosamu.github.io/lingamr/reference/find_all_paths.md)
-で列挙した全経路効果の総和を返す。 パスが存在しない場合は 0 を返す。
+Returns the sum of all path effects enumerated by
+[`find_all_paths()`](https://morimotoosamu.github.io/lingamr/reference/find_all_paths.md).
+Returns 0 if no path exists.
 
 ## Usage
 
@@ -13,16 +14,16 @@ calculate_total_effect(adjacency_matrix, from_index, to_index)
 
 - adjacency_matrix:
 
-  隣接行列 (n x n)。`B[i,j]` は j → i の係数。
+  Adjacency matrix (n x n). `B[i,j]` is the coefficient of j -\> i.
 
 - from_index:
 
-  原因変数のインデックス (1-based)
+  Index of the cause variable (1-based)
 
 - to_index:
 
-  結果変数のインデックス (1-based)
+  Index of the effect variable (1-based)
 
 ## Value
 
-総合因果効果（スカラー）
+Total causal effect (scalar)

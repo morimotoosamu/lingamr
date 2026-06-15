@@ -1,6 +1,7 @@
-# 尖度（n割り、正規分布で 0 になる超過尖度）
+# Kurtosis (divided by n; excess kurtosis, which is 0 for a normal distribution)
 
-尖度（n割り、正規分布で 0 になる超過尖度）
+Kurtosis (divided by n; excess kurtosis, which is 0 for a normal
+distribution)
 
 ## Usage
 
@@ -12,4 +13,4 @@ kurtosis_pop(x)
 
 - x:
 
-  数値ベクトル
+  numeric vector

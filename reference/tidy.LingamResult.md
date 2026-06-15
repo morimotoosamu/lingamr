@@ -1,9 +1,10 @@
-# LingamResult を tidy な data.frame に変換
+# Convert a LingamResult to a tidy data.frame
 
-推定された隣接行列を、1 行が 1 エッジの long 形式 data.frame
-に変換する。 `B[i, j]`（j → i の係数）の規則に従い、`from`
-列が原因、`to` 列が結果となる。 ggplot2 や ggraph での可視化、dplyr
-でのフィルタリングに便利。
+Converts the estimated adjacency matrix into a long-format data.frame
+with one edge per row. Following the `B[i, j]` convention (the
+coefficient for j -\> i), the `from` column is the cause and the `to`
+column is the effect. Convenient for visualization with ggplot2 or
+ggraph and for filtering with dplyr.
 
 ## Usage
 
@@ -16,21 +17,24 @@ tidy(x, threshold = 0, ...)
 
 - x:
 
+  The return value of
   [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-  の返り値（`LingamResult` オブジェクト）
+  (a `LingamResult` object)
 
 - threshold:
 
-  この絶対値以下の係数はエッジとみなさない (default: 0)
+  Coefficients with an absolute value at or below this are not treated
+  as edges (default: 0)
 
 - ...:
 
-  未使用
+  Unused
 
 ## Value
 
-data.frame(from, to, estimate)。`from`/`to` は変数名（文字列）、
-`estimate` は因果係数。エッジが無ければ 0 行の data.frame。
+data.frame(from, to, estimate). `from`/`to` are variable names (strings)
+and `estimate` is the causal coefficient. Returns a 0-row data.frame if
+there are no edges.
 
 ## Examples
 

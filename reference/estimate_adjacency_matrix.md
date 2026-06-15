@@ -1,6 +1,6 @@
-# 因果順序から隣接行列を推定
+# Estimate the adjacency matrix from a causal order
 
-因果順序から隣接行列を推定
+Estimate the adjacency matrix from a causal order
 
 ## Usage
 
@@ -19,35 +19,35 @@ estimate_adjacency_matrix(
 
 - X:
 
-  元データ
+  original data
 
 - causal_order:
 
-  因果順序 (1-based index のベクトル)
+  causal order (vector of 1-based indices)
 
 - prior_knowledge:
 
-  事前知識行列 (NULL可)
+  prior-knowledge matrix (NULL allowed)
 
 - method:
 
-  回帰手法 "ols" : 通常の最小二乗法（デフォルト） "lasso" :
-  LASSO回帰（glmnet） "adaptive_lasso": Adaptive LASSO（2段階） "ridge"
-  : Ridge回帰（glmnet）
+  regression method "ols" : ordinary least squares (default) "lasso" :
+  LASSO regression (glmnet) "adaptive_lasso": Adaptive LASSO (two-stage)
+  "ridge" : Ridge regression (glmnet)
 
 - lambda:
 
-  LASSO のペナルティ (NULL = 交差検証で自動選択) "lambda.min" :
-  予測誤差最小 "lambda.1se" : 1SE ルール（よりスパース） "AIC" :
-  AIC最小（CVなし、高速） "BIC" :
-  BIC最小（CVなし、高速、最もスパース）デフォルト "oracle" : Adaptive
-  LASSO 専用。Ridge では使用不可。
+  LASSO penalty (NULL = automatic selection by cross-validation)
+  "lambda.min" : minimum prediction error "lambda.1se" : 1SE rule
+  (sparser) "AIC" : minimum AIC (no CV, fast) "BIC" : minimum BIC (no
+  CV, fast, sparsest), default "oracle" : Adaptive LASSO only. Not
+  usable with Ridge.
 
 - init_method:
 
-  Adaptive LASSOの初期重みの推定手法 "ols" :最小二乗法（デフォルト）
-  "ridge" :Ridge回帰
+  estimation method for the initial weights of Adaptive LASSO "ols" :
+  ordinary least squares (default) "ridge" : Ridge regression
 
 ## Value
 
-隣接行列 B (n_features x n_features)
+adjacency matrix B (n_features x n_features)

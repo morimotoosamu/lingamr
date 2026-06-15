@@ -1,6 +1,6 @@
-# カーネル法による相互情報量
+# Kernel-based mutual information
 
-カーネル法による相互情報量
+Kernel-based mutual information
 
 ## Usage
 
@@ -12,16 +12,16 @@ mutual_information_kernel(x1, x2, param)
 
 - x1:
 
-  変数1
+  Variable 1
 
 - x2:
 
-  変数2
+  Variable 2
 
 - param:
 
-  パラメータベクトル (kappa, sigma)
+  Parameter vector (kappa, sigma)
 
 ## Value
 
-相互情報量
+Mutual information

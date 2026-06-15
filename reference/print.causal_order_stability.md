@@ -1,6 +1,6 @@
-# causal_order_stability の print メソッド
+# print method for causal_order_stability
 
-causal_order_stability の print メソッド
+print method for causal_order_stability
 
 ## Usage
 
@@ -13,8 +13,8 @@ print(x, ...)
 
 - x:
 
-  `causal_order_stability` オブジェクト
+  A `causal_order_stability` object
 
 - ...:
 
-  追加引数（未使用）
+  Additional arguments (unused)

@@ -40,10 +40,10 @@ data.frame with test results for each variable
 ## Examples
 
 ``` r
-# サンプルデータの呼び出し
+# Load the sample data
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-# Direct LiNGAM の実行
+# Run Direct LiNGAM
 result <- lingam_direct(LiNGAM_sample_1000$data)
 
 # Shapiro-Wilk (default)

@@ -1,6 +1,6 @@
-# エッジ指定から真の隣接行列を構築する
+# Build the true adjacency matrix from edge specifications
 
-エッジ指定から真の隣接行列を構築する
+Build the true adjacency matrix from edge specifications
 
 ## Usage
 
@@ -12,20 +12,21 @@ build_true_adjacency(var_names, from, to, coef)
 
 - var_names:
 
-  変数名ベクトル
+  vector of variable names
 
 - from:
 
-  エッジの原因変数名ベクトル
+  vector of cause (source) variable names for the edges
 
 - to:
 
-  エッジの結果変数名ベクトル（from と同じ長さ）
+  vector of effect (target) variable names for the edges (same length as
+  `from`)
 
 - coef:
 
-  エッジ係数ベクトル（from と同じ長さ）
+  vector of edge coefficients (same length as `from`)
 
 ## Value
 
-隣接行列 (p x p)。`m[to, from] = coef`（行 = to, 列 = from）
+adjacency matrix (p x p). `m[to, from] = coef` (row = to, col = from)

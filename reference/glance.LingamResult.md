@@ -1,9 +1,10 @@
-# LingamResult の1行サマリを取得
+# Get a one-row summary of a LingamResult
 
-モデル全体を1行に要約する。残差を計算しないためデータ `X` は不要。
-残差ベースの診断が必要な場合は
+Summarizes the entire model in a single row. The data `X` is not
+required because no residuals are computed. If residual-based
+diagnostics are needed, use
 [`summary_lingam()`](https://morimotoosamu.github.io/lingamr/reference/summary_lingam.md)
-を使用すること。
+instead.
 
 ## Usage
 
@@ -16,16 +17,17 @@ glance(x, ...)
 
 - x:
 
+  The return value of
   [`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
-  の返り値（`LingamResult` オブジェクト）
+  (a `LingamResult` object)
 
 - ...:
 
-  未使用
+  Unused
 
 ## Value
 
-1 行の data.frame(n_variables, n_edges, causal_order)
+A one-row data.frame(n_variables, n_edges, causal_order)
 
 ## Examples
 

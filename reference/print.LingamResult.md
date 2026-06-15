@@ -1,6 +1,6 @@
-# LingamResult の print メソッド
+# Print method for LingamResult
 
-LingamResult の print メソッド
+Print method for LingamResult
 
 ## Usage
 
@@ -13,12 +13,12 @@ print(x, digits = 3, ...)
 
 - x:
 
-  LingamResult オブジェクト
+  LingamResult object
 
 - digits:
 
-  表示桁数
+  Number of digits to display
 
 - ...:
 
-  追加引数（未使用）
+  Additional arguments (unused)

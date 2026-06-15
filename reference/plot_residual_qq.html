@@ -48,11 +48,11 @@
 
 
 <dl><dt id="arg-x">X<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>元データ (matrix or data.frame)</p></dd>
+<dd><p>original data (matrix or data.frame)</p></dd>
 
 
 <dt id="arg-lingam-result">lingam_result<a class="anchor" aria-label="anchor" href="#arg-lingam-result"></a></dt>
-<dd><p>lingam_direct() の返り値</p></dd>
+<dd><p>return value of lingam_direct()</p></dd>
 
 
 <dt id="arg-ncol">ncol<a class="anchor" aria-label="anchor" href="#arg-ncol"></a></dt>
@@ -66,10 +66,10 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># サンプルデータの呼び出し</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load the sample data</span></span></span>
 <span class="r-in"><span><span class="va">LiNGAM_sample_1000</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Direct LiNGAM の実行</span></span></span>
+<span class="r-in"><span><span class="co"># Run Direct LiNGAM</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">plot_residual_qq</span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>, <span class="va">result</span><span class="op">)</span></span></span>
