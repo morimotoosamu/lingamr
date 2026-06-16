@@ -51,8 +51,7 @@
 <script src="lingamr_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="lingamr_files/viz-1.8.2/viz.js"></script><link href="lingamr_files/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
 <script src="lingamr_files/grViz-binding-1.0.12/grViz.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Causal Discovery with lingamr</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Causal Discovery with lingamr</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/morimotoosamu/lingamr/blob/main/vignettes/lingamr.Rmd" class="external-link"><code>vignettes/lingamr.Rmd</code></a></small>
@@ -878,7 +877,7 @@ method.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 3.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 3.3 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -1276,7 +1275,7 @@ grows by a factor of
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; p = 10 : 0.03 sec</span></span>
 <span><span class="co">#&gt; p = 15 : 0.06 sec</span></span>
-<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.1x</span></span></code></pre></div>
+<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.2x</span></span></code></pre></div>
 <p>We run ICA-LiNGAM on the same data to compare speed directly.</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
@@ -1289,7 +1288,7 @@ grows by a factor of
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;               p = 10   p = 15</span></span>
 <span><span class="co">#&gt; Direct LiNGAM :  0.03 sec   0.06 sec</span></span>
-<span><span class="co">#&gt; ICA-LiNGAM    :  0.02 sec   0.02 sec</span></span></code></pre></div>
+<span><span class="co">#&gt; ICA-LiNGAM    :  0.02 sec   0.03 sec</span></span></code></pre></div>
 <p>The larger
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
 becomes, the more Direct LiNGAM’s
@@ -1431,7 +1430,7 @@ or is systematic.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.7 seconds.</span></span>
 <span></span>
 <span><span class="co"># Occurrence probability of each direction (row = to, column = from)</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
