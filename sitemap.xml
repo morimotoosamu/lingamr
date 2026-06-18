@@ -8,6 +8,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/news/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.LingamResult.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/build_lag_matrix.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/build_true_adjacency.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calculate_total_effect.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_glmnet_available.html</loc></url>
@@ -26,6 +27,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_adaptive_lasso.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_lasso.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_ols.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_penalized_regression.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_ridge_reg.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_var_ols.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.html</loc></url>
@@ -43,6 +45,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_paths.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_probabilities.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_total_causal_effects.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_names.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_paths.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_probabilities.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.LingamResult.html</loc></url>
@@ -75,6 +78,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/prune_var_lingam.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/reexports.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/residual_vec.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/resolve_var_index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/roll_rows.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/sd_pop.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/search_candidate.html</loc></url>
