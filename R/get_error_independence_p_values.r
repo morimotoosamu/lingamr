@@ -1,3 +1,6 @@
+SHAPIRO_MAX_N <- 5000L
+
+
 #' Compute residuals (error terms) of a LiNGAM model
 #'
 #' After validating the inputs (that `lingam_result` is a `LingamResult`,
@@ -11,7 +14,7 @@
 lingam_residuals <- function(X, lingam_result) {
   validate_lingam_result(lingam_result)
   X <- as.matrix(X)
-  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.", call. = FALSE)
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
   B <- lingam_result$adjacency_matrix
   if (ncol(B) != ncol(X)) {
     stop(
@@ -128,18 +131,13 @@ test_residual_normality <- function(X, lingam_result,
   n_samples  <- nrow(E)
 
   # --- Variable names ---
-  var_names <- colnames(E)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(n_features) - 1)
+  var_names <- get_var_names(E)
 
   # --- Method validation ---
-  valid_methods <- c("shapiro", "ks", "ad", "lillie", "jb")
-  if (!(method %in% valid_methods)) {
-    stop(sprintf("method must be one of: %s",
-                 paste(valid_methods, collapse = ", ")))
-  }
+  method <- match.arg(method, c("shapiro", "ks", "ad", "lillie", "jb"))
 
   # --- Sample size warnings ---
-  if (method == "shapiro" && n_samples > 5000) {
+  if (method == "shapiro" && n_samples > SHAPIRO_MAX_N) {
     warning("Shapiro-Wilk test may not work well with n > 5000. ",
             "Consider using 'ad' or 'lillie' instead.")
   }
@@ -161,9 +159,8 @@ test_residual_normality <- function(X, lingam_result,
   # --- Test function selector ---
   test_fn <- switch(method,
                     "shapiro" = function(x) {
-                      if (length(x) > 5000) {
-                        # Subsample for shapiro
-                        x <- sample(x, 5000)
+                      if (length(x) > SHAPIRO_MAX_N) {
+                        x <- sample(x, SHAPIRO_MAX_N)
                       }
                       stats::shapiro.test(x)
                     },
@@ -184,8 +181,7 @@ test_residual_normality <- function(X, lingam_result,
     mean         = NA_real_,
     sd           = NA_real_,
     skewness     = NA_real_,
-    kurtosis     = NA_real_,
-    stringsAsFactors = FALSE
+    kurtosis     = NA_real_
   )
 
   for (i in seq_len(n_features)) {
@@ -250,8 +246,7 @@ print.lingam_normality_test <- function(x, ...) {
     }),
     is_non_gauss = x$is_non_gauss,
     skewness     = sprintf("%.3f", x$skewness),
-    kurtosis     = sprintf("%.3f", x$kurtosis),
-    stringsAsFactors = FALSE
+    kurtosis     = sprintf("%.3f", x$kurtosis)
   )
 
   print(display_df, row.names = FALSE)
@@ -292,8 +287,7 @@ plot_residual_qq <- function(X, lingam_result, ncol = 3, nrow = NULL) {
 
   E <- lingam_residuals(X, lingam_result)
 
-  var_names <- colnames(E)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(ncol(E)) - 1)
+  var_names <- get_var_names(E)
 
   df <- data.frame(
     variable = rep(var_names, each = nrow(E)),

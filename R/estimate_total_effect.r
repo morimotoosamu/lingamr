@@ -26,14 +26,9 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
 
-  if (is.data.frame(X)) {
-    col_names <- colnames(X)
-    X <- as.matrix(X)
-  } else {
-    X <- as.matrix(X)
-    col_names <- colnames(X)
-  }
-  if (!is.numeric(X)) stop("X must be a numeric matrix or data.frame.", call. = FALSE)
+  X <- as.matrix(X)
+  col_names <- colnames(X)
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
 
   n_features <- ncol(X)
   if (ncol(lingam_result$adjacency_matrix) != n_features) {

@@ -68,8 +68,7 @@ get_causal_order_stability <- function(result, labels = NULL) {
     mean_rank   = colMeans(rank_matrix),
     sd_rank     = apply(rank_matrix, 2, stats::sd),
     median_rank = apply(rank_matrix, 2, stats::median),
-    mode_rank   = apply(rank_matrix, 2, mode_rank),
-    stringsAsFactors = FALSE
+    mode_rank   = apply(rank_matrix, 2, mode_rank)
   )
   rank_summary <- rank_summary[order(rank_summary$mean_rank), ]
   rownames(rank_summary) <- NULL
@@ -77,11 +76,9 @@ get_causal_order_stability <- function(result, labels = NULL) {
   # Precedence probability matrix P[i, j] = P(i precedes j)
   P <- matrix(0, n_features, n_features, dimnames = list(labels, labels))
   for (i in seq_len(n_features)) {
-    for (j in seq_len(n_features)) {
-      if (i == j) next
-      P[i, j] <- mean(rank_matrix[, i] < rank_matrix[, j])
-    }
+    P[i, ] <- colMeans(rank_matrix[, i] < rank_matrix)
   }
+  diag(P) <- 0
 
   # Overall stability score: how close each pair's precedence probability is to 0/1
   ps <- P[upper.tri(P)]
@@ -116,8 +113,7 @@ print.causal_order_stability <- function(x, ...) {
     mean_rank   = sprintf("%.2f", rs$mean_rank),
     sd_rank     = sprintf("%.2f", rs$sd_rank),
     median_rank = rs$median_rank,
-    mode_rank   = rs$mode_rank,
-    stringsAsFactors = FALSE
+    mode_rank   = rs$mode_rank
   )
   print(disp, row.names = FALSE)
 

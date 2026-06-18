@@ -139,58 +139,37 @@ plot_adjacency <- function(B,
   safe_label <- gsub("'", "\\\\'", title)
 
   # --- Generate edge descriptions ---
-  edge_lines <- c()
-
   if (is.null(true_B)) {
     # Normal mode: draw all edges in the same color
-    for (i in seq_len(p)) {
-      for (j in seq_len(p)) {
-        if (abs(B[i, j]) > threshold) {
-          coef_label <- sprintf("%.2f", B[i, j])
-          edge_lines <- c(edge_lines,
-            sprintf("  %s -> %s [label = ' %s']", labels[j], labels[i], coef_label)
-          )
-        }
-      }
+    hits <- which(abs(B) > threshold, arr.ind = TRUE)
+    edge_lines <- if (nrow(hits) > 0) {
+      sprintf("  %s -> %s [label = ' %.2f']",
+              labels[hits[, 2]], labels[hits[, 1]], B[hits])
+    } else {
+      character(0)
     }
   } else {
     # Comparison mode: color-code TP / FP / FN
-    estimated <- abs(B) > threshold
+    estimated  <- abs(B) > threshold
     true_exist <- abs(true_B) > 0
+    off_diag   <- which(row(B) != col(B), arr.ind = TRUE)
+    est_v      <- estimated[off_diag]
+    true_v     <- true_exist[off_diag]
+    tp_idx <- off_diag[ est_v &  true_v, , drop = FALSE]
+    fp_idx <- off_diag[ est_v & !true_v, , drop = FALSE]
+    fn_idx <- off_diag[!est_v &  true_v, , drop = FALSE]
 
-    for (i in seq_len(p)) {
-      for (j in seq_len(p)) {
-        if (i == j) next
-
-        is_est  <- estimated[i, j]
-        is_true <- true_exist[i, j]
-
-        if (!is_est && !is_true) next
-
-        if (is_est && is_true) {
-          # TP: correct edge (green, solid line)
-          coef_label <- sprintf("%.2f", B[i, j])
-          edge_lines <- c(edge_lines, sprintf(
-            "  %s -> %s [label = ' %s', color = '%s', fontcolor = '%s']",
-            labels[j], labels[i], coef_label, color_tp, color_tp
-          ))
-        } else if (is_est && !is_true) {
-          # FP: false positive (red, solid line)
-          coef_label <- sprintf("%.2f", B[i, j])
-          edge_lines <- c(edge_lines, sprintf(
-            "  %s -> %s [label = ' %s', color = '%s', fontcolor = '%s']",
-            labels[j], labels[i], coef_label, color_fp, color_fp
-          ))
-        } else {
-          # FN: missed edge (orange, dashed line, showing the true coefficient)
-          coef_label <- sprintf("%.2f", true_B[i, j])
-          edge_lines <- c(edge_lines, sprintf(
-            "  %s -> %s [label = ' %s', color = '%s', fontcolor = '%s', style = 'dashed']",
-            labels[j], labels[i], coef_label, color_fn, color_fn
-          ))
-        }
-      }
+    edge_line_block <- function(idx, B_src, col, style = NULL) {
+      if (nrow(idx) == 0) return(character(0))
+      extra <- if (!is.null(style)) sprintf(", style = '%s'", style) else ""
+      sprintf("  %s -> %s [label = ' %.2f', color = '%s', fontcolor = '%s'%s]",
+              labels[idx[, 2]], labels[idx[, 1]], B_src[idx], col, col, extra)
     }
+    edge_lines <- c(
+      edge_line_block(tp_idx, B,      color_tp),
+      edge_line_block(fp_idx, B,      color_fp),
+      edge_line_block(fn_idx, true_B, color_fn, style = "dashed")
+    )
   }
 
   if (length(edge_lines) == 0) {

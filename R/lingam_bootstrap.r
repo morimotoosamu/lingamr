@@ -81,7 +81,10 @@ lingam_direct_bootstrap <- function(X,
                              parallel = FALSE,
                              n_cores = NULL) {
   X <- as.matrix(X)
-  if (!is.numeric(X)) stop("X must be a numeric matrix.")
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
+  if (anyNA(X)) stop("X must not contain missing values (NA).", call. = FALSE)
+  if (ncol(X) < 2) stop("X must have at least 2 variables (columns).", call. = FALSE)
+  if (nrow(X) < 3) stop("X must have at least 3 observations (rows).", call. = FALSE)
   # Invalid arguments would otherwise produce confusing errors inside the
   # iterations (within workers when parallel), so validate them here before
   # starting the cluster.
@@ -372,8 +375,7 @@ get_causal_direction_counts <- function(result,
       median_effect = stats::median(effects),
       sd_effect = if (length(effects) > 1) stats::sd(effects) else 0,
       ci_lower = stats::quantile(effects, 0.025, names = FALSE),
-      ci_upper = stats::quantile(effects, 0.975, names = FALSE),
-      stringsAsFactors = FALSE
+      ci_upper = stats::quantile(effects, 0.975, names = FALSE)
     )
 
     if (split_by_causal_effect_sign) {

@@ -32,6 +32,28 @@ roll_rows <- function(M, shift) {
 }
 
 
+#' Resolve a variable identifier to a 1-based integer index
+#' @keywords internal
+resolve_var_index <- function(idx, arg_name, col_names, n_features) {
+  if (is.character(idx)) {
+    if (is.null(col_names)) {
+      stop(sprintf("'%s' was given as a name, but X has no column names.", arg_name),
+           call. = FALSE)
+    }
+    pos <- match(idx, col_names)
+    if (is.na(pos)) {
+      stop(sprintf("Variable '%s' not found in X.", idx), call. = FALSE)
+    }
+    return(pos)
+  }
+  idx <- as.integer(idx)
+  if (length(idx) != 1 || is.na(idx) || idx < 1 || idx > n_features) {
+    stop(sprintf("'%s' must be between 1 and %d.", arg_name, n_features), call. = FALSE)
+  }
+  idx
+}
+
+
 #' Estimate a total causal effect in a VAR-LiNGAM model
 #'
 #' Estimates the total causal effect from `from_index` (optionally at lag
@@ -58,13 +80,8 @@ estimate_var_total_effect <- function(X, result, from_index, to_index, from_lag 
     stop("result must be a VARLiNGAMResult (output of lingam_var()).", call. = FALSE)
   }
 
-  if (is.data.frame(X)) {
-    col_names <- colnames(X)
-    X <- as.matrix(X)
-  } else {
-    X <- as.matrix(X)
-    col_names <- colnames(X)
-  }
+  X <- as.matrix(X)
+  col_names <- colnames(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
 
   lags <- result$lags
@@ -83,26 +100,8 @@ estimate_var_total_effect <- function(X, result, from_index, to_index, from_lag 
   }
 
   # --- resolve variable name -> 1-based index ---
-  resolve_index <- function(idx, arg_name) {
-    if (is.character(idx)) {
-      if (is.null(col_names)) {
-        stop(sprintf("'%s' was given as a name, but X has no column names.", arg_name),
-             call. = FALSE)
-      }
-      pos <- match(idx, col_names)
-      if (is.na(pos)) {
-        stop(sprintf("Variable '%s' not found in X.", idx), call. = FALSE)
-      }
-      return(pos)
-    }
-    idx <- as.integer(idx)
-    if (length(idx) != 1 || is.na(idx) || idx < 1 || idx > n_features) {
-      stop(sprintf("'%s' must be between 1 and %d.", arg_name, n_features), call. = FALSE)
-    }
-    idx
-  }
-  from_index <- resolve_index(from_index, "from_index")
-  to_index <- resolve_index(to_index, "to_index")
+  from_index <- resolve_var_index(from_index, "from_index", col_names, n_features)
+  to_index   <- resolve_var_index(to_index,   "to_index",   col_names, n_features)
 
   # --- warn if the instantaneous causal order is reversed (from after to) ---
   if (from_lag == 0L) {

@@ -68,8 +68,7 @@ summary_lingam <- function(X, lingam_result,
   }
 
   B <- lingam_result$adjacency_matrix
-  var_names <- colnames(B)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(n_features) - 1)
+  var_names <- get_var_names(B)
 
   # --- Assumption 1: Independence of residuals ---
   p_mat <- get_error_independence_p_values(X, lingam_result,

@@ -32,13 +32,15 @@ find_all_paths <- function(adjacency_matrix, from_index, to_index, min_causal_ef
   B[abs(B) <= min_causal_effect] <- 0
 
   p <- ncol(B)
-  paths <- list()
-  effects <- c()
+  acc <- new.env(parent = emptyenv())
+  acc$paths <- list()
+  acc$effects <- list()
 
   dfs <- function(current, target, visited, path, effect) {
     if (current == target && length(path) > 1) {
-      paths[[length(paths) + 1]] <<- path
-      effects[length(effects) + 1] <<- effect
+      n <- length(acc$paths) + 1L
+      acc$paths[[n]] <- path
+      acc$effects[[n]] <- effect
       return()
     }
     for (next_node in seq_len(p)) {
@@ -52,7 +54,7 @@ find_all_paths <- function(adjacency_matrix, from_index, to_index, min_causal_ef
   }
 
   dfs(from_index, to_index, c(from_index), c(from_index), 1.0)
-  list(paths = paths, effects = effects)
+  list(paths = acc$paths, effects = unlist(acc$effects, use.names = FALSE))
 }
 
 

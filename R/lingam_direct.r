@@ -73,6 +73,7 @@ lingam_direct <- function(X,
   col_names <- if (is.data.frame(X)) names(X) else colnames(X)
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
+  if (anyNA(X)) stop("X must not contain missing values (NA).", call. = FALSE)
   if (ncol(X) < 2) stop("X must have at least 2 variables (columns).", call. = FALSE)
   if (nrow(X) < 2) stop("X must have at least 2 observations (rows).", call. = FALSE)
   if (!is.null(col_names)) colnames(X) <- col_names
@@ -186,4 +187,11 @@ validate_lingam_result <- function(x) {
 #' @keywords internal
 sd_pop <- function(x) {
   sqrt(mean((x - mean(x))^2))
+}
+
+#' Get variable names, falling back to x0, x1, ... when colnames is NULL
+#' @keywords internal
+get_var_names <- function(x) {
+  nm <- colnames(x)
+  if (is.null(nm)) paste0("x", seq_len(ncol(x)) - 1L) else nm
 }

@@ -12,6 +12,14 @@
 # =============================================================================
 
 
+#' @keywords internal
+validate_varlingam_result <- function(result) {
+  if (!inherits(result, "VARLiNGAMResult")) {
+    stop("result must be a VARLiNGAMResult (output of lingam_var()).", call. = FALSE)
+  }
+}
+
+
 #' Check the stationarity of a fitted VAR-LiNGAM model
 #'
 #' Recovers the reduced-form VAR coefficients `M_k = (I - B0)^{-1} B_k` from the
@@ -35,9 +43,7 @@
 #' m <- lingam_var(s$data, lags = 1, reg_method = "ols", prune = FALSE)
 #' check_var_stationarity(m)
 check_var_stationarity <- function(result, tol = 1) {
-  if (!inherits(result, "VARLiNGAMResult")) {
-    stop("result must be a VARLiNGAMResult (output of lingam_var()).", call. = FALSE)
-  }
+  validate_varlingam_result(result)
   am <- result$adjacency_matrices
   p <- dim(am)[2]
   lags <- result$lags
@@ -165,9 +171,7 @@ test_varlingam_residual_normality <- function(result,
                                               method = "shapiro",
                                               alpha = 0.05,
                                               on = c("innovations", "var")) {
-  if (!inherits(result, "VARLiNGAMResult")) {
-    stop("result must be a VARLiNGAMResult (output of lingam_var()).", call. = FALSE)
-  }
+  validate_varlingam_result(result)
   on <- match.arg(on)
   E <- compute_varlingam_residuals(result, on)
 
@@ -207,9 +211,7 @@ test_varlingam_residual_normality_all <- function(result,
                                                   methods = c("shapiro", "ad", "lillie", "jb"),
                                                   alpha = 0.05,
                                                   on = c("innovations", "var")) {
-  if (!inherits(result, "VARLiNGAMResult")) {
-    stop("result must be a VARLiNGAMResult (output of lingam_var()).", call. = FALSE)
-  }
+  validate_varlingam_result(result)
   on <- match.arg(on)
   valid <- c("shapiro", "ks", "ad", "lillie", "jb")
   methods <- unique(match.arg(methods, valid, several.ok = TRUE))
@@ -236,8 +238,7 @@ test_varlingam_residual_normality_all <- function(result,
   out <- data.frame(
     variable = first$variable,
     skewness = first$skewness,
-    kurtosis = first$kurtosis,
-    stringsAsFactors = FALSE
+    kurtosis = first$kurtosis
   )
   for (m in methods) {
     r <- test_varlingam_residual_normality(result, method = m, alpha = alpha, on = on)
@@ -278,9 +279,7 @@ test_varlingam_residual_normality_all <- function(result,
 #' }
 plot_varlingam_residual_qq <- function(result, on = c("innovations", "var"),
                                        ncol = 3, nrow = NULL) {
-  if (!inherits(result, "VARLiNGAMResult")) {
-    stop("result must be a VARLiNGAMResult (output of lingam_var()).", call. = FALSE)
-  }
+  validate_varlingam_result(result)
   on <- match.arg(on)
   E <- compute_varlingam_residuals(result, on)
   # Reuse the Direct LiNGAM QQ plot via a zero adjacency matrix (see

@@ -384,9 +384,10 @@ get_var_paths <- function(result, from_index, to_index,
   nf <- nrow(ams[[1]])
   n_lags <- ncol(ams[[1]]) / nf - 1L
 
-  paths_all <- character(0)
-  effects_all <- numeric(0)
-  for (am in ams) {
+  paths_collector <- vector("list", n_sampling)
+  effects_collector <- vector("list", n_sampling)
+  for (s_idx in seq_along(ams)) {
+    am <- ams[[s_idx]]
     dim_e <- ncol(am)
     # Time-expanded square graph: block (i, j) for j >= i holds B_{j-i}, so an
     # earlier-time node (larger lag block) points to a later-time node.
@@ -404,10 +405,12 @@ get_var_paths <- function(result, from_index, to_index,
     to <- nf * to_lag + to_index
     res <- find_all_paths(expansion_m, fr, to, min_causal_effect)
     if (length(res$paths) > 0) {
-      paths_all <- c(paths_all, vapply(res$paths, paste, "", collapse = "_"))
-      effects_all <- c(effects_all, res$effects)
+      paths_collector[[s_idx]] <- vapply(res$paths, paste, "", collapse = "_")
+      effects_collector[[s_idx]] <- res$effects
     }
   }
+  paths_all <- unlist(paths_collector, use.names = FALSE)
+  effects_all <- unlist(effects_collector, use.names = FALSE)
 
   if (length(paths_all) == 0) {
     return(data.frame(path = character(0), effect = numeric(0), probability = numeric(0)))

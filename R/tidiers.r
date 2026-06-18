@@ -32,15 +32,13 @@ generics::glance
 #' tidy(model)
 tidy.LingamResult <- function(x, threshold = 0, ...) {
   B <- x$adjacency_matrix
-  p <- ncol(B)
-  var_names <- colnames(B)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(p) - 1)
+  var_names <- get_var_names(B)
 
   idx <- which(abs(B) > threshold, arr.ind = TRUE)
   if (nrow(idx) == 0) {
     return(data.frame(
       from = character(0), to = character(0),
-      estimate = numeric(0), stringsAsFactors = FALSE
+      estimate = numeric(0)
     ))
   }
 
@@ -50,8 +48,7 @@ tidy.LingamResult <- function(x, threshold = 0, ...) {
   data.frame(
     from     = var_names[idx[, 2]],
     to       = var_names[idx[, 1]],
-    estimate = B[idx],
-    stringsAsFactors = FALSE
+    estimate = B[idx]
   )
 }
 
@@ -73,13 +70,11 @@ tidy.LingamResult <- function(x, threshold = 0, ...) {
 glance.LingamResult <- function(x, ...) {
   B <- x$adjacency_matrix
   p <- ncol(B)
-  var_names <- colnames(B)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(p) - 1)
+  var_names <- get_var_names(B)
   data.frame(
     n_variables  = p,
     n_edges      = sum(abs(B) > 0),
-    causal_order = paste(var_names[x$causal_order], collapse = " -> "),
-    stringsAsFactors = FALSE
+    causal_order = paste(var_names[x$causal_order], collapse = " -> ")
   )
 }
 

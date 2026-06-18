@@ -164,6 +164,44 @@ ic_glmnet <- function(glmnet_model) {
 }
 
 
+#' Penalized regression via glmnet (IC or CV lambda selection)
+#'
+#' Internal helper shared by [fit_lasso()] and [fit_ridge_reg()]. Both
+#' functions differ only in `alpha` and `lambda_seq`; this function
+#' encapsulates the duplicated IC / CV branches.
+#'
+#' @param y response variable (numeric vector)
+#' @param Xp_mat predictor matrix (already coerced to matrix)
+#' @param alpha glmnet mixing parameter: 1 = LASSO, 0 = Ridge
+#' @param lambda lambda selection method ("AIC", "BIC", "lambda.min", "lambda.1se")
+#' @param lambda_seq numeric vector of lambda values passed to glmnet
+#' @return coefficient vector (excluding intercept)
+#' @keywords internal
+fit_penalized_regression <- function(y, Xp_mat, alpha, lambda, lambda_seq) {
+  if (lambda %in% c("AIC", "BIC")) {
+    fit <- glmnet::glmnet(
+      x = Xp_mat, y = y,
+      alpha = alpha, intercept = TRUE, standardize = TRUE,
+      lambda = lambda_seq
+    )
+    ic <- ic_glmnet(fit)
+    # The selected lambda is a single point on fit$lambda, so extract it
+    # directly by column index instead of going through the interpolation in
+    # coef(fit, s = ...) (the result is identical and faster).
+    k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
+    return(as.numeric(fit$beta[, k_best]))
+  }
+
+  cv_fit <- glmnet::cv.glmnet(
+    x = Xp_mat, y = y,
+    alpha = alpha, intercept = TRUE, standardize = TRUE,
+    lambda = lambda_seq
+  )
+  lambda_val <- cv_fit[[lambda]]
+  return(as.numeric(stats::coef(cv_fit, s = lambda_val))[-1])
+}
+
+
 #' LASSO regression (lambda selection by information criterion or CV)
 #'
 #' @param y response variable
@@ -176,40 +214,10 @@ ic_glmnet <- function(glmnet_model) {
 #' @return coefficient vector
 #' @keywords internal
 fit_lasso <- function(y, Xp, lambda = "BIC") {
-  if (ncol(Xp) == 1) {
-    return(fit_ols(y, Xp))
-  }
-
+  if (ncol(Xp) == 1) return(fit_ols(y, Xp))
   check_glmnet_available("lasso")
-
   Xp_mat <- as.matrix(Xp)
-
-  if (lambda %in% c("AIC", "BIC")) {
-    fit <- glmnet::glmnet(
-      x = Xp_mat, y = y,
-      alpha = 1, intercept = TRUE, standardize = TRUE,
-      lambda = lasso_lambda_seq
-    )
-
-    ic <- ic_glmnet(fit)
-    # The selected lambda is a single point on fit$lambda, so extract it
-    # directly by column index instead of going through the interpolation in
-    # coef(fit, s = ...) (the result is identical and faster).
-    k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
-    coef_vec <- as.numeric(fit$beta[, k_best])
-
-  } else {
-    cv_fit <- glmnet::cv.glmnet(
-      x = Xp_mat, y = y,
-      alpha = 1, intercept = TRUE, standardize = TRUE,
-      lambda = lasso_lambda_seq
-    )
-
-    lambda_val <- cv_fit[[lambda]]
-    coef_vec <- as.numeric(stats::coef(cv_fit, s = lambda_val))[-1]
-  }
-
-  return(coef_vec)
+  fit_penalized_regression(y, Xp_mat, alpha = 1, lambda = lambda, lambda_seq = lasso_lambda_seq)
 }
 
 
@@ -226,42 +234,14 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
 #' @return coefficient vector
 #' @keywords internal
 fit_ridge_reg <- function(y, Xp, lambda = "BIC") {
-  if (ncol(Xp) == 1) {
-    return(fit_ols(y, Xp))
-  }
-
+  if (ncol(Xp) == 1) return(fit_ols(y, Xp))
   if (lambda == "oracle") {
     stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
          call. = FALSE)
   }
-
   check_glmnet_available("ridge")
-
   Xp_mat <- as.matrix(Xp)
-
-  if (lambda %in% c("AIC", "BIC")) {
-    fit <- glmnet::glmnet(
-      x = Xp_mat, y = y,
-      alpha = 0, intercept = TRUE, standardize = TRUE,
-      lambda = ridge_lambda_seq
-    )
-
-    ic <- ic_glmnet(fit)
-    k_best <- if (lambda == "AIC") ic$idx_AIC_best else ic$idx_BIC_best
-    coef_vec <- as.numeric(fit$beta[, k_best])
-
-  } else {
-    cv_fit <- glmnet::cv.glmnet(
-      x = Xp_mat, y = y,
-      alpha = 0, intercept = TRUE, standardize = TRUE,
-      lambda = ridge_lambda_seq
-    )
-
-    lambda_val <- cv_fit[[lambda]]
-    coef_vec <- as.numeric(stats::coef(cv_fit, s = lambda_val))[-1]
-  }
-
-  return(coef_vec)
+  fit_penalized_regression(y, Xp_mat, alpha = 0, lambda = lambda, lambda_seq = ridge_lambda_seq)
 }
 
 

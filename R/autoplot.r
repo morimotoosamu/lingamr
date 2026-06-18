@@ -42,9 +42,7 @@ autoplot.LingamResult <- function(object, threshold = 0,
   }
 
   B <- object$adjacency_matrix
-  p <- ncol(B)
-  var_names <- colnames(B)
-  if (is.null(var_names)) var_names <- paste0("x", seq_len(p) - 1)
+  var_names <- get_var_names(B)
 
   edges <- tidy(object, threshold = threshold)
 
@@ -52,7 +50,7 @@ autoplot.LingamResult <- function(object, threshold = 0,
   g <- igraph::graph_from_data_frame(
     d = edges[, c("from", "to"), drop = FALSE],
     directed = TRUE,
-    vertices = data.frame(name = var_names, stringsAsFactors = FALSE)
+    vertices = data.frame(name = var_names)
   )
 
   # --- Hierarchical layout coordinates (flip y so upstream is at the top) ---
@@ -60,8 +58,7 @@ autoplot.LingamResult <- function(object, threshold = 0,
   node_df <- data.frame(
     name = var_names,
     x = lay[, 1],
-    y = -lay[, 2],
-    stringsAsFactors = FALSE
+    y = -lay[, 2]
   )
 
   # --- Build edge coordinates from the node coordinates ---
@@ -73,13 +70,12 @@ autoplot.LingamResult <- function(object, threshold = 0,
       y     = node_df$y[fi],
       xend  = node_df$x[ti],
       yend  = node_df$y[ti],
-      label = sprintf("%.2f", edges$estimate),
-      stringsAsFactors = FALSE
+      label = sprintf("%.2f", edges$estimate)
     )
   } else {
     edge_df <- data.frame(x = numeric(0), y = numeric(0),
                           xend = numeric(0), yend = numeric(0),
-                          label = character(0), stringsAsFactors = FALSE)
+                          label = character(0))
   }
 
   # --- Plotting ---

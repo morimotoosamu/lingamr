@@ -154,6 +154,27 @@ lingam_var <- function(X,
 }
 
 
+#' Build the lagged design matrix for VAR models
+#'
+#' Constructs Z such that column block k (columns `(k-1)*p+1` to `k*p`)
+#' contains `X_{t-k}` for `t = lags+1, ..., n`.
+#'
+#' @param X numeric matrix (n_samples x n_features)
+#' @param lags lag order
+#' @return matrix of shape `(n - lags, lags * p)`
+#' @keywords internal
+build_lag_matrix <- function(X, lags) {
+  n <- nrow(X)
+  p <- ncol(X)
+  n_obs <- n - lags
+  Z <- matrix(0, nrow = n_obs, ncol = lags * p)
+  for (k in seq_len(lags)) {
+    Z[, ((k - 1L) * p + 1L):(k * p)] <- X[(lags + 1L - k):(n - k), , drop = FALSE]
+  }
+  Z
+}
+
+
 #' Fit a VAR(p) model by OLS (no intercept)
 #'
 #' @param X numeric matrix (n_samples x n_features), rows ordered in time
@@ -172,10 +193,7 @@ fit_var_ols <- function(X, lags) {
   # response: X_t for t = (lags + 1) .. n
   Y <- X[(lags + 1L):n, , drop = FALSE]
   # design: [X_{t-1}, ..., X_{t-lags}] stacked column-wise
-  Z <- matrix(0, nrow = n_obs, ncol = lags * p)
-  for (k in seq_len(lags)) {
-    Z[, ((k - 1L) * p + 1L):(k * p)] <- X[(lags + 1L - k):(n - k), , drop = FALSE]
-  }
+  Z <- build_lag_matrix(X, lags)
   # OLS via QR decomposition (numerically more stable than solving the
   # normal equations crossprod(Z), which squares the condition number).
   # No intercept column is added, matching the Python reference (trend = "n").
@@ -215,10 +233,7 @@ prune_var_lingam <- function(X, causal_order, lags, lambda = "BIC", init_method 
   Y_full <- X[(lags + 1L):n, , drop = FALSE]
   # Lagged design [X_{t-1}, ..., X_{t-lags}] stacked column-wise (same layout
   # as fit_var_ols), so lag-k variables occupy columns ((k-1)*p+1):(k*p).
-  Z <- matrix(0, nrow = n_obs, ncol = lags * p)
-  for (k in seq_len(lags)) {
-    Z[, ((k - 1L) * p + 1L):(k * p)] <- X[(lags + 1L - k):(n - k), , drop = FALSE]
-  }
+  Z <- build_lag_matrix(X, lags)
 
   B <- array(0, dim = c(lags + 1L, p, p))
   for (i in seq_len(p)) {
