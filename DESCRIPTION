@@ -15,7 +15,8 @@ Description: R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model)
     inspired by the VARLiNGAM R code of Moneta et al.
     <https://sites.google.com/site/dorisentner/publications/VARLiNGAM>.
 License: MIT + file LICENSE
-URL: https://github.com/morimotoosamu/lingamr
+URL: https://github.com/morimotoosamu/lingamr,
+    https://morimotoosamu.github.io/lingamr
 BugReports: https://github.com/morimotoosamu/lingamr/issues
 Depends:
     R (>= 4.1.0)
