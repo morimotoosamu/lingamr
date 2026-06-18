@@ -531,6 +531,17 @@ truth$true_adjacency |>
 #> x5  4  0  0  0  0  0
 ```
 
+The causal graph of the true structure:
+
+``` r
+
+truth$true_adjacency |>
+  plot_adjacency(
+    labels = colnames(truth$data),
+    title  = "True structure"
+  )
+```
+
 ### Non-Gaussian Errors (Uniform Distribution) – When It Works
 
 ``` r
@@ -551,6 +562,20 @@ fit_uniform$adjacency_matrix |>
 #> x3  0  0  0  0  0  0
 #> x4  8  0 -1  0  0  0
 #> x5  4  0  0  0  0  0
+```
+
+The estimated graph matches the true structure. Edges are color-coded
+against the truth: green = correct, red = false positive, orange dashed
+= missed.
+
+``` r
+
+fit_uniform$adjacency_matrix |>
+  plot_adjacency(
+    labels = colnames(truth$data),
+    true_B = truth$true_adjacency,
+    title  = "Estimated (uniform errors)"
+  )
 ```
 
 ### Gaussian Errors – When It Fails
@@ -576,6 +601,19 @@ fit_gauss$adjacency_matrix |>
 #> x3  0 0.0  0.2  0 0.0 0.0
 #> x4  0 0.9 -2.7  0 0.0 1.3
 #> x5  0 1.2 -2.2  0 0.0 0.0
+```
+
+Compared with the true structure, many edges are wrong (red) or missed
+(orange dashed) – the same color coding as above:
+
+``` r
+
+fit_gauss$adjacency_matrix |>
+  plot_adjacency(
+    labels = colnames(gauss$data),
+    true_B = truth$true_adjacency,
+    title  = "Estimated (Gaussian errors)"
+  )
 ```
 
 With non-Gaussian errors the true adjacency matrix is recovered as-is,
@@ -682,7 +720,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.4 seconds.
+#> Completed in 3.2 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -1106,7 +1144,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 sec
 #> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.2x
+#> theoretical factor 3.4x vs. observed 2.1x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1282,7 +1320,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.6 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>

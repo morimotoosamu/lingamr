@@ -38,6 +38,8 @@ Useful links:
 
 - <https://morimotoosamu.github.io/lingamr>
 
+- <https://morimotoosamu.github.io/lingamr/>
+
 - Report bugs at <https://github.com/morimotoosamu/lingamr/issues>
 
 ## Author

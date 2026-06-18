@@ -745,10 +745,18 @@ follows (the root is x3).</p>
 <span><span class="co">#&gt; x3  0  0  0  0  0  0</span></span>
 <span><span class="co">#&gt; x4  8  0 -1  0  0  0</span></span>
 <span><span class="co">#&gt; x5  4  0  0  0  0  0</span></span></code></pre></div>
-<div class="section level3">
+<p>The causal graph of the true structure:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">truth</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
+<span>    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>,</span>
+<span>    title  <span class="op">=</span> <span class="st">"True structure"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 3.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x3 -> x0 [label = \" 3.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><div class="section level3">
 <h3 id="non-gaussian-errors-uniform-distribution-when-it-works">Non-Gaussian Errors (Uniform Distribution) – When It Works<a class="anchor" aria-label="anchor" href="#non-gaussian-errors-uniform-distribution-when-it-works"></a>
 </h3>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_uniform</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Estimated causal order (the true root x3 comes first)</span></span>
@@ -765,13 +773,25 @@ follows (the root is x3).</p>
 <span><span class="co">#&gt; x3  0  0  0  0  0  0</span></span>
 <span><span class="co">#&gt; x4  8  0 -1  0  0  0</span></span>
 <span><span class="co">#&gt; x5  4  0  0  0  0  0</span></span></code></pre></div>
+<p>The estimated graph matches the true structure. Edges are color-coded
+against the truth: green = correct, red = false positive, orange dashed
+= missed.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_uniform</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
+<span>    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">truth</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>,</span>
+<span>    true_B <span class="op">=</span> <span class="va">truth</span><span class="op">$</span><span class="va">true_adjacency</span>,</span>
+<span>    title  <span class="op">=</span> <span class="st">"Estimated (uniform errors)"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (uniform errors)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#888888\",\n        color = \"#888888\"]\n\n  x0 -> x1 [label = \" 2.99\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x4 [label = \" 8.02\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x0 -> x5 [label = \" 4.02\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x2 -> x1 [label = \" 2.00\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x2 -> x4 [label = \" -1.01\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x3 -> x0 [label = \" 3.03\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x3 -> x2 [label = \" 5.99\", color = \"#228B22\", fontcolor = \"#228B22\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level3">
 <h3 id="gaussian-errors-when-it-fails">Gaussian Errors – When It Fails<a class="anchor" aria-label="anchor" href="#gaussian-errors-when-it-fails"></a>
 </h3>
 <p>With the same causal structure, the results break down when the
 errors are Gaussian.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>noise_dist <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span><span class="va">fit_gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">gauss</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
@@ -788,7 +808,17 @@ errors are Gaussian.</p>
 <span><span class="co">#&gt; x3  0 0.0  0.2  0 0.0 0.0</span></span>
 <span><span class="co">#&gt; x4  0 0.9 -2.7  0 0.0 1.3</span></span>
 <span><span class="co">#&gt; x5  0 1.2 -2.2  0 0.0 0.0</span></span></code></pre></div>
-<p>With non-Gaussian errors the true adjacency matrix is recovered
+<p>Compared with the true structure, many edges are wrong (red) or
+missed (orange dashed) – the same color coding as above:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_gauss</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
+<span>    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">gauss</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>,</span>
+<span>    true_B <span class="op">=</span> <span class="va">truth</span><span class="op">$</span><span class="va">true_adjacency</span>,</span>
+<span>    title  <span class="op">=</span> <span class="st">"Estimated (Gaussian errors)"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (Gaussian errors)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#888888\",\n        color = \"#888888\"]\n\n  x2 -> x4 [label = \" -2.66\", color = \"#228B22\", fontcolor = \"#228B22\"]\n  x1 -> x0 [label = \" 0.05\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x1 -> x2 [label = \" 0.28\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x1 -> x4 [label = \" 0.89\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x1 -> x5 [label = \" 1.21\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x2 -> x3 [label = \" 0.16\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x2 -> x5 [label = \" -2.23\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x4 -> x0 [label = \" 0.10\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x5 -> x4 [label = \" 1.27\", color = \"#B22222\", fontcolor = \"#B22222\"]\n  x0 -> x1 [label = \" 3.00\", color = \"#FF8C00\", fontcolor = \"#FF8C00\", style = \"dashed\"]\n  x0 -> x4 [label = \" 8.00\", color = \"#FF8C00\", fontcolor = \"#FF8C00\", style = \"dashed\"]\n  x0 -> x5 [label = \" 4.00\", color = \"#FF8C00\", fontcolor = \"#FF8C00\", style = \"dashed\"]\n  x2 -> x1 [label = \" 2.00\", color = \"#FF8C00\", fontcolor = \"#FF8C00\", style = \"dashed\"]\n  x3 -> x0 [label = \" 3.00\", color = \"#FF8C00\", fontcolor = \"#FF8C00\", style = \"dashed\"]\n  x3 -> x2 [label = \" 6.00\", color = \"#FF8C00\", fontcolor = \"#FF8C00\", style = \"dashed\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>With non-Gaussian errors the true adjacency matrix is recovered
 as-is, whereas with Gaussian errors both the causal order and the
 coefficients deviate greatly from the true structure. This is why it is
 said that “LiNGAM exploits the non-Gaussianity of the data to determine
@@ -803,7 +833,7 @@ the next section, to check whether this assumption holds.</p>
 <p>We test the normality of the residuals. Because LiNGAM assumes
 non-Gaussianity, having normality <strong>rejected</strong> (a small
 p-value) is consistent with the model’s assumptions.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Shapiro-Wilk (default)</span></span>
 <span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/test_residual_normality.html">test_residual_normality</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
@@ -827,7 +857,7 @@ p-value) is consistent with the model’s assumptions.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; All residuals are non-Gaussian. LiNGAM assumption is supported.</span></span></code></pre></div>
 <p>We also check the normality of the residuals with a QQ plot.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_residual_qq.html">plot_residual_qq</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lingamr_files/figure-html/qqplot-1.png" class="r-plt" alt="" width="576"></p>
@@ -842,7 +872,7 @@ independent, and that the residuals are non-Gaussian). Instead of
 calling <code><a href="../reference/get_error_independence_p_values.html">get_error_independence_p_values()</a></code> and
 <code><a href="../reference/test_residual_normality.html">test_residual_normality()</a></code> separately, you can survey the
 diagnostics in one place.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/summary_lingam.html">summary_lingam</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === Direct LiNGAM Model Summary ===</span></span>
@@ -867,7 +897,7 @@ diagnostics in one place.</p>
 </h2>
 <p>We assess the reliability of the model using the bootstrap
 method.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -882,7 +912,7 @@ method.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 3.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 3.2 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -890,7 +920,7 @@ method.</p>
 <code>parallel = TRUE</code> lets it run faster on multiple cores. The
 number of cores is specified with <code>n_cores</code> (when
 unspecified, it is capped at 2 cores for safety).</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="va">x1k</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span></span>
 <span>    n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
@@ -907,7 +937,7 @@ the results of sequential execution (<code>parallel = FALSE</code>).</p>
 </h3>
 <p>From the bootstrap results, we compute the frequency of occurrence of
 each path and the mean of the coefficients.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_causal_direction_counts.html">get_causal_direction_counts</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to count proportion mean_effect median_effect  sd_effect    ci_lower</span></span>
@@ -943,7 +973,7 @@ each path and the mean of the coefficients.</p>
 <h3 id="adjacency-matrix-of-mean-causal-effects">Adjacency Matrix of Mean Causal Effects<a class="anchor" aria-label="anchor" href="#adjacency-matrix-of-mean-causal-effects"></a>
 </h3>
 <p>We construct an adjacency matrix from the bootstrap results.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_adjacency_matrix</span> <span class="op">&lt;-</span> <span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_adjacency_matrix_summary.html">get_adjacency_matrix_summary</a></span><span class="op">(</span>stat <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span>
 <span></span>
@@ -957,7 +987,7 @@ each path and the mean of the coefficients.</p>
 <span><span class="co">#&gt; [5,] 8.015 0.907 -1.009 0.000  0.000    0</span></span>
 <span><span class="co">#&gt; [6,] 4.015 0.000  0.000 0.000  0.000    0</span></span></code></pre></div>
 <p>We visualize the estimated adjacency matrix.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>,</span>
@@ -966,14 +996,14 @@ each path and the mean of the coefficients.</p>
 <span>    shape     <span class="op">=</span> <span class="st">"circle"</span>,</span>
 <span>    fillcolor <span class="op">=</span> <span class="st">"lightgreen"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (with Bootstrap)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 2.98\"]\n  x0 -> x4 [label = \" 8.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n  x1 -> x0 [label = \" 0.05\"]\n  x1 -> x2 [label = \" 0.40\"]\n  x1 -> x4 [label = \" 0.91\"]\n  x2 -> x1 [label = \" 2.01\"]\n  x2 -> x3 [label = \" 0.16\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x3 -> x0 [label = \" 3.04\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x4 -> x0 [label = \" 0.10\"]\n  x4 -> x2 [label = \" -0.14\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"Estimated (with Bootstrap)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#90EE90\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 2.98\"]\n  x0 -> x4 [label = \" 8.01\"]\n  x0 -> x5 [label = \" 4.02\"]\n  x1 -> x0 [label = \" 0.05\"]\n  x1 -> x2 [label = \" 0.40\"]\n  x1 -> x4 [label = \" 0.91\"]\n  x2 -> x1 [label = \" 2.01\"]\n  x2 -> x3 [label = \" 0.16\"]\n  x2 -> x4 [label = \" -1.01\"]\n  x3 -> x0 [label = \" 3.04\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x4 -> x0 [label = \" 0.10\"]\n  x4 -> x2 [label = \" -0.14\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level3">
 <h3 id="matrix-of-path-occurrence-frequencies">Matrix of Path Occurrence Frequencies<a class="anchor" aria-label="anchor" href="#matrix-of-path-occurrence-frequencies"></a>
 </h3>
 <p>We compute the matrix of occurrence frequencies for each path.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6]</span></span>
@@ -988,7 +1018,7 @@ each path and the mean of the coefficients.</p>
 <h3 id="mean-total-effects">Mean Total Effects<a class="anchor" aria-label="anchor" href="#mean-total-effects"></a>
 </h3>
 <p>We compute the mean total effect of each path.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_total_causal_effects.html">get_total_causal_effects</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to      effect probability</span></span>
@@ -1015,11 +1045,11 @@ each path and the mean of the coefficients.</p>
 <span><span class="co">#&gt; 21    5  6  0.41846402        0.01</span></span></code></pre></div>
 <p>We turn the bootstrap results into a causal graph. By default, only
 paths that occur in at least 50% of samples are shown.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_bootstrap_probabilities.html">plot_bootstrap_probabilities</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph bootstrap_result {\n  graph [rankdir = TB, fontsize = 14,\n         label = \"Bootstrap Probabilities\",\n         labelloc = t, fontname = \"Helvetica-Bold\"]\n  node [shape = circle, style = filled, fillcolor = lightyellow,\n        fontname = Helvetica, fontsize = 14, width = 0.6]\n  edge [fontname = Helvetica, fontsize = 10, fontcolor = blue, color = gray40]\n\n  x3 -> x0 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x3 -> x2 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x5 [label = \" 1.00\", penwidth = 3.5]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-25c3e940e6859592f801" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-25c3e940e6859592f801">{"x":{"diagram":"digraph bootstrap_result {\n  graph [rankdir = TB, fontsize = 14,\n         label = \"Bootstrap Probabilities\",\n         labelloc = t, fontname = \"Helvetica-Bold\"]\n  node [shape = circle, style = filled, fillcolor = lightyellow,\n        fontname = Helvetica, fontsize = 14, width = 0.6]\n  edge [fontname = Helvetica, fontsize = 10, fontcolor = blue, color = gray40]\n\n  x3 -> x0 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x1 [label = \" 0.99\", penwidth = 3.5]\n  x3 -> x2 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x2 -> x4 [label = \" 0.99\", penwidth = 3.5]\n  x0 -> x5 [label = \" 1.00\", penwidth = 3.5]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level3">
 <h3 id="stability-of-the-causal-order">Stability of the Causal Order<a class="anchor" aria-label="anchor" href="#stability-of-the-causal-order"></a>
@@ -1031,7 +1061,7 @@ precedence probability for variable pairs (<code>P[i, j]</code> = the
 fraction of samples in which variable i came upstream of j), and an
 overall stability score (0 = random, 1 = identical across all
 samples).</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_model</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/get_causal_order_stability.html">get_causal_order_stability</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x1k</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === Causal Order Stability ===</span></span>
@@ -1068,7 +1098,7 @@ samples).</p>
 <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> returns a one-row summary of the whole model.
 <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> also works on bootstrap results, in which case it
 returns the occurrence frequencies for each direction, etc.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert the estimated adjacency matrix to an edge list</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   from to  estimate</span></span>
@@ -1120,7 +1150,7 @@ returns the occurrence frequencies for each direction, etc.</p>
 <h2 id="a-larger-dataset-10-variables">A Larger Dataset (10 Variables)<a class="anchor" aria-label="anchor" href="#a-larger-dataset-10-variables"></a>
 </h2>
 <p>An example of a larger dataset with 10 variables and 10,000 rows.</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x10k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_10.html">generate_lingam_sample_10</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">x10k</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
@@ -1130,8 +1160,8 @@ returns the occurrence frequencies for each direction, etc.</p>
 <span>    rankdir <span class="op">=</span> <span class="st">"TB"</span>,</span>
 <span>    shape   <span class="op">=</span> <span class="st">"circle"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True causal structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 3.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n  x0 -> x7 [label = \" 3.00\"]\n  x1 -> x6 [label = \" 2.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x2 -> x8 [label = \" 0.50\"]\n  x3 -> x0 [label = \" 3.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x3 -> x9 [label = \" 7.00\"]\n  x4 -> x7 [label = \" 1.50\"]\n  x5 -> x8 [label = \" 2.00\"]\n  x6 -> x9 [label = \" 1.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-3f27c09be0c60bb52829" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-3f27c09be0c60bb52829">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"TB\",\n         label = \"True causal structure\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 3.00\"]\n  x0 -> x4 [label = \" 8.00\"]\n  x0 -> x5 [label = \" 4.00\"]\n  x0 -> x7 [label = \" 3.00\"]\n  x1 -> x6 [label = \" 2.00\"]\n  x2 -> x1 [label = \" 2.00\"]\n  x2 -> x4 [label = \" -1.00\"]\n  x2 -> x8 [label = \" 0.50\"]\n  x3 -> x0 [label = \" 3.00\"]\n  x3 -> x2 [label = \" 6.00\"]\n  x3 -> x9 [label = \" 7.00\"]\n  x4 -> x7 [label = \" 1.50\"]\n  x5 -> x8 [label = \" 2.00\"]\n  x6 -> x9 [label = \" 1.00\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level2">
 <h2 id="comparing-ica-lingam-and-direct-lingam">Comparing ICA-LiNGAM and Direct LiNGAM<a class="anchor" aria-label="anchor" href="#comparing-ica-lingam-and-direct-lingam"></a>
@@ -1146,7 +1176,7 @@ taking an approach independent of <code><a href="../reference/lingam_direct.html
 <p>We analyze the same 6-variable dataset
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1000</mn></mrow><annotation encoding="application/x-tex">n = 1000</annotation></semantics></math>)
 with both methods.</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">t_cmp_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="va">res_cmp_direct</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">d_cmp</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
@@ -1163,7 +1193,7 @@ with both methods.</p>
 <p><code>$Bpruned</code> uses the same convention as the lingamr
 adjacency matrix (<code>B[i, j]</code> = coefficient of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>j</mi></msub><mo>→</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">x_j \to x_i</annotation></semantics></math>).</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">B_ica</span> <span class="op">&lt;-</span> <span class="va">res_cmp_ica</span><span class="op">$</span><span class="va">Bpruned</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">B_ica</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">B_ica</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">d_cmp</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
@@ -1193,7 +1223,7 @@ adjacency matrix (<code>B[i, j]</code> = coefficient of
 </h3>
 <p>We compare the structures with a full outer join over all edges and
 check consistency with the true DAG.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">B_true</span>   <span class="op">&lt;-</span> <span class="va">d_cmp</span><span class="op">$</span><span class="va">true_adjacency</span></span>
 <span><span class="va">idx_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">B_true</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>, arr.ind <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">true_key</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">B_true</span><span class="op">)</span><span class="op">[</span><span class="va">idx_true</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">]</span>,</span>
@@ -1246,7 +1276,7 @@ matrix</strong>.</p>
 <div class="section level3">
 <h3 id="generating-the-data">Generating the Data<a class="anchor" aria-label="anchor" href="#generating-the-data"></a>
 </h3>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d20</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">20</span>, n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">d20</span><span class="op">$</span><span class="va">data</span><span class="op">)</span>                    <span class="co"># 1000 rows x 20 columns</span></span>
@@ -1264,7 +1294,7 @@ matrix</strong>.</p>
 grows by a factor of 1.5 (10 -&gt; 15), the number of independence tests
 grows by a factor of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>15</mn><mn>3</mn></msup><mi>/</mi><msup><mn>10</mn><mn>3</mn></msup><mo>≈</mo><mn>3.4</mn></mrow><annotation encoding="application/x-tex">15^3 / 10^3 \approx 3.4</annotation></semantics></math>.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">10</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">d15</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_large_sample.html">generate_lingam_large_sample</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">15</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
@@ -1280,9 +1310,9 @@ grows by a factor of
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; p = 10 : 0.03 sec</span></span>
 <span><span class="co">#&gt; p = 15 : 0.06 sec</span></span>
-<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.2x</span></span></code></pre></div>
+<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.1x</span></span></code></pre></div>
 <p>We run ICA-LiNGAM on the same data to compare speed directly.</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">t15_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d15</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
 <span></span>
@@ -1311,7 +1341,7 @@ this trend becomes even more pronounced.</p>
 <p>Even with a sparse DAG, as long as there are <strong>non-Gaussian
 errors</strong> (default: uniform distribution), Direct LiNGAM can
 recover the correct causal order.</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimated causal order</span></span>
 <span><span class="va">r10</span><span class="op">$</span><span class="va">causal_order</span></span>
 <span><span class="co">#&gt;  [1]  1  2  3  7  4  5  9  8  6 10</span></span>
@@ -1321,7 +1351,7 @@ recover the correct causal order.</p>
 <span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
 <p>We convert to an edge list with <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and inspect the
 estimated coefficients.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">r10</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    from to   estimate</span></span>
@@ -1359,7 +1389,7 @@ making error propagation more likely.</li>
 <li>All variables are <strong>standardized</strong> with
 <code><a href="https://rdrr.io/r/base/scale.html" class="external-link">scale()</a></code> (no differences in scale).</li>
 </ul>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_paradox_data.html">generate_lingam_paradox_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -1377,7 +1407,7 @@ making error propagation more likely.</li>
 <span><span class="co">#&gt;  1  1  1  1</span></span></code></pre></div>
 <p>We visualize the true causal graph. The coefficient 0.8 is the
 structural coefficient on the latent scale before standardization.</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
 <span>    labels  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">true_adjacency</span><span class="op">)</span>,</span>
@@ -1385,9 +1415,9 @@ structural coefficient on the latent scale before standardization.</p>
 <span>    rankdir <span class="op">=</span> <span class="st">"LR"</span>,</span>
 <span>    shape   <span class="op">=</span> <span class="st">"circle"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"True causal chain (x0 -> x1 -> x2 -> x3)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 0.80\"]\n  x1 -> x2 [label = \" 0.80\"]\n  x2 -> x3 [label = \" 0.80\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Now let us apply Direct LiNGAM.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="grViz html-widget html-fill-item" id="htmlwidget-416566eb193bf50d04e6" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-416566eb193bf50d04e6">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"True causal chain (x0 -> x1 -> x2 -> x3)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFFFE0\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x0 -> x1 [label = \" 0.80\"]\n  x1 -> x2 [label = \" 0.80\"]\n  x2 -> x3 [label = \" 0.80\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Now let us apply Direct LiNGAM.</p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">paradox</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Estimated causal order</span></span>
@@ -1396,7 +1426,7 @@ structural coefficient on the latent scale before standardization.</p>
 <p>Note that the <strong>head of the estimated causal order is x1, not
 the true root x0</strong>. Because of the measurement error on the root,
 DirectLiNGAM fails to select x0 as the first exogenous variable.</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x0    x1    x2 x3</span></span>
@@ -1413,14 +1443,14 @@ DirectLiNGAM fails to select x0 as the first exogenous variable.</p>
 <span>    shape     <span class="op">=</span> <span class="st">"circle"</span>,</span>
 <span>    fillcolor <span class="op">=</span> <span class="st">"lightpink"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-25c3e940e6859592f801" style="width:576px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-25c3e940e6859592f801">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"Estimated structure (paradox data)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFB6C1\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x1 -> x0 [label = \" 0.56\"]\n  x1 -> x2 [label = \" 0.83\"]\n  x2 -> x3 [label = \" 0.82\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>While the downstream <strong>x1 -&gt; x2 -&gt; x3</strong> is
+<div class="grViz html-widget html-fill-item" id="htmlwidget-72cbf064100ce560a04c" style="width:576px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-72cbf064100ce560a04c">{"x":{"diagram":"digraph estimated_structure {\n\n  graph [rankdir = \"LR\",\n         label = \"Estimated structure (paradox data)\",\n         labelloc = \"t\",\n         fontname = \"Helvetica-Bold\",\n         fontsize = 14]\n\n  node [shape = \"circle\",\n        style = \"solid,filled\",\n        fillcolor = \"#FFB6C1\",\n        color = \"#000000\",\n        fontname = \"Helvetica\",\n        fontsize = 14,\n        width = 0.6]\n\n  edge [fontname = \"Helvetica\",\n        fontsize = 10,\n        fontcolor = \"#FF0000\",\n        color = \"#666666\"]\n\n  x1 -> x0 [label = \" 0.56\"]\n  x1 -> x2 [label = \" 0.83\"]\n  x2 -> x3 [label = \" 0.82\"]\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>While the downstream <strong>x1 -&gt; x2 -&gt; x3</strong> is
 recovered correctly, the <strong>direction between x0 and x1 is
 reversed</strong> (the truth is x0 -&gt; x1, but the estimate is x1
 -&gt; x0), and x0 ends up being treated almost like a sink.</p>
 <p>We use the bootstrap to check whether this error occurred by chance
 or is systematic.</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_paradox</span> <span class="op">&lt;-</span> <span class="va">paradox</span><span class="op">$</span><span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span>n_sampling <span class="op">=</span> <span class="fl">100L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bootstrap: 100 iterations, method=adaptive_lasso (sequential)</span></span>
@@ -1435,7 +1465,7 @@ or is systematic.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.6 seconds.</span></span>
 <span></span>
 <span><span class="co"># Occurrence probability of each direction (row = to, column = from)</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
@@ -1490,7 +1520,7 @@ time series from a VAR(1)-LiNGAM model. The instantaneous structure is
 (coefficients 0.6 and −0.5), and the only cross-variable lag-1 effect is
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>2</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>→</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x_2(t-1) \to x_0(t)</annotation></semantics></math>
 (coefficient 0.3).</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_varlingam_sample.html">generate_varlingam_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># True instantaneous coefficient matrix B0  (B0[i, j]: x_j -&gt; x_i)</span></span>
@@ -1512,7 +1542,7 @@ time series from a VAR(1)-LiNGAM model. The instantaneous structure is
 </h3>
 <p>Pass the data matrix to <code><a href="../reference/lingam_var.html">lingam_var()</a></code>. Rows must be in
 chronological order (earliest first).</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_var.html">lingam_var</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">data</span>, lags <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">model</span></span>
 <span><span class="co">#&gt; VAR-LiNGAM Result</span></span>
@@ -1554,7 +1584,7 @@ on
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x_i(t)</annotation></semantics></math>.</li>
 </ul>
 <p>Both can be extracted by their dimension label:</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">B0</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrices</span><span class="op">[</span><span class="st">"lag0"</span>, , <span class="op">]</span></span>
 <span><span class="va">B1</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrices</span><span class="op">[</span><span class="st">"lag1"</span>, , <span class="op">]</span></span>
 <span></span>
@@ -1578,7 +1608,7 @@ order among <code>1:lags</code> using the Bayesian Information Criterion
 <code>"hqic"</code>, and <code>"fpe"</code> are also supported. To use a
 fixed lag order without automatic selection, set
 <code>criterion = NULL</code>:</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fix lag order to 2 without IC-based selection</span></span>
 <span><span class="va">model_lag2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_var.html">lingam_var</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">data</span>, lags <span class="op">=</span> <span class="fl">2</span>, criterion <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -1589,7 +1619,7 @@ fixed lag order without automatic selection, set
 <code><a href="../reference/check_var_stationarity.html">check_var_stationarity()</a></code> inspects the eigenvalues of the
 VAR companion matrix: the process is stationary when all moduli are
 <strong>strictly less than 1</strong>.</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/check_var_stationarity.html">check_var_stationarity</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === VAR Stationarity Check ===</span></span>
 <span><span class="co">#&gt; Lag order:         1</span></span>
@@ -1614,7 +1644,7 @@ are the stored VAR residuals) depart from normality. A small p-value
 (reject
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>:
 Gaussian) supports the model assumption.</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/test_varlingam_residual_normality.html">test_varlingam_residual_normality</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === Residual Normality Test ===</span></span>
 <span><span class="co">#&gt; Method:         shapiro</span></span>
@@ -1635,7 +1665,7 @@ Gaussian) supports the model assumption.</p>
 <p><code><a href="../reference/test_varlingam_residual_normality_all.html">test_varlingam_residual_normality_all()</a></code> runs several
 tests at once and appends skewness and excess kurtosis columns for a
 quick overview:</p>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/test_varlingam_residual_normality_all.html">test_varlingam_residual_normality_all</a></span><span class="op">(</span><span class="va">model</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shapiro"</span>, <span class="st">"jb"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Registered S3 method overwritten by 'quantmod':</span></span>
 <span><span class="co">#&gt;   method            from</span></span>
@@ -1647,7 +1677,7 @@ quick overview:</p>
 <p><code><a href="../reference/plot_varlingam_residual_qq.html">plot_varlingam_residual_qq()</a></code> draws per-variable normal
 Q-Q plots. Deviations from the straight reference line indicate
 non-Gaussianity.</p>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_varlingam_residual_qq.html">plot_varlingam_residual_qq</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lingamr_files/figure-html/varlingam_qq-1.png" class="r-plt" alt="" width="672"></p>
 </div>
@@ -1663,7 +1693,7 @@ effect; <code>from_lag = 1</code> gives the one-step-ahead effect of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x_j(t-1)</annotation></semantics></math>
 on
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x_i(t)</annotation></semantics></math>.</p>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Total effect x0 -&gt; x2 (contemporaneous)</span></span>
 <span><span class="fu"><a href="../reference/estimate_var_total_effect.html">estimate_var_total_effect</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">data</span>, <span class="va">model</span>, from_index <span class="op">=</span> <span class="fl">1</span>, to_index <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -0.2582049</span></span>
@@ -1683,7 +1713,7 @@ bootstrap</strong> samples. Unlike the Direct LiNGAM bootstrap (which
 resamples i.i.d. rows), VAR-LiNGAM holds the fitted values fixed and
 resamples only the VAR residuals, preserving the temporal structure of
 the series.</p>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_var_bootstrap.html">lingam_var_bootstrap</a></span><span class="op">(</span></span>
 <span>  <span class="va">s</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
@@ -1696,7 +1726,7 @@ layout mirrors <code>adjacency_matrices</code>: the first
 <code>n_features</code> columns correspond to the instantaneous
 structure (lag 0), the next <code>n_features</code> to lag 1, and so
 on.</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_var_probabilities.html">get_var_probabilities</a></span><span class="op">(</span><span class="va">bs_var</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6]</span></span>
 <span><span class="co">#&gt; [1,] 0.00    0    0 1.00    0 1.00</span></span>
@@ -1705,13 +1735,13 @@ on.</p>
 <p><code><a href="../reference/get_var_paths.html">get_var_paths()</a></code> enumerates all causal paths between two
 variables found across bootstrap samples, together with each path’s
 average total effect and detection probability.</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Paths from x0 to x2 at the same time step (from_lag = 0)</span></span>
 <span><span class="fu"><a href="../reference/get_var_paths.html">get_var_paths</a></span><span class="op">(</span><span class="va">bs_var</span>, from_index <span class="op">=</span> <span class="fl">1</span>, to_index <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      path      effect probability</span></span>
 <span><span class="co">#&gt; 1 1, 2, 3 -0.28287819        1.00</span></span>
 <span><span class="co">#&gt; 2    1, 3  0.08065484        0.02</span></span></code></pre></div>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Paths from x0(t-1) to x2(t)  (from_lag = 1)</span></span>
 <span><span class="fu"><a href="../reference/get_var_paths.html">get_var_paths</a></span><span class="op">(</span><span class="va">bs_var</span>, from_index <span class="op">=</span> <span class="fl">1</span>, to_index <span class="op">=</span> <span class="fl">3</span>, from_lag <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            path       effect probability</span></span>

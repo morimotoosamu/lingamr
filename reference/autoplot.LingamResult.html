@@ -58,6 +58,7 @@ HTML figure, use <code><a href="plot_adjacency.html">plot_adjacency()</a></code>
 <span>  node_size <span class="op">=</span> <span class="fl">16</span>,</span>
 <span>  node_color <span class="op">=</span> <span class="st">"lightblue"</span>,</span>
 <span>  label_edges <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  label_pos <span class="op">=</span> <span class="fl">0.35</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -84,6 +85,13 @@ HTML figure, use <code><a href="plot_adjacency.html">plot_adjacency()</a></code>
 
 <dt id="arg-label-edges">label_edges<a class="anchor" aria-label="anchor" href="#arg-label-edges"></a></dt>
 <dd><p>Whether to display coefficient labels on edges (default: TRUE)</p></dd>
+
+
+<dt id="arg-label-pos">label_pos<a class="anchor" aria-label="anchor" href="#arg-label-pos"></a></dt>
+<dd><p>Position of each coefficient label along its edge, as a
+fraction from the source (0) to the target (1). The default 0.35 places
+labels off-center (toward the source) so labels on crossing edges do not
+overlap near the midpoint.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
