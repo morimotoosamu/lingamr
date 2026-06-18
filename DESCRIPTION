@@ -11,7 +11,9 @@ Authors@R: c(
     person("S.", "Shimizu", role = "cph"))
 Description: R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model)
     algorithms for causal discovery. Based on the Python implementation by Ikeuchi et al. (2023)
-    <https://github.com/cdt15/lingam>.
+    <https://github.com/cdt15/lingam>. The VAR-LiNGAM residual diagnostics are
+    inspired by the VARLiNGAM R code of Moneta et al.
+    <https://sites.google.com/site/dorisentner/publications/VARLiNGAM>.
 License: MIT + file LICENSE
 URL: https://github.com/morimotoosamu/lingamr
 BugReports: https://github.com/morimotoosamu/lingamr/issues
