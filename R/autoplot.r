@@ -53,12 +53,15 @@ autoplot.LingamResult <- function(object, threshold = 0,
     vertices = data.frame(name = var_names)
   )
 
-  # --- Hierarchical layout coordinates (flip y so upstream is at the top) ---
+  # --- Hierarchical layout coordinates ---
+  # sugiyama places upstream (source) nodes at the largest y, so the raw y is
+  # used directly to draw the causal flow from top (upstream) to bottom
+  # (downstream). (Negating it would put the flow upside down.)
   lay <- igraph::layout_with_sugiyama(g)$layout
   node_df <- data.frame(
     name = var_names,
     x = lay[, 1],
-    y = -lay[, 2]
+    y = lay[, 2]
   )
 
   # --- Build edge coordinates from the node coordinates ---
@@ -76,6 +79,17 @@ autoplot.LingamResult <- function(object, threshold = 0,
     edge_df <- data.frame(x = numeric(0), y = numeric(0),
                           xend = numeric(0), yend = numeric(0),
                           label = character(0))
+  }
+
+  # Pull each edge's endpoints inward so the closed arrowhead sits in a gap
+  # before the target node instead of being hidden under the node circle.
+  if (nrow(edge_df) > 0) {
+    dx <- edge_df$xend - edge_df$x
+    dy <- edge_df$yend - edge_df$y
+    edge_df$x    <- edge_df$x    + 0.10 * dx
+    edge_df$y    <- edge_df$y    + 0.10 * dy
+    edge_df$xend <- edge_df$xend - 0.18 * dx
+    edge_df$yend <- edge_df$yend - 0.18 * dy
   }
 
   # --- Plotting ---
