@@ -413,6 +413,16 @@ truth$true_adjacency |>
   round(1)
 ```
 
+The causal graph of the true structure:
+
+```{r nongauss_true_plot}
+truth$true_adjacency |>
+  plot_adjacency(
+    labels = colnames(truth$data),
+    title  = "True structure"
+  )
+```
+
 ### Non-Gaussian Errors (Uniform Distribution) -- When It Works
 
 ```{r nongauss_uniform}
@@ -424,6 +434,18 @@ colnames(truth$data)[fit_uniform$causal_order]
 # The estimated adjacency matrix recovers the true structure almost perfectly
 fit_uniform$adjacency_matrix |>
   round(1)
+```
+
+The estimated graph matches the true structure. Edges are color-coded against
+the truth: green = correct, red = false positive, orange dashed = missed.
+
+```{r nongauss_uniform_plot}
+fit_uniform$adjacency_matrix |>
+  plot_adjacency(
+    labels = colnames(truth$data),
+    true_B = truth$true_adjacency,
+    title  = "Estimated (uniform errors)"
+  )
 ```
 
 ### Gaussian Errors -- When It Fails
@@ -439,6 +461,18 @@ colnames(gauss$data)[fit_gauss$causal_order]
 
 fit_gauss$adjacency_matrix |>
   round(1)
+```
+
+Compared with the true structure, many edges are wrong (red) or missed (orange
+dashed) -- the same color coding as above:
+
+```{r nongauss_gaussian_plot}
+fit_gauss$adjacency_matrix |>
+  plot_adjacency(
+    labels = colnames(gauss$data),
+    true_B = truth$true_adjacency,
+    title  = "Estimated (Gaussian errors)"
+  )
 ```
 
 With non-Gaussian errors the true adjacency matrix is recovered as-is, whereas

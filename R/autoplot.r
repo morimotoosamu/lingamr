@@ -18,6 +18,10 @@
 #' @param node_size Node size (default: 16)
 #' @param node_color Node fill color (default: "lightblue")
 #' @param label_edges Whether to display coefficient labels on edges (default: TRUE)
+#' @param label_pos Position of each coefficient label along its edge, as a
+#'   fraction from the source (0) to the target (1). The default 0.35 places
+#'   labels off-center (toward the source) so labels on crossing edges do not
+#'   overlap near the midpoint.
 #' @param ... Unused
 #' @return A ggplot object
 #' @exportS3Method ggplot2::autoplot
@@ -33,7 +37,7 @@
 #' }
 autoplot.LingamResult <- function(object, threshold = 0,
                                   node_size = 16, node_color = "lightblue",
-                                  label_edges = TRUE, ...) {
+                                  label_edges = TRUE, label_pos = 0.35, ...) {
   for (pkg in c("ggplot2", "igraph")) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       stop("Package '", pkg, "' is required for autoplot(). Please install it.",
@@ -90,6 +94,10 @@ autoplot.LingamResult <- function(object, threshold = 0,
     edge_df$y    <- edge_df$y    + 0.10 * dy
     edge_df$xend <- edge_df$xend - 0.18 * dx
     edge_df$yend <- edge_df$yend - 0.18 * dy
+    # place labels off-center (toward the source) so labels on crossing edges
+    # do not collide near the midpoint
+    edge_df$lx <- edge_df$x + label_pos * (edge_df$xend - edge_df$x)
+    edge_df$ly <- edge_df$y + label_pos * (edge_df$yend - edge_df$y)
   }
 
   # --- Plotting ---
@@ -105,7 +113,7 @@ autoplot.LingamResult <- function(object, threshold = 0,
     if (label_edges) {
       pl <- pl + ggplot2::geom_text(
         data = edge_df,
-        mapping = ggplot2::aes(x = (x + xend) / 2, y = (y + yend) / 2, label = label),
+        mapping = ggplot2::aes(x = lx, y = ly, label = label),
         color = "firebrick", size = 3
       )
     }

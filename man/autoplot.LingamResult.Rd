@@ -10,6 +10,7 @@
   node_size = 16,
   node_color = "lightblue",
   label_edges = TRUE,
+  label_pos = 0.35,
   ...
 )
 }
@@ -23,6 +24,11 @@
 \item{node_color}{Node fill color (default: "lightblue")}
 
 \item{label_edges}{Whether to display coefficient labels on edges (default: TRUE)}
+
+\item{label_pos}{Position of each coefficient label along its edge, as a
+fraction from the source (0) to the target (1). The default 0.35 places
+labels off-center (toward the source) so labels on crossing edges do not
+overlap near the midpoint.}
 
 \item{...}{Unused}
 }
