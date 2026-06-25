@@ -1144,7 +1144,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 sec
 #> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.1x
+#> theoretical factor 3.4x vs. observed 2.2x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.

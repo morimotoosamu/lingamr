@@ -19,6 +19,10 @@ print(x, ...)
 
   Additional arguments (for S3 method compatibility)
 
+## Value
+
+The input object `x`, invisibly.
+
 ## Examples
 
 ``` r
@@ -30,7 +34,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, s
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.9 seconds.
 
 print(bs_model)
 #> BootstrapResult: 30 samplings, 6 features

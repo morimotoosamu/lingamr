@@ -33,7 +33,14 @@ version.
 
 ## Installation
 
-You can install the development version of `lingamr` from
+You can install `lingamr` from CRAN with:
+
+``` r
+
+install.packages("lingamr")
+```
+
+Or install the development version from
 [GitHub](https://github.com/morimotoosamu/lingamr) with:
 
 ``` r

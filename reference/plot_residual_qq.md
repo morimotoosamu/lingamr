@@ -26,6 +26,11 @@ plot_residual_qq(X, lingam_result, ncol = 3, nrow = NULL)
 
   Number of rows.
 
+## Value
+
+A [ggplot2::ggplot](https://ggplot2.tidyverse.org/reference/ggplot.html)
+object with QQ plots of residuals.
+
 ## Examples
 
 ``` r

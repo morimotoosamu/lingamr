@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,8 +83,11 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of <code>lingamr</code> from <a href="https://github.com/morimotoosamu/lingamr" class="external-link">GitHub</a> with:</p>
+<p>You can install <code>lingamr</code> from CRAN with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"lingamr"</span><span class="op">)</span></span></code></pre></div>
+<p>Or install the development version from <a href="https://github.com/morimotoosamu/lingamr" class="external-link">GitHub</a> with:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"morimotoosamu/lingamr"</span><span class="op">)</span></span></code></pre></div>
 <p>Some functionality relies on the following suggested packages: <code>DiagrammeR</code> (interactive plots), <code>igraph</code> and <code>ggplot2</code> (static <code>autoplot()</code> graphs and QQ plots), <code>glmnet</code> (adaptive LASSO), and <code>nortest</code> / <code>tseries</code> (residual tests).</p>
@@ -92,7 +95,7 @@
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/morimotoosamu/lingamr" class="external-link">lingamr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate sample data from a 6-variable LiNGAM model</span></span>
@@ -104,7 +107,7 @@
 <span><span class="co"># Estimated causal order (as variable names)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">[</span><span class="va">model</span><span class="op">$</span><span class="va">causal_order</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "x3" "x2" "x0" "x4" "x5" "x1"</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Visualize the estimated causal graph</span></span>
 <span><span class="va">model</span><span class="op">$</span><span class="va">adjacency_matrix</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="reference/plot_adjacency.html">plot_adjacency</a></span><span class="op">(</span></span>
@@ -120,7 +123,7 @@
 <h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
 <p>For a full walkthrough — prior knowledge, total causal effects, residual independence and normality tests, and bootstrap (including parallel execution) — see the vignette:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"lingamr"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -211,7 +214,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Osamu Morimoto <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Osamu Morimoto <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
