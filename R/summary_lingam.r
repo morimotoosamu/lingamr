@@ -107,6 +107,7 @@ summary_lingam <- function(X, lingam_result,
 #'
 #' @param x A `lingam_summary` object
 #' @param ... Additional arguments (unused)
+#' @return The input object `x`, invisibly.
 #' @export
 print.lingam_summary <- function(x, ...) {
   cat("=== Direct LiNGAM Model Summary ===\n")

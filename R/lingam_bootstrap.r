@@ -250,6 +250,7 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #'
 #' @param x BootstrapResult object
 #' @param ... Additional arguments (for S3 method compatibility)
+#' @return The input object `x`, invisibly.
 #' @method print BootstrapResult
 #' @export
 #' @examples
@@ -262,6 +263,7 @@ print.BootstrapResult <- function(x, ...) {
   n_sampling <- dim(x$adjacency_matrices)[1]
   n_features <- dim(x$adjacency_matrices)[2]
   cat(sprintf("BootstrapResult: %d samplings, %d features\n", n_sampling, n_features))
+  invisible(x)
 }
 
 

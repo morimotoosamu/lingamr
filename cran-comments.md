@@ -1,18 +1,22 @@
-## Submission
+## Resubmission
 
-This is a new submission of the lingamr package.
+This is a resubmission. In this version I have:
+
+* Put software names in single quotes in Title and Description
+  (e.g., 'LiNGAM', 'Python', 'VAR-LiNGAM').
+* Added `\value` tags to all exported function documentation
+  (plot_residual_qq, print.BootstrapResult, print.causal_order_stability,
+  print.lingam_normality_test, print.lingam_summary, print.LingamResult).
 
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
-The NOTE is from "checking CRAN incoming feasibility":
+The NOTE is from "checking R code for possible problems":
 
-* New submission.
-* Possibly misspelled words in DESCRIPTION: 'Ikeuchi', 'LiNGAM', 'al', 'et'.
-  These are spelled correctly. 'LiNGAM' is the established name of the method
-  (Linear Non-Gaussian Acyclic Model), 'Ikeuchi' is an author surname, and
-  'et al.' is a standard abbreviation used in the reference.
+* autoplot.LingamResult: no visible binding for global variable 'lx' / 'ly'.
+  These are column names used inside ggplot2::aes() and are standard
+  non-standard evaluation usage.
 
 ## Test environments
 

@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments (unused)}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 print method for lingam_summary
 }

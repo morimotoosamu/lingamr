@@ -99,6 +99,7 @@ get_causal_order_stability <- function(result, labels = NULL) {
 #'
 #' @param x A `causal_order_stability` object
 #' @param ... Additional arguments (unused)
+#' @return The input object `x`, invisibly.
 #' @export
 print.causal_order_stability <- function(x, ...) {
   cat("=== Causal Order Stability ===\n")

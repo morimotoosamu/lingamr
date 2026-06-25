@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments (for S3 method compatibility)}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Display the contents of a BootstrapResult
 }

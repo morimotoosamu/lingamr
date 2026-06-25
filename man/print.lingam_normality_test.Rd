@@ -11,6 +11,9 @@
 
 \item{...}{additional arguments}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Print method for lingam_normality_test
 }

@@ -4,11 +4,11 @@
 \name{lingamr-package}
 \alias{lingamr}
 \alias{lingamr-package}
-\title{lingamr: LiNGAM Algorithms for Causal Discovery}
+\title{lingamr: 'LiNGAM' Algorithms for Causal Discovery}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery. Based on the Python implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}. The VAR-LiNGAM residual diagnostics are inspired by the VARLiNGAM R code of Moneta et al. \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}.
+R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery. Based on the 'Python' implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}. The 'VAR-LiNGAM' residual diagnostics are inspired by the 'VARLiNGAM' R code of Moneta et al. \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}.
 }
 \details{
 tutorial: \code{vignette("lingamr", package = "lingamr")}
@@ -34,18 +34,17 @@ Python implementation (DirectLiNGAM, VAR-LiNGAM): cdt15/lingam,
 Useful links:
 \itemize{
   \item \url{https://github.com/morimotoosamu/lingamr}
-  \item \url{https://morimotoosamu.github.io/lingamr}
   \item \url{https://morimotoosamu.github.io/lingamr/}
   \item Report bugs at \url{https://github.com/morimotoosamu/lingamr/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Osamu Morimoto \email{galactic.supermarket@gmail.com}
+\strong{Maintainer}: Osamu Morimoto \email{galactic.supermarket@gmail.com} [copyright holder]
 
 Authors:
 \itemize{
-  \item Osamu Morimoto \email{galactic.supermarket@gmail.com}
+  \item Osamu Morimoto \email{galactic.supermarket@gmail.com} [copyright holder]
 }
 
 Other contributors:

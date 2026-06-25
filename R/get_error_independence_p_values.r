@@ -222,6 +222,7 @@ test_residual_normality <- function(X, lingam_result,
 #' Print method for lingam_normality_test
 #' @param x lingam_normality_test object
 #' @param ... additional arguments
+#' @return The input object `x`, invisibly.
 #' @export
 print.lingam_normality_test <- function(x, ...) {
   alpha <- attr(x, "alpha")
@@ -271,6 +272,7 @@ print.lingam_normality_test <- function(x, ...) {
 #' @param lingam_result return value of lingam_direct()
 #' @param ncol Number of columns.
 #' @param nrow Number of rows.
+#' @return A [ggplot2::ggplot] object with QQ plots of residuals.
 #' @export
 #' @examples
 #' # Load the sample data

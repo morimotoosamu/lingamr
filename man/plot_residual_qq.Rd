@@ -15,6 +15,9 @@ plot_residual_qq(X, lingam_result, ncol = 3, nrow = NULL)
 
 \item{nrow}{Number of rows.}
 }
+\value{
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object with QQ plots of residuals.
+}
 \description{
 plot QQ
 }

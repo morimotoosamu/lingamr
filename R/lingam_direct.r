@@ -153,6 +153,7 @@ lingam_direct <- function(X,
 #' @param x LingamResult object
 #' @param digits Number of digits to display
 #' @param ... Additional arguments (unused)
+#' @return The input object `x`, invisibly.
 #' @export
 print.LingamResult <- function(x, digits = 3, ...) {
   n <- length(x$causal_order)
