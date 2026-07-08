@@ -129,6 +129,7 @@ cannot be used with a `BootstrapResult` returned by this function.
 ## Examples
 
 ``` r
+# \donttest{
 confounded <- generate_parce_sample(n = 500, seed = 1)
 
 bs <- lingam_parce_bootstrap(confounded$data,
@@ -139,7 +140,7 @@ bs <- lingam_parce_bootstrap(confounded$data,
 #> Bootstrap: 10 iterations, method=ols (sequential)
 #>   iteration 1 / 10
 #>   iteration 10 / 10
-#> Completed in 17.9 seconds.
+#> Completed in 19.4 seconds.
 get_probabilities(bs)
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]  0.0  0.2  0.4  0.4  0.0  0.0
@@ -148,4 +149,5 @@ get_probabilities(bs)
 #> [4,]  0.0  0.1  0.1  0.0  0.0  0.0
 #> [5,]  0.6  0.6  0.6  0.6  0.0  0.4
 #> [6,]  0.4  0.3  0.4  0.4  0.2  0.0
+# }
 ```

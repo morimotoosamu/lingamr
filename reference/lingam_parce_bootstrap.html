@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -153,7 +153,8 @@ As a result, <code><a href="get_causal_order_stability.html">get_causal_order_st
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_parce_sample.html">generate_parce_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_parce_sample.html">generate_parce_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">bs</span> <span class="op">&lt;-</span> <span class="fu">lingam_parce_bootstrap</span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>,</span></span>
 <span class="r-in"><span>  n_sampling <span class="op">=</span> <span class="fl">10L</span>,</span></span>
@@ -163,7 +164,7 @@ As a result, <code><a href="get_causal_order_stability.html">get_causal_order_st
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 10 iterations, method=ols (sequential)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 1 / 10</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 10 / 10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 17.9 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 19.4 seconds.</span>
 <span class="r-in"><span><span class="fu"><a href="get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="va">bs</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3] [,4] [,5] [,6]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1,]  0.0  0.2  0.4  0.4  0.0  0.0</span>
@@ -172,6 +173,7 @@ As a result, <code><a href="get_causal_order_stability.html">get_causal_order_st
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4,]  0.0  0.1  0.1  0.0  0.0  0.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [5,]  0.6  0.6  0.6  0.6  0.0  0.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [6,]  0.4  0.3  0.4  0.4  0.2  0.0</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -42,7 +42,7 @@ bs <- lingam_multi_group_bootstrap(mg$data_list,
 #> Multi-group bootstrap: 10 iterations, 2 groups, method=ols (sequential)
 #>   iteration 1 / 10
 #>   iteration 10 / 10
-#> Completed in 0.1 seconds.
+#> Completed in 0.2 seconds.
 tidy(bs)
 #>     group from to count proportion   mean_effect median_effect   sd_effect
 #> 1  group1    1  2    10        1.0  3.1505219787   3.114396602 0.340283649

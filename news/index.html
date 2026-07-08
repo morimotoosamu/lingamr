@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,10 @@
       <small>Source: <a href="https://github.com/morimotoosamu/lingamr/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.2" id="lingamr-012">lingamr 0.1.2<a class="anchor" aria-label="anchor" href="#lingamr-012"></a></h2>
+<ul><li>Wrapped long-running bootstrap examples in <code>\donttest{}</code> to avoid CRAN NOTE for elapsed time &gt; 10s (<code>lingam_parce_bootstrap</code>, <code>lingam_rcd_bootstrap</code>).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.1" id="lingamr-011">lingamr 0.1.1<a class="anchor" aria-label="anchor" href="#lingamr-011"></a></h2>
 <ul><li>Extended the broom tidiers and <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> to the new result classes: <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> methods for <code>LiMResult</code>, <code>ParceLingamResult</code> and <code>RCDResult</code> (keeping <code>NA</code> adjacency entries visible as <code>estimate = NA</code> rows), <code>MultiGroupLingamResult</code> and <code>MultiGroupBootstrapResult</code> (stacked with a <code>group</code> column), and <code>ImputationBootstrapResult</code> (collapsed via <code><a href="../reference/as_bootstrap_result.html">as_bootstrap_result()</a></code>); <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> methods for <code>LiMResult</code> (<code>n_discrete</code>), <code>ParceLingamResult</code> (<code>n_na_entries</code>), <code>RCDResult</code> (<code>n_confounded_pairs</code>), and <code>MultiGroupLingamResult</code> (<code>n_groups</code>); and <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> methods for <code>LiMResult</code>, <code>ParceLingamResult</code>, <code>RCDResult</code> (suspected latent-confounder / unresolved pairs drawn as dashed segments), and <code>MultiGroupLingamResult</code> (one group at a time via the <code>group</code> argument).</li>

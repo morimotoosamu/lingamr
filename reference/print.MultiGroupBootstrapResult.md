@@ -33,7 +33,7 @@ bs <- lingam_multi_group_bootstrap(mg$data_list,
 #> Multi-group bootstrap: 10 iterations, 2 groups, method=ols (sequential)
 #>   iteration 1 / 10
 #>   iteration 10 / 10
-#> Completed in 0.1 seconds.
+#> Completed in 0.2 seconds.
 print(bs)
 #> MultiGroupBootstrapResult: 2 groups
 #>   [group1] 10 samplings, 6 features

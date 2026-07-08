@@ -132,6 +132,7 @@ with `MLHSICR = TRUE`; keep `n_sampling` modest in examples.
 ## Examples
 
 ``` r
+# \donttest{
 confounded <- generate_rcd_sample(n = 300, seed = 1)
 
 bs <- lingam_rcd_bootstrap(confounded$data,
@@ -149,4 +150,5 @@ get_probabilities(bs)
 #> [4,]  0.0  0.0    0  0.0    0  0.0
 #> [5,]  1.0  0.0    0  0.0    0  0.0
 #> [6,]  0.0  0.0    0  0.0    0  0.0
+# }
 ```

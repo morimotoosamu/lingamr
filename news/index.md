@@ -1,5 +1,11 @@
 # Changelog
 
+## lingamr 0.1.2
+
+- Wrapped long-running bootstrap examples in `\donttest{}` to avoid CRAN
+  NOTE for elapsed time \> 10s (`lingam_parce_bootstrap`,
+  `lingam_rcd_bootstrap`).
+
 ## lingamr 0.1.1
 
 - Extended the broom tidiers and
