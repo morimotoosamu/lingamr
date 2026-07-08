@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,9 +32,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="direct-lingam">Direct LiNGAM<a class="anchor" aria-label="anchor" href="#direct-lingam"></a></h2>
 
-
+      <div class="section-desc"><p>Core causal discovery on i.i.d. data</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -43,24 +43,31 @@
 
       <dl><dt>
 
-          <code><a href="autoplot.LingamResult.html">autoplot(<i>&lt;LingamResult&gt;</i>)</a></code>
+          <code><a href="lingam_direct.html">lingam_direct()</a></code>
 
         </dt>
-        <dd>Plot the causal graph of a LingamResult with ggplot2</dd>
+        <dd>Direct LiNGAM</dd>
 
         <dt>
 
-          <code><a href="check_var_stationarity.html">check_var_stationarity()</a></code>
+          <code><a href="lingam_high_dim.html">lingam_high_dim()</a></code>
 
         </dt>
-        <dd>Check the stationarity of a fitted VAR-LiNGAM model</dd>
+        <dd>High-Dimensional Direct LiNGAM</dd>
 
         <dt>
 
-          <code><a href="estimate_all_total_effects.html">estimate_all_total_effects()</a></code>
+          <code><a href="make_prior_knowledge.html">make_prior_knowledge()</a></code>
 
         </dt>
-        <dd>Estimate the total causal effects between all variables at once</dd>
+        <dd>Create a prior knowledge matrix</dd>
+
+        <dt>
+
+          <code><a href="summary_lingam.html">summary_lingam()</a></code>
+
+        </dt>
+        <dd>Summarize the goodness-of-fit of a Direct LiNGAM model at once</dd>
 
         <dt>
 
@@ -71,10 +78,357 @@
 
         <dt>
 
+          <code><a href="estimate_all_total_effects.html">estimate_all_total_effects()</a></code>
+
+        </dt>
+        <dd>Estimate the total causal effects between all variables at once</dd>
+
+        <dt>
+
+          <code><a href="get_error_independence_p_values.html">get_error_independence_p_values()</a></code>
+
+        </dt>
+        <dd>Compute p-values for the independence test of the errors</dd>
+
+        <dt>
+
+          <code><a href="get_causal_order_stability.html">get_causal_order_stability()</a></code>
+
+        </dt>
+        <dd>Evaluate the stability of the causal order from bootstrap</dd>
+      </dl></div><div class="section level2">
+      <h2 id="bootstrap-stability-analysis">Bootstrap stability analysis<a class="anchor" aria-label="anchor" href="#bootstrap-stability-analysis"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>
+
+        </dt>
+        <dd>Bootstrap for Direct LiNGAM</dd>
+
+        <dt>
+
+          <code><a href="get_probabilities.html">get_probabilities()</a></code>
+
+        </dt>
+        <dd>Get bootstrap probabilities</dd>
+
+        <dt>
+
+          <code><a href="get_causal_direction_counts.html">get_causal_direction_counts()</a></code>
+
+        </dt>
+        <dd>Get counts, proportions, and causal effects of causal directions</dd>
+
+        <dt>
+
+          <code><a href="get_directed_acyclic_graph_counts.html">get_directed_acyclic_graph_counts()</a></code>
+
+        </dt>
+        <dd>Get DAG counts</dd>
+
+        <dt>
+
+          <code><a href="get_adjacency_matrix_summary.html">get_adjacency_matrix_summary()</a></code>
+
+        </dt>
+        <dd>Create an adjacency matrix of representative causal-effect values from bootstrap results</dd>
+
+        <dt>
+
+          <code><a href="get_total_causal_effects.html">get_total_causal_effects()</a></code>
+
+        </dt>
+        <dd>Get a list of total causal effects</dd>
+
+        <dt>
+
+          <code><a href="get_paths.html">get_paths()</a></code>
+
+        </dt>
+        <dd>Get all paths between two specified variables and their bootstrap probabilities</dd>
+
+        <dt>
+
+          <code><a href="plot_bootstrap_probabilities.html">plot_bootstrap_probabilities()</a></code>
+
+        </dt>
+        <dd>Draw bootstrap probabilities with DiagrammeR</dd>
+      </dl></div><div class="section level2">
+      <h2 id="var-lingam-time-series-">VAR-LiNGAM (time series)<a class="anchor" aria-label="anchor" href="#var-lingam-time-series-"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lingam_var.html">lingam_var()</a></code>
+
+        </dt>
+        <dd>VAR-LiNGAM for time series causal discovery</dd>
+
+        <dt>
+
+          <code><a href="lingam_var_bootstrap.html">lingam_var_bootstrap()</a></code>
+
+        </dt>
+        <dd>Bootstrap for VAR-LiNGAM</dd>
+
+        <dt>
+
+          <code><a href="get_var_probabilities.html">get_var_probabilities()</a></code>
+
+        </dt>
+        <dd>Bootstrap probabilities for a VAR-LiNGAM model</dd>
+
+        <dt>
+
+          <code><a href="get_var_paths.html">get_var_paths()</a></code>
+
+        </dt>
+        <dd>Enumerate bootstrap paths between two variables in a VAR-LiNGAM model</dd>
+
+        <dt>
+
           <code><a href="estimate_var_total_effect.html">estimate_var_total_effect()</a></code>
 
         </dt>
         <dd>Estimate a total causal effect in a VAR-LiNGAM model</dd>
+
+        <dt>
+
+          <code><a href="check_var_stationarity.html">check_var_stationarity()</a></code>
+
+        </dt>
+        <dd>Check the stationarity of a fitted VAR-LiNGAM model</dd>
+
+        <dt>
+
+          <code><a href="test_varlingam_residual_normality.html">test_varlingam_residual_normality()</a></code>
+
+        </dt>
+        <dd>Test the non-Gaussianity of VAR-LiNGAM residuals</dd>
+
+        <dt>
+
+          <code><a href="test_varlingam_residual_normality_all.html">test_varlingam_residual_normality_all()</a></code>
+
+        </dt>
+        <dd>Run several normality tests on VAR-LiNGAM residuals at once</dd>
+
+        <dt>
+
+          <code><a href="plot_varlingam_residual_qq.html">plot_varlingam_residual_qq()</a></code>
+
+        </dt>
+        <dd>Q-Q plots of VAR-LiNGAM residuals</dd>
+      </dl></div><div class="section level2">
+      <h2 id="multigroup-direct-lingam">MultiGroup Direct LiNGAM<a class="anchor" aria-label="anchor" href="#multigroup-direct-lingam"></a></h2>
+
+      <div class="section-desc"><p>Joint estimation across multiple datasets sharing a causal order</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lingam_multi_group.html">lingam_multi_group()</a></code>
+
+        </dt>
+        <dd>Multi-Group Direct LiNGAM</dd>
+
+        <dt>
+
+          <code><a href="lingam_multi_group_bootstrap.html">lingam_multi_group_bootstrap()</a></code>
+
+        </dt>
+        <dd>Bootstrap for Multi-Group Direct LiNGAM</dd>
+
+        <dt>
+
+          <code><a href="get_group_result.html">get_group_result()</a></code>
+
+        </dt>
+        <dd>Extract a single group's result from a MultiGroupLingamResult</dd>
+      </dl></div><div class="section level2">
+      <h2 id="bottomupparcelingam">BottomUpParceLiNGAM<a class="anchor" aria-label="anchor" href="#bottomupparcelingam"></a></h2>
+
+      <div class="section-desc"><p>Causal discovery robust against latent confounders</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lingam_parce.html">lingam_parce()</a></code>
+
+        </dt>
+        <dd>Bottom-Up ParceLiNGAM</dd>
+
+        <dt>
+
+          <code><a href="lingam_parce_bootstrap.html">lingam_parce_bootstrap()</a></code>
+
+        </dt>
+        <dd>Bootstrap for Bottom-Up ParceLiNGAM</dd>
+
+        <dt>
+
+          <code><a href="estimate_total_effect_parce.html">estimate_total_effect_parce()</a></code>
+
+        </dt>
+        <dd>Estimate the total causal effect between two variables (ParceLiNGAM)</dd>
+
+        <dt>
+
+          <code><a href="get_error_independence_p_values_parce.html">get_error_independence_p_values_parce()</a></code>
+
+        </dt>
+        <dd>Compute p-values for the independence of ParceLiNGAM residuals (HSIC-based)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="rcd-repetitive-causal-discovery-">RCD (Repetitive Causal Discovery)<a class="anchor" aria-label="anchor" href="#rcd-repetitive-causal-discovery-"></a></h2>
+
+      <div class="section-desc"><p>Causal discovery with latent confounder detection</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lingam_rcd.html">lingam_rcd()</a></code>
+
+        </dt>
+        <dd>RCD (Repetitive Causal Discovery)</dd>
+
+        <dt>
+
+          <code><a href="lingam_rcd_bootstrap.html">lingam_rcd_bootstrap()</a></code>
+
+        </dt>
+        <dd>Bootstrap for RCD</dd>
+
+        <dt>
+
+          <code><a href="estimate_total_effect_rcd.html">estimate_total_effect_rcd()</a></code>
+
+        </dt>
+        <dd>Estimate the total causal effect between two variables (RCD)</dd>
+
+        <dt>
+
+          <code><a href="get_error_independence_p_values_rcd.html">get_error_independence_p_values_rcd()</a></code>
+
+        </dt>
+        <dd>Compute p-values for the independence of RCD residuals (HSIC-based)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="lim-mixed-continuous-and-discrete-data-">LiM (mixed continuous and discrete data)<a class="anchor" aria-label="anchor" href="#lim-mixed-continuous-and-discrete-data-"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="lingam_lim.html">lingam_lim()</a></code>
+
+        </dt>
+        <dd>LiM: LiNGAM for Mixed Data</dd>
+      </dl></div><div class="section level2">
+      <h2 id="missing-data">Missing data<a class="anchor" aria-label="anchor" href="#missing-data"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="bootstrap_with_imputation.html">bootstrap_with_imputation()</a></code>
+
+        </dt>
+        <dd>Bootstrap with Multiple Imputation for Direct LiNGAM</dd>
+
+        <dt>
+
+          <code><a href="as_bootstrap_result.html">as_bootstrap_result()</a></code>
+
+        </dt>
+        <dd>Collapse an ImputationBootstrapResult into a BootstrapResult</dd>
+      </dl></div><div class="section level2">
+      <h2 id="model-fit-and-diagnostics">Model fit and diagnostics<a class="anchor" aria-label="anchor" href="#model-fit-and-diagnostics"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="evaluate_model_fit.html">evaluate_model_fit()</a></code>
+
+        </dt>
+        <dd>Evaluate model fit of an estimated causal graph</dd>
+
+        <dt>
+
+          <code><a href="test_residual_normality.html">test_residual_normality()</a></code>
+
+        </dt>
+        <dd>Test normality of residuals from Direct LiNGAM</dd>
+
+        <dt>
+
+          <code><a href="plot_residual_qq.html">plot_residual_qq()</a></code>
+
+        </dt>
+        <dd>plot QQ</dd>
+
+        <dt>
+
+          <code><a href="plot_adjacency.html">plot_adjacency()</a></code>
+
+        </dt>
+        <dd>Plot a causal graph from an adjacency matrix with DiagrammeR</dd>
+      </dl></div><div class="section level2">
+      <h2 id="sample-data-generation">Sample data generation<a class="anchor" aria-label="anchor" href="#sample-data-generation"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="generate_lim_sample.html">generate_lim_sample()</a></code>
+
+        </dt>
+        <dd>Generate sample data for LiM (3 mixed variables)</dd>
 
         <dt>
 
@@ -113,80 +467,103 @@
 
         <dt>
 
+          <code><a href="generate_multi_group_sample.html">generate_multi_group_sample()</a></code>
+
+        </dt>
+        <dd>Generate sample data for Multi-Group Direct LiNGAM (2 groups, 6 variables)</dd>
+
+        <dt>
+
+          <code><a href="generate_parce_sample.html">generate_parce_sample()</a></code>
+
+        </dt>
+        <dd>Generate sample data with a latent confounder (for BottomUpParceLiNGAM)</dd>
+
+        <dt>
+
+          <code><a href="generate_rcd_sample.html">generate_rcd_sample()</a></code>
+
+        </dt>
+        <dd>Generate sample data with a latent confounder (for RCD)</dd>
+
+        <dt>
+
           <code><a href="generate_varlingam_sample.html">generate_varlingam_sample()</a></code>
 
         </dt>
         <dd>Generate sample data from a VAR-LiNGAM model</dd>
+      </dl></div><div class="section level2">
+      <h2 id="tidiers-and-autoplot">Tidiers and autoplot<a class="anchor" aria-label="anchor" href="#tidiers-and-autoplot"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="tidy.BootstrapResult.html">tidy(<i>&lt;BootstrapResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Convert a BootstrapResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_adjacency_matrix_summary.html">get_adjacency_matrix_summary()</a></code>
+          <code><a href="tidy.ImputationBootstrapResult.html">tidy(<i>&lt;ImputationBootstrapResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Create an adjacency matrix of representative causal-effect values from bootstrap results</dd>
+        <dd>Convert an ImputationBootstrapResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_causal_direction_counts.html">get_causal_direction_counts()</a></code>
+          <code><a href="tidy.LiMResult.html">tidy(<i>&lt;LiMResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Get counts, proportions, and causal effects of causal directions</dd>
+        <dd>Convert a LiMResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_causal_order_stability.html">get_causal_order_stability()</a></code>
+          <code><a href="tidy.LingamResult.html">tidy(<i>&lt;LingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Evaluate the stability of the causal order from bootstrap</dd>
+        <dd>Convert a LingamResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_directed_acyclic_graph_counts.html">get_directed_acyclic_graph_counts()</a></code>
+          <code><a href="tidy.MultiGroupBootstrapResult.html">tidy(<i>&lt;MultiGroupBootstrapResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Get DAG counts</dd>
+        <dd>Convert a MultiGroupBootstrapResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_error_independence_p_values.html">get_error_independence_p_values()</a></code>
+          <code><a href="tidy.MultiGroupLingamResult.html">tidy(<i>&lt;MultiGroupLingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Compute p-values for the independence test of the errors</dd>
+        <dd>Convert a MultiGroupLingamResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_paths.html">get_paths()</a></code>
+          <code><a href="tidy.ParceLingamResult.html">tidy(<i>&lt;ParceLingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Get all paths between two specified variables and their bootstrap probabilities</dd>
+        <dd>Convert a ParceLingamResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_probabilities.html">get_probabilities()</a></code>
+          <code><a href="tidy.RCDResult.html">tidy(<i>&lt;RCDResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Get bootstrap probabilities</dd>
+        <dd>Convert an RCDResult to a tidy data.frame</dd>
 
         <dt>
 
-          <code><a href="get_total_causal_effects.html">get_total_causal_effects()</a></code>
+          <code><a href="glance.LiMResult.html">glance(<i>&lt;LiMResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Get a list of total causal effects</dd>
-
-        <dt>
-
-          <code><a href="get_var_paths.html">get_var_paths()</a></code>
-
-        </dt>
-        <dd>Enumerate bootstrap paths between two variables in a VAR-LiNGAM model</dd>
-
-        <dt>
-
-          <code><a href="get_var_probabilities.html">get_var_probabilities()</a></code>
-
-        </dt>
-        <dd>Bootstrap probabilities for a VAR-LiNGAM model</dd>
+        <dd>Get a one-row summary of a LiMResult</dd>
 
         <dt>
 
@@ -197,68 +574,70 @@
 
         <dt>
 
-          <code><a href="lingam_direct.html">lingam_direct()</a></code>
+          <code><a href="glance.MultiGroupLingamResult.html">glance(<i>&lt;MultiGroupLingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Direct LiNGAM</dd>
+        <dd>Get a one-row summary of a MultiGroupLingamResult</dd>
 
         <dt>
 
-          <code><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>
+          <code><a href="glance.ParceLingamResult.html">glance(<i>&lt;ParceLingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Bootstrap for Direct LiNGAM</dd>
+        <dd>Get a one-row summary of a ParceLingamResult</dd>
 
         <dt>
 
-          <code><a href="lingam_var.html">lingam_var()</a></code>
+          <code><a href="glance.RCDResult.html">glance(<i>&lt;RCDResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>VAR-LiNGAM for time series causal discovery</dd>
+        <dd>Get a one-row summary of an RCDResult</dd>
 
         <dt>
 
-          <code><a href="lingam_var_bootstrap.html">lingam_var_bootstrap()</a></code>
+          <code><a href="autoplot.LiMResult.html">autoplot(<i>&lt;LiMResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Bootstrap for VAR-LiNGAM</dd>
+        <dd>Plot the causal graph of a LiMResult with ggplot2</dd>
 
         <dt>
 
-          <code><a href="make_prior_knowledge.html">make_prior_knowledge()</a></code>
+          <code><a href="autoplot.LingamResult.html">autoplot(<i>&lt;LingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Create a prior knowledge matrix</dd>
+        <dd>Plot the causal graph of a LingamResult with ggplot2</dd>
 
         <dt>
 
-          <code><a href="plot_adjacency.html">plot_adjacency()</a></code>
+          <code><a href="autoplot.MultiGroupLingamResult.html">autoplot(<i>&lt;MultiGroupLingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Plot a causal graph from an adjacency matrix with DiagrammeR</dd>
+        <dd>Plot one group of a MultiGroupLingamResult with ggplot2</dd>
 
         <dt>
 
-          <code><a href="plot_bootstrap_probabilities.html">plot_bootstrap_probabilities()</a></code>
+          <code><a href="autoplot.ParceLingamResult.html">autoplot(<i>&lt;ParceLingamResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>Draw bootstrap probabilities with DiagrammeR</dd>
+        <dd>Plot the causal graph of a ParceLingamResult with ggplot2</dd>
 
         <dt>
 
-          <code><a href="plot_residual_qq.html">plot_residual_qq()</a></code>
+          <code><a href="autoplot.RCDResult.html">autoplot(<i>&lt;RCDResult&gt;</i>)</a></code>
 
         </dt>
-        <dd>plot QQ</dd>
+        <dd>Plot the causal graph of an RCDResult with ggplot2</dd>
+      </dl></div><div class="section level2">
+      <h2 id="print-methods">Print methods<a class="anchor" aria-label="anchor" href="#print-methods"></a></h2>
 
-        <dt>
 
-          <code><a href="plot_varlingam_residual_qq.html">plot_varlingam_residual_qq()</a></code>
 
-        </dt>
-        <dd>Q-Q plots of VAR-LiNGAM residuals</dd>
+      <dl></dl></div><div class="section level2">
 
-        <dt>
+
+
+
+      <dl><dt>
 
           <code><a href="print.BootstrapResult.html">print(<i>&lt;BootstrapResult&gt;</i>)</a></code>
 
@@ -267,10 +646,52 @@
 
         <dt>
 
+          <code><a href="print.ImputationBootstrapResult.html">print(<i>&lt;ImputationBootstrapResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for ImputationBootstrapResult</dd>
+
+        <dt>
+
+          <code><a href="print.LiMResult.html">print(<i>&lt;LiMResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for LiMResult</dd>
+
+        <dt>
+
           <code><a href="print.LingamResult.html">print(<i>&lt;LingamResult&gt;</i>)</a></code>
 
         </dt>
         <dd>Print method for LingamResult</dd>
+
+        <dt>
+
+          <code><a href="print.MultiGroupBootstrapResult.html">print(<i>&lt;MultiGroupBootstrapResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for MultiGroupBootstrapResult</dd>
+
+        <dt>
+
+          <code><a href="print.MultiGroupLingamResult.html">print(<i>&lt;MultiGroupLingamResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for MultiGroupLingamResult</dd>
+
+        <dt>
+
+          <code><a href="print.ParceLingamResult.html">print(<i>&lt;ParceLingamResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for ParceLingamResult</dd>
+
+        <dt>
+
+          <code><a href="print.RCDResult.html">print(<i>&lt;RCDResult&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for RCDResult</dd>
 
         <dt>
 
@@ -313,50 +734,9 @@
 
         </dt>
         <dd>Print method for var_stationarity</dd>
-
-        <dt>
-
-          <code><a href="summary_lingam.html">summary_lingam()</a></code>
-
-        </dt>
-        <dd>Summarize the goodness-of-fit of a Direct LiNGAM model at once</dd>
-
-        <dt>
-
-          <code><a href="test_residual_normality.html">test_residual_normality()</a></code>
-
-        </dt>
-        <dd>Test normality of residuals from Direct LiNGAM</dd>
-
-        <dt>
-
-          <code><a href="test_varlingam_residual_normality.html">test_varlingam_residual_normality()</a></code>
-
-        </dt>
-        <dd>Test the non-Gaussianity of VAR-LiNGAM residuals</dd>
-
-        <dt>
-
-          <code><a href="test_varlingam_residual_normality_all.html">test_varlingam_residual_normality_all()</a></code>
-
-        </dt>
-        <dd>Run several normality tests on VAR-LiNGAM residuals at once</dd>
-
-        <dt>
-
-          <code><a href="tidy.BootstrapResult.html">tidy(<i>&lt;BootstrapResult&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert a BootstrapResult to a tidy data.frame</dd>
-
-        <dt>
-
-          <code><a href="tidy.LingamResult.html">tidy(<i>&lt;LingamResult&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert a LingamResult to a tidy data.frame</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
@@ -364,7 +744,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

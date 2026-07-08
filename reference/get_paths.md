@@ -36,14 +36,24 @@ data.frame (path, effect, probability)
 ``` r
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
-#> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)
+bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+  n_sampling = 30L, reg_method = "ols", seed = 42
+)
+#> Bootstrap: 30 iterations, method=ols (sequential)
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.9 seconds.
+#> Completed in 0.2 seconds.
 get_paths(bs_model, 1, 6)
-#>   path   effect probability
-#> 1 1, 6 4.018861           1
+#>           path        effect probability
+#> 1         1, 6  4.0038996964  1.00000000
+#> 2      1, 5, 6  0.2347844496  0.40000000
+#> 3      1, 2, 6 -0.0533555108  0.33333333
+#> 4   1, 2, 5, 6 -0.0027424587  0.16666667
+#> 5   1, 5, 2, 6  0.0052283471  0.13333333
+#> 6 1, 3, 2,....  0.0002273752  0.03333333
+#> 7   1, 3, 2, 6  0.0016654412  0.03333333
+#> 8   1, 3, 5, 6  0.0018510027  0.03333333
+#> 9      1, 3, 6 -0.0051552729  0.03333333
 ```

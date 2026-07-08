@@ -44,13 +44,13 @@ A list of class `causal_order_stability`, containing:
 
 ``` r
 dat <- generate_lingam_sample_6()
-bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
-#> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)
+bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", seed = 42)
+#> Bootstrap: 30 iterations, method=ols (sequential)
 #>   iteration 1 / 30
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.9 seconds.
+#> Completed in 0.2 seconds.
 get_causal_order_stability(bs, labels = names(dat$data))
 #> === Causal Order Stability ===
 #> Bootstrap samples:       30

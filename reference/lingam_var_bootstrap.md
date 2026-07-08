@@ -103,6 +103,13 @@ with `parallel = TRUE`, L'Ecuyer streams via
 make results reproducible for a given `seed` and `n_cores`, but they do
 not match the sequential (`parallel = FALSE`) results.
 
+**On iteration failures:** as in
+[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md),
+each iteration runs inside a
+[`tryCatch()`](https://rdrr.io/r/base/conditions.html); a failing
+iteration is reported as a warning and excluded from the result instead
+of aborting the run. An error is raised only if every iteration fails.
+
 ## Examples
 
 ``` r

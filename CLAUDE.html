@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
 <th>説明</th>
 </tr></thead><tbody><tr><td><code>LingamResult</code></td>
 <td><code>R/lingam_direct.r</code></td>
-<td>Direct LiNGAMの推定結果</td>
+<td>Direct LiNGAMの推定結果（<code><a href="reference/lingam_high_dim.html">lingam_high_dim()</a></code> も同クラスを返す）</td>
 </tr><tr><td><code>BootstrapResult</code></td>
 <td><code>R/lingam_bootstrap.r</code></td>
 <td>Bootstrap安定性評価</td>
@@ -73,6 +73,24 @@
 </tr><tr><td><code>VARBootstrapResult</code></td>
 <td><code>R/lingam_var_bootstrap.r</code></td>
 <td>VARのBootstrap結果</td>
+</tr><tr><td><code>MultiGroupLingamResult</code></td>
+<td><code>R/lingam_multi_group.r</code></td>
+<td>MultiGroup Direct LiNGAMの推定結果</td>
+</tr><tr><td><code>MultiGroupBootstrapResult</code></td>
+<td><code>R/lingam_multi_group_bootstrap.r</code></td>
+<td>MultiGroupのBootstrap結果</td>
+</tr><tr><td><code>ParceLingamResult</code></td>
+<td><code>R/lingam_parce.r</code></td>
+<td>BottomUpParceLiNGAMの推定結果</td>
+</tr><tr><td><code>RCDResult</code></td>
+<td><code>R/lingam_rcd.r</code></td>
+<td>RCD（潜在交絡ありの因果探索）の推定結果</td>
+</tr><tr><td><code>LiMResult</code></td>
+<td><code>R/lingam_lim.r</code></td>
+<td>LiM（連続・離散混合データ）の推定結果</td>
+</tr><tr><td><code>ImputationBootstrapResult</code></td>
+<td><code>R/bootstrap_with_imputation.r</code></td>
+<td>多重代入つきBootstrap結果（<code><a href="reference/as_bootstrap_result.html">as_bootstrap_result()</a></code> で <code>BootstrapResult</code> に変換可）</td>
 </tr><tr><td><code>lingam_summary</code></td>
 <td><code>R/summary_lingam.r</code></td>
 <td>包括的な適合度サマリー</td>
@@ -80,9 +98,10 @@
 </div>
 <div class="section level3">
 <h3 id="主要アルゴリズム">主要アルゴリズム<a class="anchor" aria-label="anchor" href="#%E4%B8%BB%E8%A6%81%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0"></a></h3>
-<p><strong>Direct LiNGAM</strong> (<code>R/lingam_direct.r</code>): - <code>measure</code>: “pwling”（ペアワイズ独立）or “kernel”（カーネルベース） - <code>reg_method</code>: “ols” / “lasso” / “adaptive_lasso”（デフォルト） / “ridge” - 回帰バックエンドは <code>R/fit_regression.r</code>（glmnetが必要な手法あり） - 因果順序探索は <code>R/search_causal_order.r</code></p>
+<p><strong>Direct LiNGAM</strong> (<code>R/lingam_direct.r</code>): - <code>measure</code>: “pwling”（ペアワイズ独立）or “kernel”（カーネルベース） - <code>reg_method</code>: “ols” / “lasso” / “adaptive_lasso”（デフォルト） / “ridge” - 回帰バックエンドは <code>R/fit_regression.r</code>（glmnetが必要な手法あり） - 因果順序探索は <code>R/search_causal_order.r</code> - <code>measure = "kernel"</code> はn &gt; 1000でincomplete Cholesky低ランク近似（<code>kernel_mi_prepare_lowrank</code>/<code>kernel_mi_core_lowrank</code>）に自動切替、n &lt;= 1000は既存の正確計算（<code>kernel_mi_prepare</code>/<code>kernel_mi_core</code>）のまま</p>
 <p><strong>VAR-LiNGAM</strong> (<code>R/lingam_var.r</code>): - VARモデルを当てはめ、残差にDirect LiNGAMを適用 - ラグ選択基準: “bic”（デフォルト）/ “aic” / “hqic” / “fpe” - <code>adjacency_matrices[1,,]</code> が瞬時構造B0、以降がラグ行列</p>
 <p><strong>Bootstrap並列実行</strong> (<code>R/lingam_bootstrap.r</code>): - <code><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">parallel::makePSOCKcluster()</a></code> + L’Ecuyer RNGストリームで再現性を保証 - <code>n_cores</code> が変わると数値結果が変わる（設計上の仕様）</p>
+<p><strong>その他の移植アルゴリズム</strong>（いずれも Python cdt15/lingam からの移植）: - MultiGroup Direct LiNGAM (<code>R/lingam_multi_group.r</code>): 複数データセットの共通因果順序を同時推定 - BottomUpParceLiNGAM (<code>R/lingam_parce.r</code>): 潜在交絡に頑健、未解決ブロックは <code>NA</code> - RCD (<code>R/lingam_rcd.r</code>): 潜在交絡ペアを <code>NA</code> で表現、MLHSICR 回帰オプションあり - LiM (<code>R/lingam_lim.r</code>): 連続・離散混合データ対応 - HighDimDirectLiNGAM (<code>R/lingam_high_dim.r</code>): 高次元向け、<code>LingamResult</code> を返す - 独立性検定の共通基盤: HSIC (<code>R/hsic.r</code>)・F-correlation (<code>R/f_correlation.r</code>) - ユーティリティ: <code><a href="reference/evaluate_model_fit.html">evaluate_model_fit()</a></code>（lavaan による SEM 適合度）、<code><a href="reference/bootstrap_with_imputation.html">bootstrap_with_imputation()</a></code>（mice による多重代入つき Bootstrap）</p>
 </div>
 <div class="section level3">
 <h3 id="s3メソッドの在処">S3メソッドの在処<a class="anchor" aria-label="anchor" href="#s3%E3%83%A1%E3%82%BD%E3%83%83%E3%83%89%E3%81%AE%E5%9C%A8%E5%87%A6"></a></h3>
@@ -107,17 +126,26 @@
 <strong>ggplot2</strong>: <code>autoplot()</code> と診断プロット</li>
 <li>
 <strong>nortest / tseries</strong>: 残差正規性・定常性検定</li>
+<li>
+<strong>lavaan</strong>: <code><a href="reference/evaluate_model_fit.html">evaluate_model_fit()</a></code> のSEM適合度評価</li>
+<li>
+<strong>mice</strong>: <code><a href="reference/bootstrap_with_imputation.html">bootstrap_with_imputation()</a></code> の多重代入</li>
+<li>
+<strong>igraph / pcalg</strong>: 診断・vignetteでの比較用</li>
 </ul></div>
 </div>
 <div class="section level2">
 <h2 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a></h2>
-<p>テストは <code>tests/testthat/</code> に16ファイル。スナップショットは <code>tests/testthat/_snaps/</code> に保存。</p>
-<p>入力バリデーション、S3クラス確認、並列実行再現性、スナップショット比較の4パターンが中心。</p>
+<p>テストは <code>tests/testthat/</code> に23ファイル（testthat edition 3）。<code>_snaps/</code> は使わず、 決定的な golden-value 方式（期待値をテスト内にピン留め、例: <code>test-lingam_var_snapshot.R</code>）で 数値回帰を検出する。</p>
+<p>入力バリデーション、S3クラス確認、並列実行再現性、golden-value 比較の4パターンが中心。 オプション依存（glmnet / lavaan / mice / DiagrammeR / ggplot2 等）を使うテストは <code>skip_if_not_installed()</code> でガードする。</p>
 </div>
 <div class="section level2">
 <h2 id="cicd">CI/CD<a class="anchor" aria-label="anchor" href="#cicd"></a></h2>
-<p><code>.github/workflows/pkgdown.yaml</code> のみ。main/masterへのpushまたはリリース時にpkgdownサイトをgh-pagesへデプロイする。R CMD checkのCIは設定されていない。</p>
-</div>
+<ul><li>
+<code>.github/workflows/R-CMD-check.yaml</code>: Ubuntu (devel/release/oldrel-1)・Windows・macOS で R CMD check を実行</li>
+<li>
+<code>.github/workflows/pkgdown.yaml</code>: main/masterへのpushまたはリリース時にpkgdownサイトをgh-pagesへデプロイ</li>
+</ul></div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -129,7 +157,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

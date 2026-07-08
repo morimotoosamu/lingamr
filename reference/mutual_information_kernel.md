@@ -1,6 +1,9 @@
 # Kernel-based mutual information
 
-Kernel-based mutual information
+Dispatches to the incomplete-Cholesky low-rank path for n above the
+low-rank threshold (matching the kappa/sigma switch in
+[`search_causal_order_kernel()`](https://morimotoosamu.github.io/lingamr/reference/search_causal_order_kernel.md));
+below the threshold it calls the exact path unchanged.
 
 ## Usage
 

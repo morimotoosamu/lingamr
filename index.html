@@ -16,8 +16,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="LiNGAM Algorithms for Causal Discovery">
-<meta name="description" content="R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery. Based on the Python implementation by Ikeuchi et al. (2023) &lt;https://github.com/cdt15/lingam&gt;. The VAR-LiNGAM residual diagnostics are inspired by the VARLiNGAM R code of Moneta et al. &lt;https://sites.google.com/site/dorisentner/publications/VARLiNGAM&gt;.">
-<meta property="og:description" content="R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery. Based on the Python implementation by Ikeuchi et al. (2023) &lt;https://github.com/cdt15/lingam&gt;. The VAR-LiNGAM residual diagnostics are inspired by the VARLiNGAM R code of Moneta et al. &lt;https://sites.google.com/site/dorisentner/publications/VARLiNGAM&gt;.">
+<meta name="description" content="R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery, following Shimizu et al. (2011) &lt;https://www.jmlr.org/papers/v12/shimizu11a.html&gt;. Based on the Python implementation by Ikeuchi et al. (2023) &lt;https://github.com/cdt15/lingam&gt;. The VAR-LiNGAM residual diagnostics are inspired by the VARLiNGAM R code of Moneta et al. &lt;https://sites.google.com/site/dorisentner/publications/VARLiNGAM&gt;.">
+<meta property="og:description" content="R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery, following Shimizu et al. (2011) &lt;https://www.jmlr.org/papers/v12/shimizu11a.html&gt;. Based on the Python implementation by Ikeuchi et al. (2023) &lt;https://github.com/cdt15/lingam&gt;. The VAR-LiNGAM residual diagnostics are inspired by the VARLiNGAM R code of Moneta et al. &lt;https://sites.google.com/site/dorisentner/publications/VARLiNGAM&gt;.">
 <meta property="og:image" content="https://morimotoosamu.github.io/lingamr/logo.png">
 </head>
 <body>
@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,14 @@
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
 </h2>
 <ul>
-<li>Implementation of the Direct LiNGAM algorithm</li>
+<li>Direct LiNGAM (<code><a href="reference/lingam_direct.html">lingam_direct()</a></code>), with selectable regression backends (OLS, LASSO, adaptive LASSO, ridge) for adjacency-matrix estimation</li>
+<li>VAR-LiNGAM (<code><a href="reference/lingam_var.html">lingam_var()</a></code>) for time series causal discovery</li>
+<li>Algorithms robust against latent confounders: BottomUpParceLiNGAM (<code><a href="reference/lingam_parce.html">lingam_parce()</a></code>) and RCD (<code><a href="reference/lingam_rcd.html">lingam_rcd()</a></code>)</li>
+<li>MultiGroupDirectLiNGAM (<code><a href="reference/lingam_multi_group.html">lingam_multi_group()</a></code>) for jointly estimating a shared causal order across multiple datasets</li>
+<li>HighDimDirectLiNGAM (<code><a href="reference/lingam_high_dim.html">lingam_high_dim()</a></code>) for high-dimensional data (large <code>p</code>, or <code>p &gt; n</code>)</li>
+<li>LiM (<code><a href="reference/lingam_lim.html">lingam_lim()</a></code>) for causal discovery on mixed continuous/binary data</li>
+<li>
+<code><a href="reference/bootstrap_with_imputation.html">bootstrap_with_imputation()</a></code> for causal discovery on data with missing values, and <code><a href="reference/evaluate_model_fit.html">evaluate_model_fit()</a></code> for SEM-based fit evaluation via lavaan</li>
 <li>Stability assessment of causal structures using the bootstrap method, including causal-order stability</li>
 <li>Model diagnostics: residual independence / normality tests and a one-call <code><a href="reference/summary_lingam.html">summary_lingam()</a></code>
 </li>
@@ -179,7 +186,7 @@
 <li>Takahiko Umeyama</li>
 <li>JMRA (Japan Marketing Research Association)</li>
 </ul>
-<p>Development of this package was assisted by AI coding tools (Google Gemini and Anthropic Claude). All AI-generated code was reviewed, tested, and validated by the author.</p>
+<p>Development of this package was assisted by AI coding tools (Google Gemini and Anthropic Claude). The author reviewed, tested, and validated all AI-generated code.</p>
 </div>
 <div class="section level2">
 <h2 id="feedback">Feedback<a class="anchor" aria-label="anchor" href="#feedback"></a>
@@ -235,7 +242,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

@@ -20,7 +20,11 @@ get_error_independence_p_values(X, lingam_result, method = "spearman")
 
 - method:
 
-  type of correlation coefficient ("spearman", "pearson", "kendall")
+  type of correlation coefficient ("spearman", "pearson", "kendall").
+  "kendall" uses the O(n^2)-per-pair algorithm in
+  [`stats::cor.test()`](https://rdrr.io/r/stats/cor.test.html); for
+  large `n` (beyond 5000) this warns, and "spearman" is a much faster
+  alternative with similar rank-based semantics.
 
 ## Value
 
@@ -34,27 +38,27 @@ LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Run Direct LiNGAM
 result <- LiNGAM_sample_1000$data |>
-  lingam_direct()
+  lingam_direct(reg_method = "ols")
 
 # Compute p-values (default: Spearman)
 p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
 round(p_vals, 3)
 #>       x0    x1    x2    x3    x4    x5
-#> x0    NA 0.988 0.214 0.976 0.484 0.954
-#> x1 0.988    NA 0.986 0.991 0.323 0.882
-#> x2 0.214 0.986    NA 0.919 0.100 0.124
-#> x3 0.976 0.991 0.919    NA 0.806 0.974
-#> x4 0.484 0.323 0.100 0.806    NA 0.643
-#> x5 0.954 0.882 0.124 0.974 0.643    NA
+#> x0    NA 0.980 0.978 0.990 0.997 0.962
+#> x1 0.980    NA 0.995 0.997 0.943 0.999
+#> x2 0.978 0.995    NA 0.919 0.945 0.995
+#> x3 0.990 0.997 0.919    NA 0.989 0.999
+#> x4 0.997 0.943 0.945 0.989    NA 0.986
+#> x5 0.962 0.999 0.995 0.999 0.986    NA
 
 # Compute with Kendall
 p_vals_k <- get_error_independence_p_values(LiNGAM_sample_1000$data, result, method = "kendall")
 round(p_vals_k, 3)
 #>       x0    x1    x2    x3    x4    x5
-#> x0    NA 0.986 0.225 0.996 0.478 0.961
-#> x1 0.986    NA 0.978 0.969 0.320 0.894
-#> x2 0.225 0.978    NA 0.912 0.104 0.131
-#> x3 0.996 0.969 0.912    NA 0.798 0.954
-#> x4 0.478 0.320 0.104 0.798    NA 0.641
-#> x5 0.961 0.894 0.131 0.954 0.641    NA
+#> x0    NA 0.994 0.993 0.988 0.979 0.964
+#> x1 0.994    NA 0.976 0.979 0.948 0.989
+#> x2 0.993 0.976    NA 0.912 0.961 0.972
+#> x3 0.988 0.979 0.912    NA 1.000 0.986
+#> x4 0.979 0.948 0.961 1.000    NA 0.995
+#> x5 0.964 0.989 0.972 0.986 0.995    NA
 ```

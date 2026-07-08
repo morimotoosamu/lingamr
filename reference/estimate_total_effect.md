@@ -36,8 +36,8 @@ estimate_total_effect(
 
 - method:
 
-  Regression method ("ols", "lasso", "adaptive_lasso"). Default is
-  adaptive_lasso
+  Regression method ("ols", "lasso", "adaptive_lasso", "ridge"). Default
+  is adaptive_lasso
 
 - lambda:
 
@@ -59,7 +59,7 @@ Estimated total causal effect
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000$data |>
-  lingam_direct()
+  lingam_direct(reg_method = "ols")
 
 LiNGAM_sample_1000$data |>
   estimate_total_effect(model, 4, 1)

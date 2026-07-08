@@ -28,13 +28,19 @@ devtools::release()
 
 ### S3クラスと対応ファイル
 
-| クラス               | ソースファイル             | 説明                    |
-|----------------------|----------------------------|-------------------------|
-| `LingamResult`       | `R/lingam_direct.r`        | Direct LiNGAMの推定結果 |
-| `BootstrapResult`    | `R/lingam_bootstrap.r`     | Bootstrap安定性評価     |
-| `VARLiNGAMResult`    | `R/lingam_var.r`           | VAR-LiNGAMの推定結果    |
-| `VARBootstrapResult` | `R/lingam_var_bootstrap.r` | VARのBootstrap結果      |
-| `lingam_summary`     | `R/summary_lingam.r`       | 包括的な適合度サマリー  |
+| クラス | ソースファイル | 説明 |
+|----|----|----|
+| `LingamResult` | `R/lingam_direct.r` | Direct LiNGAMの推定結果（[`lingam_high_dim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_high_dim.md) も同クラスを返す） |
+| `BootstrapResult` | `R/lingam_bootstrap.r` | Bootstrap安定性評価 |
+| `VARLiNGAMResult` | `R/lingam_var.r` | VAR-LiNGAMの推定結果 |
+| `VARBootstrapResult` | `R/lingam_var_bootstrap.r` | VARのBootstrap結果 |
+| `MultiGroupLingamResult` | `R/lingam_multi_group.r` | MultiGroup Direct LiNGAMの推定結果 |
+| `MultiGroupBootstrapResult` | `R/lingam_multi_group_bootstrap.r` | MultiGroupのBootstrap結果 |
+| `ParceLingamResult` | `R/lingam_parce.r` | BottomUpParceLiNGAMの推定結果 |
+| `RCDResult` | `R/lingam_rcd.r` | RCD（潜在交絡ありの因果探索）の推定結果 |
+| `LiMResult` | `R/lingam_lim.r` | LiM（連続・離散混合データ）の推定結果 |
+| `ImputationBootstrapResult` | `R/bootstrap_with_imputation.r` | 多重代入つきBootstrap結果（[`as_bootstrap_result()`](https://morimotoosamu.github.io/lingamr/reference/as_bootstrap_result.md) で `BootstrapResult` に変換可） |
+| `lingam_summary` | `R/summary_lingam.r` | 包括的な適合度サマリー |
 
 **重要な規約:** 隣接行列 `B[i,j]` は変数 j → i の因果係数を表す。
 
@@ -44,7 +50,10 @@ devtools::release()
 “pwling”（ペアワイズ独立）or “kernel”（カーネルベース） - `reg_method`:
 “ols” / “lasso” / “adaptive_lasso”（デフォルト） / “ridge” -
 回帰バックエンドは `R/fit_regression.r`（glmnetが必要な手法あり） -
-因果順序探索は `R/search_causal_order.r`
+因果順序探索は `R/search_causal_order.r` - `measure = "kernel"` はn \>
+1000でincomplete
+Cholesky低ランク近似（`kernel_mi_prepare_lowrank`/`kernel_mi_core_lowrank`）に自動切替、n
+\<= 1000は既存の正確計算（`kernel_mi_prepare`/`kernel_mi_core`）のまま
 
 **VAR-LiNGAM** (`R/lingam_var.r`): - VARモデルを当てはめ、残差にDirect
 LiNGAMを適用 - ラグ選択基準: “bic”（デフォルト）/ “aic” / “hqic” /
@@ -54,6 +63,20 @@ LiNGAMを適用 - ラグ選択基準: “bic”（デフォルト）/ “aic” 
 [`parallel::makePSOCKcluster()`](https://rdrr.io/r/parallel/makeCluster.html) +
 L’Ecuyer RNGストリームで再現性を保証 - `n_cores`
 が変わると数値結果が変わる（設計上の仕様）
+
+**その他の移植アルゴリズム**（いずれも Python cdt15/lingam
+からの移植）: - MultiGroup Direct LiNGAM (`R/lingam_multi_group.r`):
+複数データセットの共通因果順序を同時推定 - BottomUpParceLiNGAM
+(`R/lingam_parce.r`): 潜在交絡に頑健、未解決ブロックは `NA` - RCD
+(`R/lingam_rcd.r`): 潜在交絡ペアを `NA` で表現、MLHSICR
+回帰オプションあり - LiM (`R/lingam_lim.r`): 連続・離散混合データ対応 -
+HighDimDirectLiNGAM (`R/lingam_high_dim.r`): 高次元向け、`LingamResult`
+を返す - 独立性検定の共通基盤: HSIC (`R/hsic.r`)・F-correlation
+(`R/f_correlation.r`) - ユーティリティ:
+[`evaluate_model_fit()`](https://morimotoosamu.github.io/lingamr/reference/evaluate_model_fit.md)（lavaan
+による SEM
+適合度）、[`bootstrap_with_imputation()`](https://morimotoosamu.github.io/lingamr/reference/bootstrap_with_imputation.md)（mice
+による多重代入つき Bootstrap）
 
 ### S3メソッドの在処
 
@@ -71,16 +94,28 @@ L’Ecuyer RNGストリームで再現性を保証 - `n_cores`
   のインタラクティブDAG
 - **ggplot2**: `autoplot()` と診断プロット
 - **nortest / tseries**: 残差正規性・定常性検定
+- **lavaan**:
+  [`evaluate_model_fit()`](https://morimotoosamu.github.io/lingamr/reference/evaluate_model_fit.md)
+  のSEM適合度評価
+- **mice**:
+  [`bootstrap_with_imputation()`](https://morimotoosamu.github.io/lingamr/reference/bootstrap_with_imputation.md)
+  の多重代入
+- **igraph / pcalg**: 診断・vignetteでの比較用
 
 ## Testing
 
-テストは `tests/testthat/` に16ファイル。スナップショットは
-`tests/testthat/_snaps/` に保存。
+テストは `tests/testthat/` に23ファイル（testthat edition 3）。`_snaps/`
+は使わず、 決定的な golden-value 方式（期待値をテスト内にピン留め、例:
+`test-lingam_var_snapshot.R`）で 数値回帰を検出する。
 
-入力バリデーション、S3クラス確認、並列実行再現性、スナップショット比較の4パターンが中心。
+入力バリデーション、S3クラス確認、並列実行再現性、golden-value
+比較の4パターンが中心。 オプション依存（glmnet / lavaan / mice /
+DiagrammeR / ggplot2 等）を使うテストは `skip_if_not_installed()`
+でガードする。
 
 ## CI/CD
 
-`.github/workflows/pkgdown.yaml`
-のみ。main/masterへのpushまたはリリース時にpkgdownサイトをgh-pagesへデプロイする。R
-CMD checkのCIは設定されていない。
+- `.github/workflows/R-CMD-check.yaml`: Ubuntu
+  (devel/release/oldrel-1)・Windows・macOS で R CMD check を実行
+- `.github/workflows/pkgdown.yaml`:
+  main/masterへのpushまたはリリース時にpkgdownサイトをgh-pagesへデプロイ

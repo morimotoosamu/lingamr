@@ -6,7 +6,7 @@ vector
 ## Usage
 
 ``` r
-residual_vec(xi, xj, standardized = FALSE)
+residual_vec(xi, xj)
 ```
 
 ## Arguments
@@ -18,10 +18,6 @@ residual_vec(xi, xj, standardized = FALSE)
 - xj:
 
   Explanatory variable vector
-
-- standardized:
-
-  Whether the data is already standardized (default: FALSE)
 
 ## Value
 

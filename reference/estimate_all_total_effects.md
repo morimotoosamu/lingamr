@@ -26,7 +26,7 @@ estimate_all_total_effects(
 
 - method:
 
-  Regression method ("ols", "lasso", "adaptive_lasso")
+  Regression method ("ols", "lasso", "adaptive_lasso", "ridge")
 
 - lambda:
 
@@ -50,15 +50,15 @@ Matrix of total causal effects (n_features x n_features). **Convention:
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000$data |>
-  lingam_direct()
+  lingam_direct(reg_method = "ols")
 
 LiNGAM_sample_1000$data |>
   estimate_all_total_effects(model)
 #>          x0 x1        x2        x3 x4 x5
 #> x0 0.000000  0  0.000000  3.033460  0  0
-#> x1 2.896907  0  1.909712 21.058733  0  0
+#> x1 2.987779  0  1.936920 21.058733  0  0
 #> x2 0.000000  0  0.000000  5.992677  0  0
 #> x3 0.000000  0  0.000000  0.000000  0  0
-#> x4 8.001464  0 -1.308131 18.276121  0  0
-#> x5 4.015103  0  0.000000 12.179395  0  0
+#> x4 8.004531  0 -1.128548 18.276121  0  0
+#> x5 4.014974  0  0.000000 12.179395  0  0
 ```

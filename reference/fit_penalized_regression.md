@@ -33,7 +33,9 @@ fit_penalized_regression(y, Xp_mat, alpha, lambda, lambda_seq)
 
 - lambda_seq:
 
-  numeric vector of lambda values passed to glmnet
+  numeric vector of (relative) lambda values, scaled internally by
+  [`lambda_scale_factor()`](https://morimotoosamu.github.io/lingamr/reference/lambda_scale_factor.md)
+  to the response's natural scale before use
 
 ## Value
 

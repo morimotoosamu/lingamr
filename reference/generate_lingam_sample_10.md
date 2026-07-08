@@ -40,13 +40,13 @@ list(data, true_adjacency)
 ``` r
 # Non-Gaussian (LiNGAM works well)
 X_nongauss <- generate_lingam_sample_10(noise_dist = "uniform")
-result <- lingam_direct(X_nongauss$data)
+result <- lingam_direct(X_nongauss$data, reg_method = "ols")
 result$causal_order
 #>  [1]  4  3  1  5  6  8  2  9  7 10
 
 # Gaussian (LiNGAM may fail)
 X_gauss <- generate_lingam_sample_10(noise_dist = "gaussian")
-result <- lingam_direct(X_gauss$data)
+result <- lingam_direct(X_gauss$data, reg_method = "ols")
 result$causal_order
 #>  [1] 10  2  7  3  9  4  6  5  8  1
 ```

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,43 +89,77 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">LiNGAM_sample_1000</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>, n_sampling <span class="op">=</span> <span class="fl">30L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)</span>
+<span class="r-in"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>,</span></span>
+<span class="r-in"><span>  n_sampling <span class="op">=</span> <span class="fl">30L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">42</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 30 iterations, method=ols (sequential)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 1 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 10 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 20 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 30 / 30</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 0.9 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 0.2 seconds.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">get_causal_direction_counts</span><span class="op">(</span><span class="va">bs_model</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    from to count proportion mean_effect median_effect   sd_effect    ci_lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  6    30 1.00000000  4.02010918    4.01886128 0.009510235  4.00298581</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  2    29 0.96666667  2.98872289    2.98691378 0.029595289  2.94808621</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  5    29 0.96666667  8.02805949    8.03049041 0.030493711  7.97909377</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     3  2    29 0.96666667  2.00133847    2.00270222 0.015820048  1.97089548</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  5    29 0.96666667 -1.01545079   -1.01650518 0.015564566 -1.03972182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     4  1    29 0.96666667  3.03159775    3.03291869 0.035791478  2.96698487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7     4  3    29 0.96666667  6.00046795    6.00363746 0.031652501  5.94254816</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8     2  1     1 0.03333333  0.05299398    0.05299398 0.000000000  0.05299398</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9     2  3     1 0.03333333  0.40422428    0.40422428 0.000000000  0.40422428</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10    2  5     1 0.03333333  0.90679690    0.90679690 0.000000000  0.90679690</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    3  4     1 0.03333333  0.16165370    0.16165370 0.000000000  0.16165370</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12    5  1     1 0.03333333  0.10459193    0.10459193 0.000000000  0.10459193</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13    5  3     1 0.03333333 -0.13879324   -0.13879324 0.000000000 -0.13879324</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       ci_upper from_name to_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   4.03756004        x0      x5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   3.04468103        x0      x1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   8.08567538        x0      x4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   2.02581141        x2      x1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  -0.98775234        x2      x4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   3.09090167        x3      x0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7   6.05479799        x3      x2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8   0.05299398        x1      x0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9   0.40422428        x1      x2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10  0.90679690        x1      x4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.16165370        x2      x3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12  0.10459193        x4      x0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13 -0.13879324        x4      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to count proportion   mean_effect median_effect  sd_effect     ci_lower</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  6    30 1.00000000  3.9169074323   4.003899696 0.21847967  3.445944525</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  2    29 0.96666667  3.1965221742   3.068221838 0.30992203  2.841587361</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  5    29 0.96666667  8.0389161985   8.006451065 0.10854439  7.880941612</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     3  2    29 0.96666667  1.9673174150   1.966453543 0.05027476  1.879777124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  5    29 0.96666667 -1.0480749405  -1.053357169 0.06179135 -1.137049836</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     4  1    29 0.96666667  3.1441078645   3.091442871 0.17659155  2.932002923</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     4  2    29 0.96666667  0.0185014076  -0.008653801 0.22438674 -0.443300570</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     4  3    29 0.96666667  6.0253099490   6.006990357 0.08010239  5.901857344</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  5    29 0.96666667  0.4045350222   0.382649748 0.23513863  0.037881264</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  6    29 0.96666667 -0.1622345285  -0.079885472 0.24550716 -0.646327934</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    6  2    19 0.63333333  0.0153784233   0.008629175 0.03166615 -0.024662694</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    5  2    18 0.60000000 -0.0500280758  -0.050117494 0.03396618 -0.097710792</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    3  6    17 0.56666667  0.0857324665   0.085303740 0.07256644 -0.052388557</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    6  5    17 0.56666667 -0.0006059292  -0.001975088 0.02392258 -0.041830447</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    3  1    16 0.53333333 -0.0321416604  -0.035631751 0.03269372 -0.087898264</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16    1  3    14 0.46666667 -0.2478974798  -0.262812042 0.11310103 -0.438743808</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17    5  6    13 0.43333333  0.0349666609   0.029746764 0.03185837 -0.019204672</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18    6  3    13 0.43333333  0.0619274966   0.067423011 0.02340254  0.023069303</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19    2  5    12 0.40000000  0.0492728268  -0.047501331 0.27277363 -0.064307429</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20    2  6    11 0.36666667 -0.0128677846  -0.016891773 0.03405618 -0.061464005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21    1  4     1 0.03333333  0.0111159044   0.011115904 0.00000000  0.011115904</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22    2  1     1 0.03333333  0.0428822972   0.042882297 0.00000000  0.042882297</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23    2  3     1 0.03333333  0.4080999577   0.408099958 0.00000000  0.408099958</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24    2  4     1 0.03333333  0.0010149466   0.001014947 0.00000000  0.001014947</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25    3  4     1 0.03333333  0.1360229125   0.136022912 0.00000000  0.136022912</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26    5  1     1 0.03333333  0.1075834029   0.107583403 0.00000000  0.107583403</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27    5  3     1 0.03333333 -0.1429104530  -0.142910453 0.00000000 -0.142910453</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28    5  4     1 0.03333333  0.0094097550   0.009409755 0.00000000  0.009409755</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29    6  4     1 0.03333333 -0.0049963432  -0.004996343 0.00000000 -0.004996343</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        ci_upper from_name to_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   4.220378958        x0      x5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   3.779718648        x0      x1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   8.208283705        x0      x4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   2.047119882        x2      x1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  -0.932471742        x2      x4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   3.530778717        x3      x0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   0.357810619        x3      x1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8   6.208911907        x3      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9   0.902335801        x3      x4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10  0.165966658        x3      x5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.079210779        x5      x1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12  0.009318859        x4      x1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13  0.190346233        x2      x5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14  0.037238724        x5      x4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15  0.023337357        x2      x0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16 -0.066736406        x0      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17  0.080052261        x4      x5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18  0.094281792        x5      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19  0.669829251        x1      x4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20  0.051706273        x1      x5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21  0.011115904        x0      x3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22  0.042882297        x1      x0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23  0.408099958        x1      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24  0.001014947        x1      x3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25  0.136022912        x2      x3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26  0.107583403        x4      x0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27 -0.142910453        x4      x2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28  0.009409755        x4      x3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29 -0.004996343        x5      x3</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -137,7 +171,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

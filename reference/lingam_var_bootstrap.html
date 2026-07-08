@@ -17,7 +17,7 @@ autoregressive structure). Port of the Python reference VARLiNGAM.bootstrap."><m
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -140,6 +140,10 @@ NULL to use <code>lags</code> directly.</p></dd>
 <code>parallel = TRUE</code>, L'Ecuyer streams via <code><a href="https://rdrr.io/r/parallel/RngStream.html" class="external-link">parallel::clusterSetRNGStream()</a></code> make
 results reproducible for a given <code>seed</code> and <code>n_cores</code>, but they do not match
 the sequential (<code>parallel = FALSE</code>) results.</p>
+<p><strong>On iteration failures:</strong> as in <code><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>, each iteration
+runs inside a <code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code>; a failing iteration is reported as a warning and
+excluded from the result instead of aborting the run. An error is raised
+only if every iteration fails.</p>
     </div>
 
     <div class="section level2">
@@ -167,7 +171,7 @@ the sequential (<code>parallel = FALSE</code>) results.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

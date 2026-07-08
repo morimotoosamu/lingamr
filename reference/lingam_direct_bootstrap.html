@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,8 @@
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  n_cores <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  n_cores <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  compute_total_effects <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -111,6 +112,17 @@ each bootstrap iteration is distributed across multiple cores.</p></dd>
 the number of cores is limited to a maximum of 2 for safety. Ignored when
 <code>parallel = FALSE</code>.</p></dd>
 
+
+<dt id="arg-compute-total-effects">compute_total_effects<a class="anchor" aria-label="anchor" href="#arg-compute-total-effects"></a></dt>
+<dd><p>Whether to also estimate total causal effects
+for every variable pair on each bootstrap iteration (logical, default
+<code>TRUE</code>). For the lasso-family regression methods this roughly doubles
+iteration cost (an additional regression per downstream variable beyond
+the adjacency-matrix fit). Set to <code>FALSE</code> to skip it when only edge/order
+stability is needed (<code><a href="get_probabilities.html">get_probabilities()</a></code>, <code><a href="get_causal_direction_counts.html">get_causal_direction_counts()</a></code>,
+<code><a href="get_directed_acyclic_graph_counts.html">get_directed_acyclic_graph_counts()</a></code>, <code><a href="get_causal_order_stability.html">get_causal_order_stability()</a></code>); in
+that case <code><a href="get_total_causal_effects.html">get_total_causal_effects()</a></code> errors if called on the result.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -122,6 +134,13 @@ the number of cores is limited to a maximum of 2 for safety. Ignored when
 socket cluster created by <code><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">parallel::makePSOCKcluster()</a></code>. The cluster is
 always released via <code><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit()</a></code>, whether the process finishes normally or
 an error occurs.</p>
+<p><strong>On iteration failures:</strong> each bootstrap iteration is run inside a
+<code><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch()</a></code>. If an iteration errors (e.g. a resample produces
+near-singular columns), a warning identifying the failed iteration is
+issued and that iteration is excluded from the result instead of aborting
+the entire run. The returned <code>BootstrapResult</code> reflects however many
+iterations actually succeeded; an error is raised only if every iteration
+fails.</p>
 <p><strong>On reproducibility:</strong> During parallel execution, L'Ecuyer parallel random
 number streams via <code><a href="https://rdrr.io/r/parallel/RngStream.html" class="external-link">parallel::clusterSetRNGStream()</a></code> are used. Results are
 reproducible given the same <code>seed</code> and same <code>n_cores</code>, but they do not
@@ -164,7 +183,7 @@ If you need results that exactly match the sequential version, use
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 10 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 20 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 30 / 30</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 0.9 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 1.0 seconds.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Parallel execution on 2 cores</span></span></span>
 <span class="r-in"><span><span class="va">bs_par</span> <span class="op">&lt;-</span> <span class="fu">lingam_direct_bootstrap</span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>,</span></span>
@@ -174,7 +193,7 @@ If you need results that exactly match the sequential version, use
 <span class="r-in"><span>  n_cores <span class="op">=</span> <span class="fl">2L</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 30 iterations, method=adaptive_lasso (parallel, 2 cores)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 2.5 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 1.8 seconds.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
@@ -187,7 +206,7 @@ If you need results that exactly match the sequential version, use
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

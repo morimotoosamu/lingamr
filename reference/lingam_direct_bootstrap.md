@@ -17,7 +17,8 @@ lingam_direct_bootstrap(
   seed = NULL,
   verbose = TRUE,
   parallel = FALSE,
-  n_cores = NULL
+  n_cores = NULL,
+  compute_total_effects = TRUE
 )
 ```
 
@@ -76,6 +77,22 @@ lingam_direct_bootstrap(
   number of cores is limited to a maximum of 2 for safety. Ignored when
   `parallel = FALSE`.
 
+- compute_total_effects:
+
+  Whether to also estimate total causal effects for every variable pair
+  on each bootstrap iteration (logical, default `TRUE`). For the
+  lasso-family regression methods this roughly doubles iteration cost
+  (an additional regression per downstream variable beyond the
+  adjacency-matrix fit). Set to `FALSE` to skip it when only edge/order
+  stability is needed
+  ([`get_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_probabilities.md),
+  [`get_causal_direction_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.md),
+  [`get_directed_acyclic_graph_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_directed_acyclic_graph_counts.md),
+  [`get_causal_order_stability()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.md));
+  in that case
+  [`get_total_causal_effects()`](https://morimotoosamu.github.io/lingamr/reference/get_total_causal_effects.md)
+  errors if called on the result.
+
 ## Value
 
 BootstrapResult (list)
@@ -88,6 +105,14 @@ socket cluster created by
 The cluster is always released via
 [`on.exit()`](https://rdrr.io/r/base/on.exit.html), whether the process
 finishes normally or an error occurs.
+
+**On iteration failures:** each bootstrap iteration is run inside a
+[`tryCatch()`](https://rdrr.io/r/base/conditions.html). If an iteration
+errors (e.g. a resample produces near-singular columns), a warning
+identifying the failed iteration is issued and that iteration is
+excluded from the result instead of aborting the entire run. The
+returned `BootstrapResult` reflects however many iterations actually
+succeeded; an error is raised only if every iteration fails.
 
 **On reproducibility:** During parallel execution, L'Ecuyer parallel
 random number streams via
@@ -132,7 +157,7 @@ bs_lasso <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.9 seconds.
+#> Completed in 1.0 seconds.
 
 # Parallel execution on 2 cores
 bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
@@ -142,6 +167,6 @@ bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
   n_cores = 2L
 )
 #> Bootstrap: 30 iterations, method=adaptive_lasso (parallel, 2 cores)
-#> Completed in 2.5 seconds.
+#> Completed in 1.8 seconds.
 # }
 ```

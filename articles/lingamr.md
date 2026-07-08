@@ -84,7 +84,9 @@ model <- x1k$data |>
 ```
 
 To use HSIC for assessing independence, set the `measure` argument to
-“kernel”. Note that HSIC is very computationally expensive.
+“kernel”. HSIC is computationally expensive; for `n > 1000`,
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+automatically switches to a low-rank approximation.
 
 ### Causal Order
 
@@ -115,7 +117,7 @@ model$adjacency_matrix |>
 #> x1 2.988  0  2.002 0.000  0  0
 #> x2 0.000  0  0.000 5.993  0  0
 #> x3 0.000  0  0.000 0.000  0  0
-#> x4 8.017  0 -1.009 0.000  0  0
+#> x4 8.000  0 -1.000 0.000  0  0
 #> x5 4.015  0  0.000 0.000  0  0
 ```
 
@@ -202,10 +204,10 @@ total_effects <- x1k$data |>
 round(total_effects, 3)
 #>       x0 x1     x2     x3 x4 x5
 #> x0 0.000  0  0.000  3.033  0  0
-#> x1 2.897  0  1.910 21.059  0  0
+#> x1 2.872  0  1.937 21.059  0  0
 #> x2 0.000  0  0.000  5.993  0  0
 #> x3 0.000  0  0.000  0.000  0  0
-#> x4 8.001  0 -1.308 18.276  0  0
+#> x4 7.910  0 -1.129 18.276  0  0
 #> x5 4.015  0  0.000 12.179  0  0
 ```
 
@@ -239,8 +241,8 @@ data.frame(
   total_causal_effect = round(total_effects["x1", c("x0", "x2", "x3")], 3)
 )
 #>    variable OLS_coefficient total_causal_effect
-#> x0       x0           3.237               2.897
-#> x2       x2           1.965               1.910
+#> x0       x0           3.237               2.872
+#> x2       x2           1.965               1.937
 #> x3       x3           0.014              21.059
 ```
 
@@ -374,7 +376,7 @@ model_pk1$adjacency_matrix |>
 #> x1 2.988  0  2.002 0.000  0  0
 #> x2 0.000  0  0.000 5.993  0  0
 #> x3 0.000  0  0.000 0.000  0  0
-#> x4 8.017  0 -1.009 0.000  0  0
+#> x4 8.000  0 -1.000 0.000  0  0
 #> x5 4.015  0  0.000 0.000  0  0
 
 model_pk1$adjacency_matrix |>
@@ -425,27 +427,27 @@ round(fit_ols$adjacency_matrix,    3)
 round(fit_lasso$adjacency_matrix,  3)
 #>       x0 x1     x2    x3 x4 x5
 #> x0 0.000  0  0.000 3.030  0  0
-#> x1 2.938  0  1.965 0.184  0  0
+#> x1 2.939  0  1.965 0.185  0  0
 #> x2 0.000  0  0.000 5.993  0  0
 #> x3 0.000  0  0.000 0.000  0  0
-#> x4 7.979  0 -0.989 0.000  0  0
-#> x5 3.977  0  0.000 0.000  0  0
+#> x4 7.924  0 -0.960 0.000  0  0
+#> x5 3.975  0  0.000 0.000  0  0
 round(fit_alasso$adjacency_matrix, 3)
 #>       x0 x1     x2    x3 x4 x5
 #> x0 0.000  0  0.000 3.033  0  0
 #> x1 2.988  0  2.002 0.000  0  0
 #> x2 0.000  0  0.000 5.993  0  0
 #> x3 0.000  0  0.000 0.000  0  0
-#> x4 8.017  0 -1.009 0.000  0  0
+#> x4 8.000  0 -1.000 0.000  0  0
 #> x5 4.015  0  0.000 0.000  0  0
 round(fit_ridge$adjacency_matrix,  3)
 #>       x0 x1     x2     x3    x4    x5
-#> x0 0.000  0 -0.016  3.123 0.000 0.000
-#> x1 2.172  0  2.043  0.170 0.057 0.084
+#> x0 0.000  0 -0.017  3.132 0.000 0.000
+#> x1 1.863  0  1.987  0.656 0.071 0.127
 #> x2 0.000  0  0.000  5.993 0.000 0.000
 #> x3 0.000  0  0.000  0.000 0.000 0.000
-#> x4 7.986  0 -1.028  0.209 0.000 0.000
-#> x5 2.858  0  0.204 -0.329 0.143 0.000
+#> x4 7.927  0 -0.997  0.203 0.000 0.000
+#> x5 2.407  0  0.254 -0.251 0.197 0.000
 ```
 
 OLS and Ridge tend to leave nonzero coefficients on all edges, whereas
@@ -475,7 +477,7 @@ fit_lam_min <- lingam_direct(x1k$data, lambda = "lambda.min")
 sum(fit_bic$adjacency_matrix     != 0)
 #> [1] 7
 sum(fit_lam_min$adjacency_matrix != 0)
-#> [1] 8
+#> [1] 7
 ```
 
 ## Independence between Error Variables
@@ -494,12 +496,12 @@ p_vals <- x1k$data |>
 
 round(p_vals, 3)
 #>       x0    x1    x2    x3    x4    x5
-#> x0    NA 0.988 0.214 0.976 0.484 0.954
-#> x1 0.988    NA 0.986 0.991 0.323 0.882
-#> x2 0.214 0.986    NA 0.919 0.100 0.124
-#> x3 0.976 0.991 0.919    NA 0.806 0.974
-#> x4 0.484 0.323 0.100 0.806    NA 0.643
-#> x5 0.954 0.882 0.124 0.974 0.643    NA
+#> x0    NA 0.988 0.214 0.976 0.876 0.952
+#> x1 0.988    NA 0.986 0.991 0.328 0.882
+#> x2 0.214 0.986    NA 0.919 0.051 0.124
+#> x3 0.976 0.991 0.919    NA 0.934 0.978
+#> x4 0.876 0.328 0.051 0.934    NA 0.650
+#> x5 0.952 0.882 0.124 0.978 0.650    NA
 ```
 
 ## The Non-Gaussianity Assumption
@@ -599,8 +601,8 @@ fit_gauss$adjacency_matrix |>
 #> x1  0 0.0  0.0  0 0.0 0.0
 #> x2  0 0.3  0.0  0 0.0 0.0
 #> x3  0 0.0  0.2  0 0.0 0.0
-#> x4  0 0.9 -2.7  0 0.0 1.3
-#> x5  0 1.2 -2.2  0 0.0 0.0
+#> x4  0 0.9 -2.6  0 0.0 1.3
+#> x5  0 1.2 -2.1  0 0.0 0.0
 ```
 
 Compared with the true structure, many edges are wrong (red) or missed
@@ -646,7 +648,7 @@ x1k$data |>
 #>        x1    0.9521 < 2.2e-16         TRUE    0.026   -1.213
 #>        x2    0.9557 < 2.2e-16         TRUE    0.083   -1.170
 #>        x3    0.9578  2.25e-16         TRUE    0.025   -1.163
-#>        x4    0.9546 < 2.2e-16         TRUE   -0.003   -1.205
+#>        x4    0.9544 < 2.2e-16         TRUE   -0.003   -1.206
 #>        x5    0.9536 < 2.2e-16         TRUE   -0.052   -1.206
 #> 
 #> Interpretation:
@@ -691,7 +693,7 @@ x1k$data |>
 #> --- Assumption 1: Independence of residuals ---
 #> Method:           spearman
 #> Dependent pairs:  0 / 15  (p < 0.050)
-#> Min p-value:      0.1002
+#> Min p-value:      0.0510
 #> => Residuals appear mutually independent (assumption supported).
 #> 
 #> --- Assumption 2: Non-Gaussianity of residuals ---
@@ -720,7 +722,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.2 seconds.
+#> Completed in 3.7 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -757,33 +759,33 @@ each path and the mean of the coefficients.
 bs_model |>
   get_causal_direction_counts(labels = names(x1k$data))
 #>    from to count proportion mean_effect median_effect  sd_effect    ci_lower
-#> 1     1  6   100       1.00  4.01535064    4.01518466 0.01127031  3.99552486
-#> 2     1  2    99       0.99  2.98223709    2.97929357 0.02843886  2.93018267
-#> 3     1  5    99       0.99  8.01741193    8.01499334 0.02793983  7.96982894
-#> 4     3  2    99       0.99  2.00484060    2.00654938 0.01477014  1.97675011
-#> 5     3  5    99       0.99 -1.00940817   -1.00898195 0.01434909 -1.03920338
-#> 6     4  1    99       0.99  3.03520802    3.03586526 0.03002439  2.97854657
-#> 7     4  3    99       0.99  5.99647035    5.99745219 0.03184846  5.94046661
-#> 8     2  1     1       0.01  0.05299398    0.05299398 0.00000000  0.05299398
-#> 9     2  3     1       0.01  0.40422428    0.40422428 0.00000000  0.40422428
+#> 1     1  6   100       1.00  4.01532920    4.01513886 0.01126767  3.99550980
+#> 2     1  2    99       0.99  2.98181621    2.97864538 0.02849338  2.92980702
+#> 3     1  5    99       0.99  8.00994011    8.00748238 0.02951185  7.95680521
+#> 4     3  2    99       0.99  2.00498455    2.00660933 0.01479861  1.97675886
+#> 5     3  5    99       0.99 -1.00529230   -1.00485827 0.01523485 -1.03801290
+#> 6     4  1    99       0.99  3.03521019    3.03586526 0.03001961  2.97855949
+#> 7     4  3    99       0.99  5.99644109    5.99745219 0.03186571  5.94050363
+#> 8     2  1     1       0.01  0.05304916    0.05304916 0.00000000  0.05304916
+#> 9     2  3     1       0.01  0.40196452    0.40196452 0.00000000  0.40196452
 #> 10    2  5     1       0.01  0.90679690    0.90679690 0.00000000  0.90679690
-#> 11    3  4     1       0.01  0.16165370    0.16165370 0.00000000  0.16165370
-#> 12    5  1     1       0.01  0.10459193    0.10459193 0.00000000  0.10459193
-#> 13    5  3     1       0.01 -0.13879324   -0.13879324 0.00000000 -0.13879324
+#> 11    3  4     1       0.01  0.16166764    0.16166764 0.00000000  0.16166764
+#> 12    5  1     1       0.01  0.10453910    0.10453910 0.00000000  0.10453910
+#> 13    5  3     1       0.01 -0.13636255   -0.13636255 0.00000000 -0.13636255
 #>       ci_upper from_name to_name
-#> 1   4.03705179        x0      x5
-#> 2   3.03872609        x0      x1
-#> 3   8.07779274        x0      x4
-#> 4   2.03177449        x2      x1
-#> 5  -0.98291713        x2      x4
-#> 6   3.09306961        x3      x0
+#> 1   4.03698551        x0      x5
+#> 2   3.03860193        x0      x1
+#> 3   8.07414013        x0      x4
+#> 4   2.03193816        x2      x1
+#> 5  -0.97488336        x2      x4
+#> 6   3.09304642        x3      x0
 #> 7   6.06134091        x3      x2
-#> 8   0.05299398        x1      x0
-#> 9   0.40422428        x1      x2
+#> 8   0.05304916        x1      x0
+#> 9   0.40196452        x1      x2
 #> 10  0.90679690        x1      x4
-#> 11  0.16165370        x2      x3
-#> 12  0.10459193        x4      x0
-#> 13 -0.13879324        x4      x2
+#> 11  0.16166764        x2      x3
+#> 12  0.10453910        x4      x0
+#> 13 -0.13636255        x4      x2
 ```
 
 ### Adjacency Matrix of Mean Causal Effects
@@ -800,9 +802,9 @@ bs_adjacency_matrix |>
 #>       [,1]  [,2]   [,3]  [,4]   [,5] [,6]
 #> [1,] 0.000 0.053  0.000 3.036  0.105    0
 #> [2,] 2.979 0.000  2.007 0.000  0.000    0
-#> [3,] 0.000 0.404  0.000 5.997 -0.139    0
+#> [3,] 0.000 0.402  0.000 5.997 -0.136    0
 #> [4,] 0.000 0.000  0.162 0.000  0.000    0
-#> [5,] 8.015 0.907 -1.009 0.000  0.000    0
+#> [5,] 8.007 0.907 -1.005 0.000  0.000    0
 #> [6,] 4.015 0.000  0.000 0.000  0.000    0
 ```
 
@@ -846,27 +848,27 @@ We compute the mean total effect of each path.
 bs_model |>
   get_total_causal_effects()
 #>    from to      effect probability
-#> 1     1  6  4.01522820        1.00
-#> 2     1  2  2.89964231        0.99
-#> 3     1  5  8.00358754        0.99
-#> 4     3  2  1.93096970        0.99
-#> 5     3  5 -1.24882407        0.99
+#> 1     1  6  4.01520158        1.00
+#> 2     1  2  2.87431611        0.99
+#> 3     1  5  7.90813117        0.99
+#> 4     3  2  1.95874622        0.99
+#> 5     3  5 -1.06193484        0.99
 #> 6     4  1  3.03586526        0.99
 #> 7     4  2 21.07027271        0.99
 #> 8     4  3  5.99805118        0.99
 #> 9     4  5 18.28272145        0.99
 #> 10    4  6 12.18719857        0.99
-#> 11    6  2  0.20011220        0.11
-#> 12    3  6 -0.32306351        0.07
-#> 13    2  1  0.14794503        0.01
-#> 14    2  3  0.27850920        0.01
-#> 15    2  4  0.04611007        0.01
-#> 16    2  5  0.90679690        0.01
-#> 17    2  6  0.59359217        0.01
-#> 18    3  4  0.16191585        0.01
-#> 19    5  1  0.10506715        0.01
-#> 20    5  3 -0.13869103        0.01
-#> 21    5  6  0.41846402        0.01
+#> 11    3  6 -0.24574320        0.04
+#> 12    2  1  0.14794503        0.01
+#> 13    2  3  0.27850920        0.01
+#> 14    2  4  0.04611007        0.01
+#> 15    2  5  0.90679690        0.01
+#> 16    2  6  0.59359217        0.01
+#> 17    3  4  0.16192779        0.01
+#> 18    5  1  0.10498716        0.01
+#> 19    5  3 -0.13625059        0.01
+#> 20    5  6  0.42156703        0.01
+#> 21    6  2  0.24518629        0.01
 ```
 
 We turn the bootstrap results into a causal graph. By default, only
@@ -935,12 +937,12 @@ for each direction, etc.
 # Convert the estimated adjacency matrix to an edge list
 tidy(model)
 #>   from to  estimate
-#> 1   x0 x1  2.987704
-#> 2   x0 x4  8.016514
-#> 3   x0 x5  4.015008
+#> 1   x0 x1  2.987705
+#> 2   x0 x4  8.000096
+#> 3   x0 x5  4.014962
 #> 4   x2 x1  2.001708
-#> 5   x2 x4 -1.009459
-#> 6   x3 x0  3.032965
+#> 5   x2 x4 -1.000306
+#> 6   x3 x0  3.032952
 #> 7   x3 x2  5.992677
 
 # One-row summary of the whole model
@@ -951,33 +953,33 @@ glance(model)
 # Direction-wise summary of the bootstrap results (variable names via labels)
 tidy(bs_model, labels = names(x1k$data))
 #>    from to count proportion mean_effect median_effect  sd_effect    ci_lower
-#> 1     1  6   100       1.00  4.01535064    4.01518466 0.01127031  3.99552486
-#> 2     1  2    99       0.99  2.98223709    2.97929357 0.02843886  2.93018267
-#> 3     1  5    99       0.99  8.01741193    8.01499334 0.02793983  7.96982894
-#> 4     3  2    99       0.99  2.00484060    2.00654938 0.01477014  1.97675011
-#> 5     3  5    99       0.99 -1.00940817   -1.00898195 0.01434909 -1.03920338
-#> 6     4  1    99       0.99  3.03520802    3.03586526 0.03002439  2.97854657
-#> 7     4  3    99       0.99  5.99647035    5.99745219 0.03184846  5.94046661
-#> 8     2  1     1       0.01  0.05299398    0.05299398 0.00000000  0.05299398
-#> 9     2  3     1       0.01  0.40422428    0.40422428 0.00000000  0.40422428
+#> 1     1  6   100       1.00  4.01532920    4.01513886 0.01126767  3.99550980
+#> 2     1  2    99       0.99  2.98181621    2.97864538 0.02849338  2.92980702
+#> 3     1  5    99       0.99  8.00994011    8.00748238 0.02951185  7.95680521
+#> 4     3  2    99       0.99  2.00498455    2.00660933 0.01479861  1.97675886
+#> 5     3  5    99       0.99 -1.00529230   -1.00485827 0.01523485 -1.03801290
+#> 6     4  1    99       0.99  3.03521019    3.03586526 0.03001961  2.97855949
+#> 7     4  3    99       0.99  5.99644109    5.99745219 0.03186571  5.94050363
+#> 8     2  1     1       0.01  0.05304916    0.05304916 0.00000000  0.05304916
+#> 9     2  3     1       0.01  0.40196452    0.40196452 0.00000000  0.40196452
 #> 10    2  5     1       0.01  0.90679690    0.90679690 0.00000000  0.90679690
-#> 11    3  4     1       0.01  0.16165370    0.16165370 0.00000000  0.16165370
-#> 12    5  1     1       0.01  0.10459193    0.10459193 0.00000000  0.10459193
-#> 13    5  3     1       0.01 -0.13879324   -0.13879324 0.00000000 -0.13879324
+#> 11    3  4     1       0.01  0.16166764    0.16166764 0.00000000  0.16166764
+#> 12    5  1     1       0.01  0.10453910    0.10453910 0.00000000  0.10453910
+#> 13    5  3     1       0.01 -0.13636255   -0.13636255 0.00000000 -0.13636255
 #>       ci_upper from_name to_name
-#> 1   4.03705179        x0      x5
-#> 2   3.03872609        x0      x1
-#> 3   8.07779274        x0      x4
-#> 4   2.03177449        x2      x1
-#> 5  -0.98291713        x2      x4
-#> 6   3.09306961        x3      x0
+#> 1   4.03698551        x0      x5
+#> 2   3.03860193        x0      x1
+#> 3   8.07414013        x0      x4
+#> 4   2.03193816        x2      x1
+#> 5  -0.97488336        x2      x4
+#> 6   3.09304642        x3      x0
 #> 7   6.06134091        x3      x2
-#> 8   0.05299398        x1      x0
-#> 9   0.40422428        x1      x2
+#> 8   0.05304916        x1      x0
+#> 9   0.40196452        x1      x2
 #> 10  0.90679690        x1      x4
-#> 11  0.16165370        x2      x3
-#> 12  0.10459193        x4      x0
-#> 13 -0.13879324        x4      x2
+#> 11  0.16166764        x2      x3
+#> 12  0.10453910        x4      x0
+#> 13 -0.13636255        x4      x2
 ```
 
 ## A Larger Dataset (10 Variables)
@@ -1047,10 +1049,10 @@ tidy_dir <- data.frame(from = tidy_dir$from, to = tidy_dir$to,
 merge(tidy_dir, tidy_ica, by = c("from", "to"), sort = TRUE)
 #>   from to direct    ica
 #> 1   x0 x1  2.988  3.245
-#> 2   x0 x4  8.017  7.999
+#> 2   x0 x4  8.000  7.999
 #> 3   x0 x5  4.015  3.876
 #> 4   x2 x1  2.002  1.973
-#> 5   x2 x4 -1.009 -1.060
+#> 5   x2 x4 -1.000 -1.060
 #> 6   x3 x0  3.033  3.027
 #> 7   x3 x2  5.993  6.101
 ```
@@ -1072,10 +1074,10 @@ cmp$truth <- paste(cmp$from, cmp$to, sep = "->") %in% true_key
 cmp
 #>   from to direct    ica truth
 #> 1   x0 x1  2.988  3.245  TRUE
-#> 2   x0 x4  8.017  7.999  TRUE
+#> 2   x0 x4  8.000  7.999  TRUE
 #> 3   x0 x5  4.015  3.876  TRUE
 #> 4   x2 x1  2.002  1.973  TRUE
-#> 5   x2 x4 -1.009 -1.060  TRUE
+#> 5   x2 x4 -1.000 -1.060  TRUE
 #> 6   x3 x0  3.033  3.027  TRUE
 #> 7   x3 x2  5.993  6.101  TRUE
 ```
@@ -1144,7 +1146,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 sec
 #> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.2x
+#> theoretical factor 3.4x vs. observed 2.1x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1161,7 +1163,7 @@ cat(sprintf(
 ))
 #>               p = 10   p = 15
 #> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.01 sec   0.03 sec
+#> ICA-LiNGAM    :  0.02 sec   0.03 sec
 ```
 
 The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
@@ -1196,15 +1198,128 @@ tidy(r10) |>
   head(10)
 #>    from to   estimate
 #> 1    x0 x1 -1.3787175
-#> 2    x0 x2  1.0970109
-#> 3    x0 x3  0.9352380
-#> 4    x0 x5  1.2881634
-#> 5    x1 x2  0.9042926
-#> 6    x1 x3  1.4216545
-#> 7    x1 x5 -1.2929148
-#> 8    x1 x6  1.4634000
-#> 9    x1 x9  1.2499665
-#> 10   x2 x3 -1.4986808
+#> 2    x0 x2  1.1069608
+#> 3    x0 x3  0.9365537
+#> 4    x0 x5  1.2879537
+#> 5    x1 x2  0.9099343
+#> 6    x1 x3  1.4225647
+#> 7    x1 x5 -1.2930266
+#> 8    x1 x6  1.4634025
+#> 9    x1 x9  1.2511988
+#> 10   x2 x3 -1.4992033
+```
+
+## High-Dimensional Direct LiNGAM
+
+The $`O(p^3)`$ independence-test cost shown above becomes a real
+bottleneck once $`p`$ grows into the tens or hundreds, and breaks down
+entirely once $`p > n`$ (more variables than observations), where the
+usual regression-based adjacency estimation is no longer well defined.
+
+[`lingam_high_dim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_high_dim.md)
+implements HighDimDirectLiNGAM (Wang & Drton 2020), a variant designed
+for this regime. Instead of pairwise independence tests, it searches the
+causal order using moment statistics of non-Gaussianity, computed from a
+cached Gram matrix. The algorithm is deterministic (no random restarts),
+and it returns the same `LingamResult` object as
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md),
+so [`print()`](https://rdrr.io/r/base/print.html),
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html),
+[`plot_adjacency()`](https://morimotoosamu.github.io/lingamr/reference/plot_adjacency.md)
+and
+[`estimate_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect.md)
+all work unchanged.
+
+``` r
+
+hd_sample <- generate_lingam_sample_6(n = 500, seed = 1)
+hd_result <- lingam_high_dim(hd_sample$data)
+
+hd_result$causal_order
+#> [1] 4 3 1 5 2 6
+round(hd_result$adjacency_matrix, 3)
+#>       x0 x1     x2    x3 x4 x5
+#> x0 0.000  0  0.000 2.968  0  0
+#> x1 2.970  0  2.013 0.000  0  0
+#> x2 0.000  0  0.000 6.010  0  0
+#> x3 0.000  0  0.000 0.000  0  0
+#> x4 8.023  0 -1.000 0.000  0  0
+#> x5 4.013  0  0.000 0.000  0  0
+```
+
+When `n_samples <= n_features`, the usual BIC-based Adaptive LASSO
+cannot be used to estimate the adjacency matrix, so
+[`lingam_high_dim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_high_dim.md)
+falls back to a cross-validated LASSO
+([`glmnet::cv.glmnet`](https://glmnet.stanford.edu/reference/cv.glmnet.html))
+and emits a warning:
+
+``` r
+
+wide_sample <- generate_lingam_large_sample(p = 30, n = 25, seed = 1)
+wide_result <- lingam_high_dim(wide_sample$data)
+#> Warning: Since n_samples <= n_features, the adjacency matrix is estimated with
+#> cross-validated lasso (cv.glmnet) instead of BIC-based lambda selection.
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+#> Warning: Option grouped=FALSE enforced in cv.glmnet, since < 3 observations per
+#> fold
+
+wide_result$causal_order
+#>  [1]  2  1  3  8 20 13 27  4  5 12 26  6  7 16  9 15 14 23 10 18 21 11 22 24 29
+#> [26] 30 25 19 17 28
 ```
 
 ## A Case Where DirectLiNGAM Struggles: The Measurement Error Paradox
@@ -1320,7 +1435,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.6 seconds.
+#> Completed in 1.5 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
@@ -1415,7 +1530,7 @@ model
 #> Lagged adjacency matrix B1 (row = to, col = from):
 #>     x0    x1    x2
 #> x0 0.4 0.000 0.309
-#> x1 0.0 0.226 0.000
+#> x1 0.0 0.225 0.000
 #> x2 0.0 0.000 0.495
 ```
 
@@ -1443,7 +1558,7 @@ round(B1, 2)  # compare with s$true_M1
 #>     x0   x1   x2
 #> x0 0.4 0.00 0.31
 #> x1 0.0 0.23 0.00
-#> x2 0.0 0.00 0.49
+#> x2 0.0 0.00 0.50
 ```
 
 ### Lag Order Selection
@@ -1473,7 +1588,7 @@ stationary when all moduli are **strictly less than 1**.
 check_var_stationarity(model)
 #> === VAR Stationarity Check ===
 #> Lag order:         1
-#> Max |eigenvalue|:  0.4943  (threshold 1.00)
+#> Max |eigenvalue|:  0.4942  (threshold 1.00)
 #> Stationary:        YES
 ```
 
@@ -1501,7 +1616,7 @@ test_varlingam_residual_normality(model)
 #>  variable statistic   p_value is_non_gauss skewness kurtosis
 #>        x0    0.9498 < 2.2e-16         TRUE    0.088   -1.220
 #>        x1    0.9536 < 2.2e-16         TRUE   -0.007   -1.238
-#>        x2    0.9519 < 2.2e-16         TRUE   -0.046   -1.221
+#>        x2    0.9518 < 2.2e-16         TRUE   -0.046   -1.221
 #> 
 #> Interpretation:
 #>   is_non_gauss = TRUE  -> rejects normality (supports LiNGAM assumption)
@@ -1520,10 +1635,10 @@ test_varlingam_residual_normality_all(model, methods = c("shapiro", "jb"))
 #> Registered S3 method overwritten by 'quantmod':
 #>   method            from
 #>   as.zoo.data.frame zoo
-#>   variable    skewness  kurtosis    p_shapiro         p_jb all_non_gauss
-#> 1       x0  0.08801343 -1.219504 6.041150e-18 1.898481e-14          TRUE
-#> 2       x1 -0.00706622 -1.238433 3.113275e-17 1.365574e-14          TRUE
-#> 3       x2 -0.04637669 -1.220514 1.453019e-17 2.864375e-14          TRUE
+#>   variable     skewness  kurtosis    p_shapiro         p_jb all_non_gauss
+#> 1       x0  0.088013433 -1.219504 6.041150e-18 1.898481e-14          TRUE
+#> 2       x1 -0.007060832 -1.238431 3.114110e-17 1.365574e-14          TRUE
+#> 3       x2 -0.046381574 -1.220525 1.452023e-17 2.864375e-14          TRUE
 ```
 
 [`plot_varlingam_residual_qq()`](https://morimotoosamu.github.io/lingamr/reference/plot_varlingam_residual_qq.md)
@@ -1604,8 +1719,8 @@ probability.
 # Paths from x0 to x2 at the same time step (from_lag = 0)
 get_var_paths(bs_var, from_index = 1, to_index = 3)
 #>      path      effect probability
-#> 1 1, 2, 3 -0.28287819        1.00
-#> 2    1, 3  0.08065484        0.02
+#> 1 1, 2, 3 -0.28289316        1.00
+#> 2    1, 3  0.08085689        0.02
 ```
 
 ``` r
@@ -1613,17 +1728,540 @@ get_var_paths(bs_var, from_index = 1, to_index = 3)
 # Paths from x0(t-1) to x2(t)  (from_lag = 1)
 get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 #>            path       effect probability
-#> 1    4, 1, 2, 3 -0.112809271        1.00
-#> 2    4, 5, 2, 3 -0.062306657        1.00
-#> 3  4, 5, 6,....  0.024968865        1.00
-#> 4    4, 5, 6, 3 -0.139165424        1.00
-#> 5       4, 1, 3  0.034837247        0.02
-#> 6  4, 5, 6,.... -0.007769310        0.02
-#> 7  4, 6, 1,.... -0.007769310        0.02
-#> 8    4, 6, 1, 3  0.002034289        0.02
-#> 9       4, 6, 3  0.040311950        0.02
-#> 10      4, 2, 3 -0.068038894        0.01
-#> 11 4, 5, 6,.... -0.018272003        0.01
+#> 1    4, 1, 2, 3 -0.112845948        1.00
+#> 2    4, 5, 2, 3 -0.062338986        1.00
+#> 3  4, 5, 6,....  0.024970830        1.00
+#> 4    4, 5, 6, 3 -0.139242633        1.00
+#> 5       4, 1, 3  0.034930592        0.02
+#> 6  4, 5, 6,.... -0.007793044        0.02
+#> 7  4, 6, 1,.... -0.007793044        0.02
+#> 8    4, 6, 1, 3  0.002044126        0.02
+#> 9       4, 6, 3  0.040411503        0.02
+#> 10      4, 2, 3 -0.068176510        0.01
+#> 11 4, 5, 6,.... -0.018273144        0.01
+```
+
+## LiNGAM for Mixed Data (LiM)
+
+Direct LiNGAM assumes every variable is continuous.
+[`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
+relaxes this assumption and estimates a causal structure from data
+containing a mixture of continuous and binary (0/1) discrete variables,
+following Zeng et al. (2022). It combines a NOTEARS-style continuous
+optimization (the “global” phase) with a combinatorial local search over
+edge directions, pruning, and edge addition (the “local” phase).
+
+[`generate_lim_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lim_sample.md)
+generates a small dataset with a known causal chain of continuous and
+discrete variables: `x1` (continuous) -\> `x2` (discrete) -\> `x3`
+(continuous).
+
+``` r
+
+set.seed(1)
+lim_dat <- generate_lim_sample(n = 2000)
+head(lim_dat$data)
+#>           x1 x2         x3
+#> 1  0.1182559  0 -0.8936636
+#> 2 -1.8695490  0 -1.2651618
+#> 3 -3.3867259  0  2.1530815
+#> 4 -0.4395899  1  0.6618645
+#> 5  0.3215812  0 -0.4652433
+#> 6  1.6721779  0  0.8429619
+lim_dat$is_continuous
+#> [1]  TRUE FALSE  TRUE
+```
+
+[`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
+requires `is_continuous`, a logical vector marking which columns are
+continuous (`TRUE`) versus binary discrete (`FALSE`). Because the
+optimization starts from a random initial point, reproducibility
+requires [`set.seed()`](https://rdrr.io/r/base/Random.html).
+
+``` r
+
+lim_result <- lingam_lim(lim_dat$data, is_continuous = lim_dat$is_continuous)
+print(lim_result)
+#> LiM Result
+#>   Variables : 3
+#>   Variable types: continuous, discrete, continuous
+#>   Causal order: x1 -> x2 -> x3
+#> 
+#> Adjacency matrix (row = to, col = from):
+#>    x1    x2 x3
+#> x1  0 0.000  0
+#> x2  1 0.000  0
+#> x3  0 1.657  0
+```
+
+As with
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md),
+`adjacency_matrix` follows the `B[i, j]` = j -\> i convention (row = to,
+column = from), and `causal_order` lists the estimated topological order
+as 1-based indices.
+
+``` r
+
+colnames(lim_dat$data)[lim_result$causal_order]
+#> [1] "x1" "x2" "x3"
+```
+
+Only binary (0/1) discrete variables are supported; see
+[`?lingam_lim`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
+for details on the local phase’s edge-weight convention and its numeric
+differences from the Python implementation.
+
+## Multi-Group Direct LiNGAM
+
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+fits a single dataset. When data comes from several sources that
+plausibly share the same causal structure but not the same strength of
+effect (e.g. the same study run at multiple sites, or the same process
+observed in different time periods),
+[`lingam_multi_group()`](https://morimotoosamu.github.io/lingamr/reference/lingam_multi_group.md)
+jointly estimates a **common causal order** across all groups while
+still allowing each group its own adjacency matrix (structural
+coefficients), following Shimizu (2012).
+
+[`generate_multi_group_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_multi_group_sample.md)
+generates two datasets that share the causal structure of
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+but with slightly different coefficients per group.
+
+``` r
+
+mg <- generate_multi_group_sample(n = c(1000, 1000), seed = 42)
+lapply(mg$data_list, head, 3)
+#> $group1
+#>         x0        x1       x2        x3        x4        x5
+#> 1 2.814924 18.017120 4.543655 0.6333728 18.160090 12.236660
+#> 2 1.889685 10.956005 2.188091 0.3175366 13.172754  7.932657
+#> 3 1.008905  6.990652 1.953131 0.2409218  6.702107  4.797122
+#> 
+#> $group2
+#>          x0        x1        x2         x3        x4        x5
+#> 1 0.7259014  5.482225 0.9301592 0.01259095  5.275903  3.321061
+#> 2 2.4321051 17.252303 3.3989705 0.41696287 16.459975 11.368701
+#> 3 1.5550457 10.342355 1.8713591 0.24518297 10.520165  7.859683
+```
+
+``` r
+
+mg_result <- lingam_multi_group(mg$data_list, reg_method = "ols")
+print(mg_result)
+#> Multi-Group Direct LiNGAM Result
+#>   Groups      : 2 (group1, group2)
+#>   Variables   : 6
+#>   Causal order (common): x3 -> x0 -> x5 -> x2 -> x4 -> x1
+#> 
+#> [group1] Adjacency matrix (row = to, col = from):
+#>        x0 x1     x2     x3     x4    x5
+#> x0  0.000  0  0.000  3.033  0.000 0.000
+#> x1  3.237  0  1.965  0.014 -0.034 0.006
+#> x2 -0.236  0  0.000  6.112  0.000 0.049
+#> x3  0.000  0  0.000  0.000  0.000 0.000
+#> x4  7.921  0 -1.063  0.399  0.000 0.018
+#> x5  4.016  0  0.000 -0.003  0.000 0.000
+#> 
+#> [group2] Adjacency matrix (row = to, col = from):
+#>       x0 x1     x2     x3    x4     x5
+#> x0 0.000  0  0.000  3.504 0.000  0.000
+#> x1 2.732  0  2.568  0.083 0.034  0.093
+#> x2 0.154  0  0.000  6.322 0.000 -0.024
+#> x3 0.000  0  0.000  0.000 0.000  0.000
+#> x4 8.483  0 -1.487 -0.110 0.000  0.006
+#> x5 4.515  0  0.000 -0.045 0.000  0.000
+```
+
+`causal_order` is shared by all groups; `adjacency_matrices` holds one
+matrix per group, each following the usual `B[i, j]` = j -\> i
+convention.
+
+To analyze a single group with the rest of `lingamr`’s single-group
+tooling (total causal effects, independence tests, plotting), extract it
+as a plain `LingamResult` with
+[`get_group_result()`](https://morimotoosamu.github.io/lingamr/reference/get_group_result.md):
+
+``` r
+
+g1 <- get_group_result(mg_result, "group1")
+class(g1)
+#> [1] "LingamResult"
+
+estimate_all_total_effects(mg$data_list$group1, g1, method = "ols")
+#>             x0 x1        x2        x3          x4          x5
+#> x0  0.00000000  0  0.000000  3.033460  0.00000000  0.00000000
+#> x1  2.90911952  0  2.001580 21.058733 -0.03397056  0.10299386
+#> x2 -0.03933572  0  0.000000  5.992677  0.00000000  0.04894766
+#> x3  0.00000000  0  0.000000  0.000000  0.00000000  0.00000000
+#> x4  8.03407606  0 -1.062516 18.276121  0.00000000 -0.03416285
+#> x5  4.01586857  0  0.000000 12.179395  0.00000000  0.00000000
+```
+
+[`lingam_multi_group_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_multi_group_bootstrap.md)
+provides bootstrap stability estimates in the same joint fashion: every
+iteration resamples each group independently, then jointly re-estimates
+the causal order and per-group adjacency matrices. It returns a named
+list of per-group `BootstrapResult` objects, so the existing bootstrap
+query functions apply directly per group:
+
+``` r
+
+mg_bs <- lingam_multi_group_bootstrap(mg$data_list,
+  n_sampling = 20L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(mg_bs$group1)
+#>      [,1] [,2] [,3] [,4] [,5] [,6]
+#> [1,]  0.0  0.0 0.30    1 0.00 0.00
+#> [2,]  1.0  0.0 1.00    1 0.70 0.80
+#> [3,]  0.7  0.0 0.00    1 0.00 0.45
+#> [4,]  0.0  0.0 0.00    0 0.00 0.00
+#> [5,]  1.0  0.3 1.00    1 0.00 0.55
+#> [6,]  1.0  0.2 0.55    1 0.45 0.00
+```
+
+Note that
+[`lingam_multi_group_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_multi_group_bootstrap.md)’s
+total causal effects are computed as path-coefficient products over each
+iteration’s adjacency matrix, not via regression; this matches the
+upstream Python implementation but differs from
+[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md)’s
+regression-based
+[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md).
+
+## Causal Discovery with Missing Data
+
+All algorithms above assume a complete data matrix. When `X` contains
+missing values (`NA`),
+[`bootstrap_with_imputation()`](https://morimotoosamu.github.io/lingamr/reference/bootstrap_with_imputation.md)
+combines bootstrap resampling with multiple imputation: each resample is
+imputed into several complete datasets, and a common causal structure is
+jointly estimated across them with
+[`lingam_multi_group()`](https://morimotoosamu.github.io/lingamr/reference/lingam_multi_group.md)
+(treating the imputed copies as “groups” that share one causal order).
+This is an R port of the Python
+`lingam.tools.bootstrap_with_imputation()`.
+
+``` r
+
+sample6_na <- generate_lingam_sample_6(n = 1000, seed = 1)
+X_na <- sample6_na$data
+set.seed(1)
+X_na$x5[sample.int(nrow(X_na), size = round(0.1 * nrow(X_na)))] <- NA # MCAR 10% on x5
+```
+
+``` r
+
+bwi <- bootstrap_with_imputation(X_na,
+  n_sampling = 20L, n_repeats = 5L, seed = 42, verbose = FALSE
+)
+print(bwi)
+#> ImputationBootstrapResult: 20 samplings x 5 repeats, 6 features, 100 missing cells (original data)
+```
+
+The default imputer is `mice::mice(method = "norm")` (Bayesian linear
+regression), the closest standard R equivalent of the upstream Python
+default (`IterativeImputer(sample_posterior = TRUE)`); numeric results
+will not match the Python implementation. Both the imputer and the
+causal-discovery step can be swapped for a custom `function` via the
+`imputer` and `cd_fit` arguments.
+
+Because each iteration produces `n_repeats` adjacency matrices (one per
+imputed dataset), the result’s shape differs from
+[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md).
+[`as_bootstrap_result()`](https://morimotoosamu.github.io/lingamr/reference/as_bootstrap_result.md)
+collapses the `n_repeats` dimension (median or mean) into a regular
+`BootstrapResult`, so the existing bootstrap query functions apply as
+usual:
+
+``` r
+
+bs_na <- as_bootstrap_result(bwi, aggregate = "median")
+get_probabilities(bs_na)
+#>    x0 x1 x2 x3 x4 x5
+#> x0  0  0  0  1  0  0
+#> x1  1  0  1  0  0  0
+#> x2  0  0  0  1  0  0
+#> x3  0  0  0  0  0  0
+#> x4  1  0  1  0  0  0
+#> x5  1  0  0  0  0  0
+```
+
+[`get_total_causal_effects()`](https://morimotoosamu.github.io/lingamr/reference/get_total_causal_effects.md)
+is not available on this `BootstrapResult`, since
+[`bootstrap_with_imputation()`](https://morimotoosamu.github.io/lingamr/reference/bootstrap_with_imputation.md)
+never computes total effects.
+
+## Latent Confounders: Bottom-Up ParceLiNGAM
+
+Every algorithm above assumes there is no latent (unobserved)
+confounder: any variable that causes two or more of the observed
+variables must itself be observed. When that assumption fails,
+[`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)
+will still return a full causal order, but silently – some part of it
+may be wrong, with no indication of which part.
+
+[`lingam_parce()`](https://morimotoosamu.github.io/lingamr/reference/lingam_parce.md)
+(BottomUpParceLiNGAM, Tashiro et al. 2014) is designed for this
+situation. It searches for the causal order from the sink (most
+downstream) side, testing at each step whether a candidate variable’s
+residual is independent of the others. As soon as that test is rejected,
+the search stops, and every variable it could not yet place is returned
+together as a single **unresolved block** – a signal that those
+variables likely share a latent confounder, rather than a (possibly
+wrong) guess at their order.
+
+[`generate_parce_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_parce_sample.md)
+generates a 7-variable model in which `x6` is an unobserved common cause
+of `x2` and `x3`; only `x0`-`x5` are returned as data.
+
+``` r
+
+# HSIC is O(n^2), so a moderate n keeps this vignette fast to build
+confounded <- generate_parce_sample(n = 500, seed = 1)
+head(confounded$data)
+#>          x0        x1        x2        x3          x4        x5
+#> 1 0.6154746 1.7104554 1.0618261 1.0851944  0.57917376 0.8337563
+#> 2 1.5905703 2.4770365 1.4291087 1.4325230  0.56022597 0.8686206
+#> 3 1.1007549 2.1817888 1.5289901 1.8037643 -0.03671602 1.4001192
+#> 4 1.7744689 2.7106515 2.7714036 2.4797583 -0.10133399 1.3102925
+#> 5 0.5433612 0.7244786 0.5217204 0.8755981  0.82504738 1.2597767
+#> 6 1.7671488 1.8838085 1.8358794 2.7663075  0.90699176 1.3624485
+confounded$confounded_pair
+#> [1] 3 4
+```
+
+``` r
+
+parce_result <- lingam_parce(confounded$data, reg_method = "ols")
+print(parce_result)
+#> Bottom-Up ParceLiNGAM Result
+#>   Variables : 6
+#>   Independence measure: hsic
+#>   Causal order: (x2, x3) -> x0 -> x4 -> x5 -> x1
+#>   (NA entries in the adjacency matrix = unresolved order / suspected latent confounding)
+#> 
+#> Adjacency matrix (row = to, col = from):
+#>       x0 x1     x2     x3    x4     x5
+#> x0 0.000  0 -0.010  0.516 0.000  0.000
+#> x1 0.479  0  0.447  0.060 0.025 -0.049
+#> x2 0.000  0  0.000     NA 0.000  0.000
+#> x3 0.000  0     NA  0.000 0.000  0.000
+#> x4 0.497  0 -0.490 -0.001 0.000  0.000
+#> x5 0.436  0  0.068  0.023 0.050  0.000
+```
+
+The causal order’s first element is the unresolved block, shown in
+parentheses; here it correctly contains `x2` and `x3`. The corresponding
+entries of the adjacency matrix are `NA`, while edges among the
+remaining, fully-resolved variables are estimated as usual:
+
+``` r
+
+parce_result$causal_order[[1]]
+#> [1] 3 4
+parce_result$adjacency_matrix[confounded$confounded_pair, confounded$confounded_pair]
+#>    x2 x3
+#> x2  0 NA
+#> x3 NA  0
+```
+
+Because a confounded variable’s true parents cannot be identified,
+[`estimate_total_effect_parce()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect_parce.md)
+warns and returns `NA` when asked for a total effect *from* a variable
+in the unresolved block, but still computes normal estimates for
+well-identified pairs:
+
+``` r
+
+# from a confounded variable: warns and returns NA
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = confounded$confounded_pair[1], to_index = "x1"
+)
+#> Warning in estimate_total_effect_parce(confounded$data, parce_result,
+#> from_index = confounded$confounded_pair[1], : x2 is part of an unresolved
+#> causal order (suspected latent confounding); total effect cannot be estimated.
+#> [1] NA
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = "x0", to_index = "x5"
+)
+#> [1] 0.5121874
+```
+
+[`lingam_parce_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_parce_bootstrap.md)
+provides bootstrap stability estimates in the same style as
+[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md).
+`NA` (unresolved) edges are treated as absent when aggregating, so
+[`get_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_probabilities.md)
+and the other `BootstrapResult` query functions work as usual;
+[`get_causal_order_stability()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.md)
+is the one exception, since ParceLiNGAM’s blocked causal order does not
+fit its fixed-length format.
+
+``` r
+
+parce_bs <- lingam_parce_bootstrap(confounded$data,
+  n_sampling = 10L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(parce_bs)
+#>      [,1] [,2] [,3] [,4] [,5] [,6]
+#> [1,]  0.0  0.2  0.5  0.4  0.0  0.0
+#> [2,]  0.5  0.0  0.5  0.4  0.2  0.3
+#> [3,]  0.0  0.0  0.0  0.0  0.0  0.0
+#> [4,]  0.1  0.2  0.2  0.0  0.1  0.0
+#> [5,]  0.7  0.5  0.7  0.6  0.0  0.3
+#> [6,]  0.6  0.4  0.6  0.6  0.4  0.0
+```
+
+## Latent Confounders: RCD
+
+[`lingam_rcd()`](https://morimotoosamu.github.io/lingamr/reference/lingam_rcd.md)
+(Repetitive Causal Discovery; Maeda and Shimizu 2020) tackles the same
+latent-confounder problem as
+[`lingam_parce()`](https://morimotoosamu.github.io/lingamr/reference/lingam_parce.md),
+but from a different angle: rather than searching for a causal order and
+giving up on an **unresolved block** once a test is rejected, RCD
+directly estimates each variable’s **ancestor set** and then checks
+individual, parent-free pairs for a shared latent confounder. This makes
+RCD’s output pair-level (which specific pairs are confounded) rather
+than block-level (which set of variables could not be ordered).
+
+[`generate_rcd_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_rcd_sample.md)
+generates a 7-variable model in which `x6` is an unobserved common cause
+of `x2` and `x4`; only `x0`-`x5` are returned as data.
+
+``` r
+
+# HSIC is O(n^2), so a moderate n keeps this vignette fast to build
+rcd_confounded <- generate_rcd_sample(n = 300, seed = 1)
+head(rcd_confounded$data)
+#>            x0           x1         x2           x3         x4            x5
+#> 1 -0.96839700 -0.023398020 -0.7514703 -0.473147026 -0.9674898 -0.0307310344
+#> 2  1.31480945  0.424388510  1.0389688  0.001304296  1.4111680  0.0007741684
+#> 3 -0.85973904 -0.025330472 -1.1731736 -0.034157640 -1.3389435 -0.0729373397
+#> 4 -0.76463976  0.324413350 -0.7116352  0.078719765 -0.3333176  0.5074829194
+#> 5  0.08152383  0.002364107 -0.2546673  0.036715357 -0.2040856  0.0044720536
+#> 6 -0.30389184 -0.225029302 -0.5032249 -0.172267536  0.5221642 -0.0690391705
+rcd_confounded$confounded_pair
+#> [1] 3 5
+```
+
+``` r
+
+rcd_result <- lingam_rcd(rcd_confounded$data)
+print(rcd_result)
+#> RCD Result
+#>   Variables : 6
+#> 
+#> Ancestor sets:
+#>   M(x0) = {x1, x3, x5}
+#>   M(x1) = {x5}
+#>   M(x2) = {x0, x1, x3, x5}
+#>   M(x3) = {x5}
+#>   M(x4) = {x0, x1, x3, x5}
+#>   M(x5) = {}
+#> 
+#>   (NA entries in the adjacency matrix = suspected shared latent confounder)
+#> 
+#> Adjacency matrix (row = to, col = from):
+#>       x0    x1 x2    x3 x4    x5
+#> x0 0.000 1.116  0 0.989  0 0.000
+#> x1 0.000 0.000  0 0.000  0 0.588
+#> x2 0.810 0.000  0 0.000 NA 0.000
+#> x3 0.000 0.000  0 0.000  0 0.449
+#> x4 1.015 0.000 NA 0.000  0 0.000
+#> x5 0.000 0.000  0 0.000  0 0.000
+```
+
+`ancestors_list` gives each variable’s estimated ancestors (not a causal
+order), and the confounded pair’s adjacency-matrix entries are `NA`:
+
+``` r
+
+rcd_result$ancestors_list
+#> $x0
+#> [1] 2 4 6
+#> 
+#> $x1
+#> [1] 6
+#> 
+#> $x2
+#> [1] 1 2 4 6
+#> 
+#> $x3
+#> [1] 6
+#> 
+#> $x4
+#> [1] 1 2 4 6
+#> 
+#> $x5
+#> integer(0)
+rcd_result$adjacency_matrix[rcd_confounded$confounded_pair, rcd_confounded$confounded_pair]
+#>    x2 x4
+#> x2  0 NA
+#> x4 NA  0
+```
+
+As with ParceLiNGAM,
+[`estimate_total_effect_rcd()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect_rcd.md)
+warns and returns `NA` when asked for a total effect *from* a confounded
+variable:
+
+``` r
+
+# from a confounded variable: warns and returns NA
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = rcd_confounded$confounded_pair[1], to_index = rcd_confounded$confounded_pair[2]
+)
+#> Warning in estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+#> from_index = rcd_confounded$confounded_pair[1], : x2 is part of a suspected
+#> latent confounder pair; total effect cannot be estimated.
+#> [1] NA
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = "x5", to_index = "x0"
+)
+#>      x5 
+#> 1.05674
+```
+
+## Evaluating Model Fit
+
+[`evaluate_model_fit()`](https://morimotoosamu.github.io/lingamr/reference/evaluate_model_fit.md)
+treats an estimated adjacency matrix as a structural equation model
+(SEM) and reports standard SEM fit measures (CFI, RMSEA, AIC/BIC, etc.)
+via the `lavaan` package (an optional dependency; install it with
+`install.packages("lavaan")`). This is useful for judging whether an
+estimated causal graph is consistent with the data, independent of how
+it was estimated.
+
+``` r
+
+sample6 <- generate_lingam_sample_6()
+fit_result <- lingam_direct(sample6$data, reg_method = "ols")
+
+# fit measures for the estimated graph
+evaluate_model_fit(fit_result, sample6$data)
+#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
+#> 1   0           15    0           NA       23023.7   1   1    1   1   1     0
+#>        AIC      BIC    LogLik
+#> 1 1860.598 1958.753 -910.2991
+```
+
+Reversing the direction of every edge produces a mis-specified model,
+and its fit measures are visibly worse (lower CFI, higher RMSEA):
+
+``` r
+
+reversed_adjacency <- t(fit_result$adjacency_matrix)
+evaluate_model_fit(reversed_adjacency, sample6$data)
+#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
+#> 1   0           15 3.197442e-11           NA       23023.7   1   1    1   1   1
+#>   RMSEA       AIC       BIC   LogLik
+#> 1     0 -4264.864 -4166.708 2152.432
 ```
 
 ## When LiNGAM Cannot Be Used

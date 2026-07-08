@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,6 +60,32 @@
     <p>The input object <code>x</code>, invisibly.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">LiNGAM_sample_1000</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="test_residual_normality.html">test_residual_normality</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>, <span class="va">result</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> === Residual Normality Test ===</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Method:         shapiro</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sample size:    1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Significance:   0.050</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Non-Gaussian:   6 / 6 variables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  variable statistic   p_value is_non_gauss skewness kurtosis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        x0    0.9526 &lt; 2.2e-16         TRUE    0.063   -1.214</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        x1    0.9533 &lt; 2.2e-16         TRUE    0.026   -1.208</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        x2    0.9557 &lt; 2.2e-16         TRUE    0.083   -1.170</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        x3    0.9578  2.25e-16         TRUE    0.025   -1.163</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        x4    0.9556 &lt; 2.2e-16         TRUE   -0.002   -1.205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        x5    0.9552 &lt; 2.2e-16         TRUE   -0.044   -1.196</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interpretation:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   is_non_gauss = TRUE  -&gt; rejects normality (supports LiNGAM assumption)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   is_non_gauss = FALSE -&gt; cannot reject normality (LiNGAM may not fit)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> All residuals are non-Gaussian. LiNGAM assumption is supported.</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
@@ -69,7 +95,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

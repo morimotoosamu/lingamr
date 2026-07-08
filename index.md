@@ -15,7 +15,30 @@ releasing it for the purpose of testing and gathering feedback.
 
 ## Features
 
-- Implementation of the Direct LiNGAM algorithm
+- Direct LiNGAM
+  ([`lingam_direct()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct.md)),
+  with selectable regression backends (OLS, LASSO, adaptive LASSO,
+  ridge) for adjacency-matrix estimation
+- VAR-LiNGAM
+  ([`lingam_var()`](https://morimotoosamu.github.io/lingamr/reference/lingam_var.md))
+  for time series causal discovery
+- Algorithms robust against latent confounders: BottomUpParceLiNGAM
+  ([`lingam_parce()`](https://morimotoosamu.github.io/lingamr/reference/lingam_parce.md))
+  and RCD
+  ([`lingam_rcd()`](https://morimotoosamu.github.io/lingamr/reference/lingam_rcd.md))
+- MultiGroupDirectLiNGAM
+  ([`lingam_multi_group()`](https://morimotoosamu.github.io/lingamr/reference/lingam_multi_group.md))
+  for jointly estimating a shared causal order across multiple datasets
+- HighDimDirectLiNGAM
+  ([`lingam_high_dim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_high_dim.md))
+  for high-dimensional data (large `p`, or `p > n`)
+- LiM
+  ([`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md))
+  for causal discovery on mixed continuous/binary data
+- [`bootstrap_with_imputation()`](https://morimotoosamu.github.io/lingamr/reference/bootstrap_with_imputation.md)
+  for causal discovery on data with missing values, and
+  [`evaluate_model_fit()`](https://morimotoosamu.github.io/lingamr/reference/evaluate_model_fit.md)
+  for SEM-based fit evaluation via lavaan
 - Stability assessment of causal structures using the bootstrap method,
   including causal-order stability
 - Model diagnostics: residual independence / normality tests and a
@@ -141,8 +164,8 @@ developing this package:
 - JMRA (Japan Marketing Research Association)
 
 Development of this package was assisted by AI coding tools (Google
-Gemini and Anthropic Claude). All AI-generated code was reviewed,
-tested, and validated by the author.
+Gemini and Anthropic Claude). The author reviewed, tested, and validated
+all AI-generated code.
 
 ## Feedback
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,39 +76,201 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">LiNGAM_sample_1000</span> <span class="op">&lt;-</span> <span class="fu"><a href="generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>, n_sampling <span class="op">=</span> <span class="fl">30L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 30 iterations, method=adaptive_lasso (sequential)</span>
+<span class="r-in"><span><span class="va">bs_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap</a></span><span class="op">(</span><span class="va">LiNGAM_sample_1000</span><span class="op">$</span><span class="va">data</span>,</span></span>
+<span class="r-in"><span>  n_sampling <span class="op">=</span> <span class="fl">30L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">42</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Bootstrap: 30 iterations, method=ols (sequential)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 1 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 10 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 20 / 30</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   iteration 30 / 30</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 0.9 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed in 0.2 seconds.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">get_directed_acyclic_graph_counts</span><span class="op">(</span><span class="va">bs_model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $dag</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[1]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   from to</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1  2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1  5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    1  6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    3  2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    3  5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    4  1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    5  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    6  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    6  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[2]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   from to</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1  6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    2  1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    2  3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    2  5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    3  4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    5  1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    5  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    5  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    5  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[3]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     2  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    5  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[4]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     2  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    6  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    6  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[5]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    5  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    5  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[6]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    5  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    6  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[7]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     2  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     2  4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     2  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     2  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     3  4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    5  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    5  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    5  4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    5  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[8]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    6  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[9]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     2  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    6  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $dag[[10]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    from to</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     1  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     1  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     2  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     2  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     3  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     3  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     3  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    4  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    4  2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    4  3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    4  5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    4  6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    5  6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $count</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 29  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 9 4 4 4 3 2 1 1 1 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
@@ -121,7 +283,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
