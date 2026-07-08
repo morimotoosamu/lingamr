@@ -23,7 +23,7 @@ estimate_total_effect(
 
 \item{to_index}{Effect variable (1-based index or variable name)}
 
-\item{method}{Regression method ("ols", "lasso", "adaptive_lasso"). Default is adaptive_lasso}
+\item{method}{Regression method ("ols", "lasso", "adaptive_lasso", "ridge"). Default is adaptive_lasso}
 
 \item{lambda}{Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle"). Default is BIC}
 
@@ -39,7 +39,7 @@ Estimate the total causal effect between two specified variables
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000$data |>
-  lingam_direct()
+  lingam_direct(reg_method = "ols")
 
 LiNGAM_sample_1000$data |>
   estimate_total_effect(model, 4, 1)

@@ -284,7 +284,20 @@ select_var_lag <- function(X, max_lag, criterion = "bic") {
 
   best_lag <- 1L
   best_ic <- Inf
+  any_evaluated <- FALSE
   for (lag in seq_len(max_lag)) {
+    # Total free parameters; per-equation count is lag * p (no intercept).
+    n_params <- lag * p * p
+    n_params_eq <- lag * p
+    # Skip candidates too close to saturation: once residual degrees of freedom
+    # (n_obs - n_params_eq) approach p, the estimated p x p residual covariance
+    # matrix becomes ill-conditioned and its log-determinant turns spuriously very
+    # negative, letting an overfit high lag win under every criterion despite the
+    # penalty term. Require a margin of residual df beyond the covariance dimension p
+    # for the covariance estimate to be reasonably well-conditioned.
+    if (n_obs - n_params_eq <= 2L * p) next
+    any_evaluated <- TRUE
+
     # Build the lagged design over the same window: [X_{t-1}, ..., X_{t-lag}].
     Z <- matrix(0, nrow = n_obs, ncol = lag * p)
     for (k in seq_len(lag)) {
@@ -294,9 +307,6 @@ select_var_lag <- function(X, max_lag, criterion = "bic") {
     # Residual covariance (MLE scaling, divide by n_obs) as used by the criteria.
     sigma <- crossprod(resid) / n_obs
     log_det <- as.numeric(determinant(sigma, logarithm = TRUE)$modulus)
-    # Total free parameters; per-equation count is lag * p (no intercept).
-    n_params <- lag * p * p
-    n_params_eq <- lag * p
     ic <- switch(criterion,
       bic  = log_det + (log(n_obs) / n_obs) * n_params,
       aic  = log_det + (2 / n_obs) * n_params,
@@ -309,6 +319,11 @@ select_var_lag <- function(X, max_lag, criterion = "bic") {
       best_lag <- lag
     }
   }
+  if (!any_evaluated) {
+    warning("Too few observations relative to the number of variables to reliably ",
+            "compare lag orders up to ", max_lag, "; falling back to lag = 1.",
+            call. = FALSE)
+  }
   best_lag
 }
 
@@ -318,7 +333,12 @@ select_var_lag <- function(X, max_lag, criterion = "bic") {
 #' @param x VARLiNGAMResult object
 #' @param digits number of digits to display
 #' @param ... additional arguments (unused)
+#' @return The input object `x`, invisibly.
 #' @export
+#' @examples
+#' sample <- generate_varlingam_sample(n = 500, seed = 42)
+#' model <- lingam_var(sample$data, lags = 1, reg_method = "ols", prune = FALSE)
+#' print(model)
 print.VARLiNGAMResult <- function(x, digits = 3, ...) {
   n <- length(x$causal_order)
   var_names <- dimnames(x$adjacency_matrices)[[2]]

@@ -38,12 +38,58 @@ test_that("lingam_direct accepts matrix input", {
 test_that("lingam_direct errors on invalid inputs", {
   dat <- generate_lingam_sample_6(n = 100, seed = 1)
 
-  expect_error(lingam_direct(dat$data, measure = "bad_measure"))
-  expect_error(lingam_direct(dat$data, reg_method = "bad_method"))
-  expect_error(lingam_direct(dat$data, lambda = "bad_lambda"))
-  expect_error(lingam_direct(matrix(1:4, nrow = 2)))   # non-numeric (integers are OK, so a separate case)
-  expect_error(lingam_direct(as.data.frame(matrix(1, nrow = 5, ncol = 1))))  # 1 variable
-  expect_error(lingam_direct(matrix(numeric(0), nrow = 0, ncol = 3)))        # 0 rows
+  expect_error(lingam_direct(dat$data, measure = "bad_measure"), "should be one of")
+  expect_error(lingam_direct(dat$data, reg_method = "bad_method"), "should be one of")
+  expect_error(lingam_direct(dat$data, lambda = "bad_lambda"), "should be one of")
+  expect_error(lingam_direct(matrix(letters[1:4], nrow = 2)), "numeric matrix")  # non-numeric
+  expect_error(
+    lingam_direct(as.data.frame(matrix(1, nrow = 5, ncol = 1))),
+    "at least 2 variables"
+  )  # 1 variable
+  expect_error(
+    lingam_direct(matrix(numeric(0), nrow = 0, ncol = 3)),
+    "at least 2 observations"
+  )  # 0 rows
+})
+
+test_that("lingam_direct rejects constant and perfectly collinear columns", {
+  set.seed(1)
+  X_const <- cbind(x0 = runif(100), x1 = runif(100), x2 = rep(1, 100))
+  # the offending column is named in the message
+  expect_error(lingam_direct(X_const, reg_method = "ols"), "constant columns: x2")
+
+  x <- runif(200)
+  X_dup <- cbind(a = x, b = x, c = runif(200))
+  expect_error(lingam_direct(X_dup, reg_method = "ols"), "linearly dependent")
+  # a column equal to another plus a constant offset is also caught
+  X_offset <- cbind(a = x, b = x + 5, c = runif(200))
+  expect_error(lingam_direct(X_offset, reg_method = "ols"), "linearly dependent")
+})
+
+test_that("lingam_direct rejects prior knowledge values outside {-1, 0, 1}", {
+  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  pk <- matrix(-1, 6, 6)
+  pk[1, 2] <- 0.5
+  expect_error(
+    lingam_direct(dat$data, prior_knowledge = pk, reg_method = "ols"),
+    "must contain only -1"
+  )
+  pk[1, 2] <- 2
+  expect_error(
+    lingam_direct(dat$data, prior_knowledge = pk, reg_method = "ols"),
+    "must contain only -1"
+  )
+})
+
+test_that("single-predictor edges are pruned for independent variables", {
+  skip_if_not_installed("glmnet")
+  # The second variable in the causal order has exactly one predictor, which
+  # is fitted by the IC-pruned OLS fallback (glmnet needs >= 2 columns). For
+  # fully independent data every edge, including that one, must be zero.
+  set.seed(7)
+  X <- cbind(a = runif(2000), b = runif(2000), c = runif(2000))
+  res <- lingam_direct(X)  # default adaptive_lasso + BIC
+  expect_equal(sum(abs(res$adjacency_matrix) > 0), 0L)
 })
 
 test_that("print.LingamResult runs without error", {
@@ -75,7 +121,8 @@ test_that("soft prior knowledge with -1 (unknown) entries runs without error", {
 
   res <- lingam_direct(dat$data,
     prior_knowledge = pk,
-    apply_prior_knowledge_softly = TRUE
+    apply_prior_knowledge_softly = TRUE,
+    reg_method = "ols"
   )
 
   expect_s3_class(res, "LingamResult")
@@ -134,6 +181,57 @@ test_that("mutual_information_kernel returns finite non-negative values", {
   expect_gt(mi_dep, mi_ind)
 })
 
+test_that("incomplete_cholesky_gauss reconstructs the Gaussian Gram matrix", {
+  set.seed(3)
+  n <- 300
+  sigma <- 1.0
+  x <- rnorm(n)
+
+  G <- incomplete_cholesky_gauss(x, sigma)
+  K_true <- exp(-1 / (2 * sigma^2) * outer(x, x, "-")^2)
+  K_approx <- tcrossprod(G)
+
+  expect_lt(max(abs(K_true - K_approx)), 1e-3)
+})
+
+test_that("low-rank kernel MI agrees with the exact computation", {
+  set.seed(4)
+  n <- 300
+  kappa <- 2e-2
+  sigma <- 1.0
+  x <- rnorm(n)
+  y_dep <- 0.7 * x + rnorm(n, sd = 0.5)
+  y_ind <- rnorm(n)
+
+  E1 <- kernel_mi_prepare(x, kappa, sigma)
+  mi_dep_exact <- kernel_mi_core(E1, y_dep, kappa, sigma)
+  mi_ind_exact <- kernel_mi_core(E1, y_ind, kappa, sigma)
+
+  prep1 <- kernel_mi_prepare_lowrank(x, kappa, sigma)
+  mi_dep_lr <- kernel_mi_core_lowrank(prep1, y_dep, kappa, sigma)
+  mi_ind_lr <- kernel_mi_core_lowrank(prep1, y_ind, kappa, sigma)
+
+  expect_lt(abs(mi_dep_exact - mi_dep_lr), 1e-3)
+  expect_lt(abs(mi_ind_exact - mi_ind_lr), 1e-3)
+  # the low-rank path must preserve which pair has the larger MI
+  expect_equal(mi_dep_exact > mi_ind_exact, mi_dep_lr > mi_ind_lr)
+})
+
+test_that("search_causal_order_kernel uses the low-rank path above n = 1000 and still finds a valid order", {
+  set.seed(5)
+  n <- 1500
+  e1 <- rnorm(n)
+  e2 <- rnorm(n)
+  e3 <- rnorm(n)
+  x1 <- e1
+  x2 <- 0.8 * x1 + e2
+  x3 <- 0.5 * x1 + 0.6 * x2 + e3
+  X <- cbind(x1, x2, x3)
+
+  result <- search_causal_order_kernel(X, U = 1:3, Uc = 1:3, Vj = integer(0))
+  expect_true(result %in% 1:3)
+})
+
 test_that("reg_method = 'ols' does not require glmnet", {
   dat <- generate_lingam_sample_6(n = 200, seed = 1)
 
@@ -154,6 +252,7 @@ test_that("reg_method = 'ols' does not require glmnet", {
 })
 
 test_that("reg_method = 'ridge' returns a valid LingamResult", {
+  skip_if_not_installed("glmnet")
   dat <- generate_lingam_sample_6(n = 300, seed = 42)
   res <- lingam_direct(dat$data, reg_method = "ridge")
 

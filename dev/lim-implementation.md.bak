@@ -1,0 +1,233 @@
+# LiM (LiNGAM for Mixed data) 実装指示書
+
+lingamr パッケージに LiM アルゴリズムを追加する。Python cdt15/lingam の `LiM` クラスの R 移植。
+
+## 0. 参照資料（実装前に必ず全文を読むこと）
+
+本指示書のアルゴリズム要約は二次情報である。**以下の原典を WebFetch で取得し、原典を正とする**こと。
+
+- ソース: https://raw.githubusercontent.com/cdt15/lingam/master/lingam/lim.py
+- ユーティリティ（`simulate_linear_mixed_sem`, `likelihood_i` 等）:
+  https://raw.githubusercontent.com/cdt15/lingam/master/lingam/utils/__init__.py
+- チュートリアル: https://lingam.readthedocs.io/en/latest/tutorial/lim.html
+- 論文: Y. Zeng, S. Shimizu, H. Matsui, F. Sun. Causal discovery for linear mixed data.
+  In Proc. First Conference on Causal Learning and Reasoning (CLeaR2022). PMLR 177, pp. 994-1009, 2022.
+
+また、着手前に必ずリポジトリの CLAUDE.md と以下の既存実装を読み、規約を踏襲すること:
+
+- `R/lingam_direct.r` — 関数シグネチャ、バリデーション、S3 クラス（LingamResult）、print、roxygen2 の手本
+- `R/fit_regression.r` — 内部関数の書き方、`requireNamespace` パターン
+- `R/generate_lingam_sample.r` — データ生成関数の手本
+- `tests/testthat/test-lingam_direct.R` — テストパターンの手本
+
+## 1. スコープ
+
+### 実装するもの
+
+| 成果物 | ファイル |
+|---|---|
+| `lingam_lim()` + `print.LiMResult()` | `R/lingam_lim.r`（新規） |
+| `generate_lim_sample()`（テスト・例示用データ生成） | `R/generate_lim_sample.r`（新規） |
+| testthat テスト | `tests/testthat/test-lingam_lim.R`（新規） |
+| roxygen2 → man/NAMESPACE 再生成 | `devtools::document()` |
+| NEWS.md 追記 | `NEWS.md` |
+| vignette 追記（LiM セクション） | `vignettes/lingamr.Rmd` |
+| pkgdown reference 追記 | `_pkgdown.yml` |
+
+### 実装しないもの
+
+- Poisson 対応（Python の `loss_type="poisson"`, `is_poisson=True` 経路）。移植しない。
+  離散変数は **2値（0/1）のみ** サポートし、roxygen2 にその旨を明記する
+- bootstrap 対応（Python 版 LiM にも無い）
+- 新規パッケージ依存の追加。**base R + stats のみで実装する**（`optim(method="L-BFGS-B")` を使用）。
+  igraph/networkx 相当は自前実装（後述）
+
+## 2. API 設計
+
+```r
+lingam_lim <- function(X,
+                       is_continuous,
+                       lambda1 = 0.1,
+                       max_iter = 150L,
+                       h_tol = 1e-8,
+                       rho_max = 1e16,
+                       w_threshold = 0.1,
+                       only_global = FALSE)
+```
+
+- `X`: 数値行列または data.frame（n_samples × n_features）。列名を保存する（lingam_direct と同様）
+- `is_continuous`: 長さ n_features の logical ベクトル。TRUE=連続、FALSE=離散(2値)。
+  Python の `dis_con`（1×p 行列, 1=連続, 0=離散）を R らしい logical ベクトルに置き換えたもの
+- その他は Python のデフォルトと同値。`loss_type` 引数は公開しない
+  （Python の既定運用は "mixed" 固定で、local phase 内部で "mixed_dag" に切替わるだけのため）
+
+### バリデーション（lingam_direct.r:73-93 のスタイルを踏襲）
+
+- `X` の数値・NA・次元チェック（`ncol >= 2`, `nrow >= 2`）
+- `is_continuous`: logical、長さが `ncol(X)` と一致、NA なし
+- 離散指定列（`!is_continuous`）の値が {0, 1} の2値であることをチェック。違えば
+  「LiM only supports binary (0/1) discrete variables」の旨で `stop(call. = FALSE)`
+- スカラー引数（lambda1, h_tol 等）の型・範囲チェック
+- エラーメッセージは既存同様に英語、`call. = FALSE`
+
+### 返り値: S3 クラス `LiMResult`
+
+```r
+result <- list(
+  adjacency_matrix = B,        # p × p, 規約 B[i,j] = j -> i（後述の転置に注意）
+  causal_order     = K,        # B から導出したトポロジカル順序（1-based, 上流→下流）
+  is_continuous    = is_continuous
+)
+class(result) <- "LiMResult"
+```
+
+- `adjacency_matrix` の dimnames には X の列名を付ける
+- Python 版に `causal_order_` は無いが、結果は DAG なのでトポロジカルソートで導出して付ける
+  （lingamr の他クラスとの一貫性のため）
+- `print.LiMResult()` は `print.LingamResult()`（lingam_direct.r:162-176）に倣う。
+  ヘッダは "LiM Result"、変数型（continuous/discrete）の一覧も1行表示、
+  "Adjacency matrix (row = to, col = from):" 形式、`invisible(x)` で返す
+
+### 【最重要】隣接行列の向きの検証
+
+lingamr の規約は **`B[i,j]` = 変数 j → 変数 i の係数（行=to, 列=from）**（lingam_direct.r:48、vignette にも明記）。
+
+一方、LiM の内部最適化は NOTEARS 型で、損失が `M = X @ W` の形（W の列 j = 変数 j を予測する
+親の係数）なので、内部の W は `W[i,j] = i → j`、つまり **lingamr 規約の転置になっている可能性が高い**。
+チュートリアルでも推定結果を `simulate_dag`（NOTEARS 系 utils）由来の W_true と無転置で比較している。
+
+**実装時に lim.py と utils.py（`simulate_linear_mixed_sem` がどの向きで X を生成するか）を読んで
+向きを確定させ、`LiMResult$adjacency_matrix` は必ず lingamr 規約（j→i）に合わせること**
+（必要なら `t(W_est)`）。さらに単体テストで検証する: 既知構造 x1→x2 のデータを生成し、
+`adjacency_matrix[2,1] != 0` かつ `adjacency_matrix[1,2] == 0` を確認する。
+
+## 3. アルゴリズム（lim.py を正とする。以下は実装ガイド）
+
+内部では Python と同じ向き（`W[i,j] = i → j`, 損失 `M = X %*% W`）のまま計算し、
+最後に lingamr 規約へ変換するのが安全。
+
+### 3.1 グローバル最適化（拡張ラグランジュ + L-BFGS-B）
+
+d = n_features とする。
+
+1. パラメータは長さ `2*d*d` のベクトル w（非負の w+ と w- に分解。`W = matrix(w[1:d^2] - w[d^2+1:d^2], d, d)`）
+2. 境界: すべて `[0, Inf)`、ただし対角成分に対応する要素は `[0, 0]` に固定
+3. 初期値: `w_est <- runif(2 * d * d)`（乱数はユーザーの `set.seed()` に従う。内部でシードを固定しない）
+4. 非巡回制約:
+   ```
+   M <- diag(d) + W * W / d          # 要素ごとの積
+   E <- M %^% (d-1)                  # 行列べき乗（自前の反復乗算で実装）
+   h <- sum(t(E) * M) - d
+   grad_h（W についての勾配）= t(E) * W * 2   # lim.py の _h の勾配式を原典で確認すること
+   ```
+5. mixed 損失（連続=Laplace: log-cosh、離散=logistic）: lim.py の `_loss` の "mixed" 分岐を
+   忠実に移植する。R では `X * M` 等の要素積・`plogis`（sigmoid）・`log(cosh())` で書ける。
+   log(cosh(r)) は |r| が大きいとオーバーフローするので `abs(r) + log1p(exp(-2*abs(r))) - log(2)`
+   で安定化してよい（数値同等）
+6. 目的関数: `obj = loss + 0.5 * rho * h^2 + alpha * h + lambda1 * sum(w)`（w は非負なので sum(w) が L1）
+7. 外側ループ（`max_iter` 回）: Python の dual ascent を忠実に移植する。
+   `rho` の 10 倍化条件（`h_new >= 0.25 * h`）、`alpha <- alpha + rho * h`、
+   収束条件（`h <= h_tol && h != 0`）、発散時の再初期化
+   （`rho >= rho_max * 1e-6 && h > 1e5` → w を runif で再初期化、
+   `sum(abs(W)) < 0.09` → 再初期化）まで含めて原典どおりに
+8. `optim()` の注意: scipy は `jac=True` で値と勾配を同時に返せるが、R の `optim` は
+   `fn` と `gr` を別々に呼ぶ。損失と勾配の計算を共有する closure（直近の w に対する
+   計算結果をキャッシュ）にするか、素直に2回計算する（まず正しさ優先で2回計算、
+   遅ければキャッシュ化）
+9. 収束後 `W_est[abs(W_est) < w_threshold] <- 0`
+
+### 3.2 ローカル探索（`only_global = FALSE` のとき）
+
+閾値処理後の W_est の辺集合について、辺の向きの全組合せ（2^|E| 通り）を列挙し、
+BIC スコアが最良かつ `h(W) < h_tol`（非巡回）の構成を選ぶ。lim.py の該当ループ
+（`itertools.product(range(2), repeat=len(I[0]))`）を正確に読んで移植すること。
+`I` がどう作られるか（どの辺対を反転候補にするか）は原典で確認する。
+
+- BIC スコアリング（Python `_bic_scoring`）: 各変数 i について親集合 pa(i) を W から取り、
+  - 離散変数: `glm(Xi ~ X[, pa], family = binomial)` の logLik
+  - 連続変数: `lm(Xi ~ X[, pa])` の logLik（Python は `lingam.utils.likelihood_i` を使う。
+    utils.py で中身を確認し、対数尤度の定義を合わせる）
+  - ペナルティ: `log(n)/2 * (辺数 + ノード数)`
+  親が空集合の場合（切片のみ）も動くこと
+- 非巡回判定: networkx は使えないので、`h(W) < h_tol` 判定（Python と同じ）をそのまま使う
+- **計算量ガード（R 独自追加）**: 辺数 |E| が 15 を超える場合は
+  `warning("Local search skipped: too many edges (2^|E| combinations); returning global solution.", call. = FALSE)`
+  を出して global 解を返す（Python にはガードが無く 2^|E| 爆発する）
+
+### 3.3 仕上げ
+
+- 最終 W を lingamr 規約（`B[i,j] = j→i`）へ変換（セクション2の検証結果に従う）
+- B からトポロジカル順序を導出して `causal_order` にする。閾値後の B が万一巡回を含む場合は
+  `causal_order` を `NA` にして warning（既存 `find_all_paths`（R/paths.r）があるが、
+  トポロジカルソートは Kahn 法を数行で自前実装してよい）
+
+## 4. データ生成関数 `generate_lim_sample()`
+
+`R/generate_lingam_sample.r` の `generate_lingam_sample_6()` 等のスタイルを踏襲した固定構造の
+生成関数を `R/generate_lim_sample.r` に作る。Python `utils.simulate_linear_mixed_sem` の
+生成ロジック（連続変数=線形 + Laplace ノイズ、離散変数=線形予測子を `plogis` に通して
+`rbinom`）を参考にする。
+
+- シグネチャ例: `generate_lim_sample(n = 1000, seed = NULL)`
+- 構造は 3 変数程度の既知 DAG（例: x1(連続) → x2(離散) → x3(連続)、係数は ±0.5〜1.5 で固定）
+- 返り値: `list(data = <data.frame>, adjacency_matrix = <真の B, lingamr 規約>, is_continuous = <logical>)`
+  （既存の generate_* の返り値形式を確認して合わせること）
+- Laplace 乱数は `rexp` 2本の差、または逆変換法で自前実装（新規依存を増やさない）
+
+## 5. テスト（tests/testthat/test-lingam_lim.R）
+
+test-lingam_direct.R のパターンを踏襲。**数値スナップショットは使わない**
+（乱数初期化に依存し不安定なため）。構造アサーション中心にする。
+
+1. 構造: `expect_s3_class(res, "LiMResult")`, `expect_named()`, 行列次元、dimnames が列名
+2. バリデーション: 非数値 X、NA 入り X、`is_continuous` の長さ不一致・非 logical、
+   離散指定列が 2 値でない場合、それぞれ `expect_error()`
+3. print: `expect_output(print(res), "LiM Result")`
+4. 再現性: `set.seed(1); r1 <- ...; set.seed(1); r2 <- ...; expect_equal(r1, r2)`
+5. **向きの検証（重要）**: `generate_lim_sample()` の既知構造（例: x1→x2）に対し
+   `set.seed` 固定で fit し、真の辺位置 `adjacency_matrix[to, from]` が非ゼロ、
+   逆位置がゼロであることを確認（n=1000 程度、チュートリアルの 2 変数設定が再現の目安）
+6. `only_global = TRUE` でも valid な結果が返ること
+7. `w_threshold` を大きくすると辺が減る（または全ゼロになる）こと
+8. causal_order がトポロジカル順序として整合すること（B の非ゼロが順序と矛盾しない）
+
+実行: `devtools::test(filter = "lingam_lim")` → 全体 `devtools::test()`
+
+## 6. ドキュメント
+
+- roxygen2: lingam_direct.r の書式に倣う。`@param`, `@return`（箇条書き）, `@references`
+  （Zeng et al. CLeaR2022 を記載）, `@examples`。最適化は遅いので例は小さな n
+  （n=300 程度・2〜3変数）にし、それでも遅ければ `\donttest{}` で包む
+- `@export` は `lingam_lim`, `generate_lim_sample`。print は `@export` + S3method 登録
+  （roxygen2 が自動処理）。内部関数は `@keywords internal`
+- `devtools::document()` で man/NAMESPACE を再生成
+- NEWS.md: 開発版セクションに「Added `lingam_lim()` ...」を追記
+- vignette（vignettes/lingamr.Rmd）: 新セクション「LiNGAM for Mixed Data (LiM)」を追加。
+  構成: モデル説明（連続+2値、規約）→ `generate_lim_sample()` → `lingam_lim()` 実行 →
+  結果解釈（既存セクションの「モデル説明→使用例→結果解釈」構成に合わせる）。
+  チャンクは実行時間に注意（n を小さく）
+- _pkgdown.yml: reference に `lingam_lim`, `generate_lim_sample` を適切なグループへ追加
+
+## 7. 完了条件・検証手順
+
+R は PATH 外の `C:\R\R-4.6.0` にある。実行例:
+
+```powershell
+& "C:\R\R-4.6.0\bin\Rscript.exe" -e "devtools::document(); devtools::test()"
+& "C:\R\R-4.6.0\bin\Rscript.exe" -e "devtools::check()"
+```
+
+- [ ] `devtools::document()` が警告なく通る
+- [ ] `devtools::test()` 全緑（既存テストを壊さない）
+- [ ] `devtools::check()` で新規 ERROR/WARNING/NOTE なし
+- [ ] 向きの検証テスト（セクション5-5）が通る
+- [ ] vignette がビルドできる（`devtools::build_vignettes()` または check 内で確認）
+
+## 8. 遵守事項
+
+- 既存ファイル（NEWS.md, vignettes/lingamr.Rmd, _pkgdown.yml）の編集は追記のみ。
+  既存記述を書き換えない
+- テストコードの削除・コメントアウト禁止
+- commit / push はしない（ユーザーが行う）
+- エラーは握りつぶさない。意味のあるメッセージ付きで stop/warning
+- 範囲外のリファクタリング禁止

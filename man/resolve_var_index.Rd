@@ -7,6 +7,6 @@
 resolve_var_index(idx, arg_name, col_names, n_features)
 }
 \description{
-Resolve a variable identifier to a 1-based integer index
+Shared by \code{\link[=estimate_var_total_effect]{estimate_var_total_effect()}} and \code{\link[=estimate_total_effect]{estimate_total_effect()}}.
 }
 \keyword{internal}

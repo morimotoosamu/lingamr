@@ -52,11 +52,17 @@ test_that("labels are attached and name-based lookup works", {
 })
 
 test_that("make_prior_knowledge errors on invalid inputs", {
-  expect_error(make_prior_knowledge(1))          # n_variables < 2
-  expect_error(make_prior_knowledge(4, exogenous_variables = 5))  # index out of range
-  expect_error(make_prior_knowledge(4,
-    exogenous_variables = "x",
-    labels = NULL))                              # name given but no labels
-  expect_error(make_prior_knowledge(4,
-    labels = c("a", "b", "a", "c")))            # duplicate labels
+  expect_error(make_prior_knowledge(1), "n_variables must be")          # n_variables < 2
+  expect_error(
+    make_prior_knowledge(4, exogenous_variables = 5),
+    "indices must be between"
+  )  # index out of range
+  expect_error(
+    make_prior_knowledge(4, exogenous_variables = "x", labels = NULL),
+    "labels' is not specified"
+  )  # name given but no labels
+  expect_error(
+    make_prior_knowledge(4, labels = c("a", "b", "a", "c")),
+    "must not contain duplicate"
+  )  # duplicate labels
 })

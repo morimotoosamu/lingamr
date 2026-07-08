@@ -83,8 +83,13 @@ check_var_stationarity <- function(result, tol = 1) {
 #'
 #' @param x a `var_stationarity` object
 #' @param ... additional arguments (unused)
+#' @return The input object `x`, invisibly.
 #' @method print var_stationarity
 #' @export
+#' @examples
+#' s <- generate_varlingam_sample(n = 1000, seed = 42)
+#' m <- lingam_var(s$data, lags = 1, reg_method = "ols", prune = FALSE)
+#' print(check_var_stationarity(m))
 print.var_stationarity <- function(x, ...) {
   cat("=== VAR Stationarity Check ===\n")
   cat(sprintf("Lag order:         %d\n", x$lags))

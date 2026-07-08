@@ -17,3 +17,8 @@ The input object \code{x}, invisibly.
 \description{
 print method for lingam_summary
 }
+\examples{
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
+model <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
+print(summary_lingam(LiNGAM_sample_1000$data, model))
+}

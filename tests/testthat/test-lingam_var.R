@@ -65,9 +65,18 @@ test_that("lingam_var errors on missing values", {
 test_that("lingam_var errors on invalid inputs", {
   s <- generate_varlingam_sample(n = 200, seed = 1)
 
-  expect_error(lingam_var(s$data[, 1, drop = FALSE], reg_method = "ols"))   # 1 variable
-  expect_error(lingam_var(s$data, lags = 0, reg_method = "ols"))            # lags < 1
-  expect_error(lingam_var(s$data, lags = 1, criterion = "bad", reg_method = "ols"))
+  expect_error(
+    lingam_var(s$data[, 1, drop = FALSE], reg_method = "ols"),
+    "at least 2 variables"
+  )  # 1 variable
+  expect_error(
+    lingam_var(s$data, lags = 0, reg_method = "ols"),
+    "lags must be"
+  )  # lags < 1
+  expect_error(
+    lingam_var(s$data, lags = 1, criterion = "bad", reg_method = "ols"),
+    "should be one of"
+  )
 })
 
 test_that("print.VARLiNGAMResult runs without error", {

@@ -17,3 +17,8 @@ The input object \code{x}, invisibly.
 \description{
 print method for causal_order_stability
 }
+\examples{
+dat <- generate_lingam_sample_6()
+bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", seed = 42)
+print(get_causal_order_stability(bs, labels = names(dat$data)))
+}

@@ -27,7 +27,7 @@
 #' @export
 #' @examples
 #' dat <- generate_lingam_sample_6()
-#' bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
+#' bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", seed = 42)
 #' get_causal_order_stability(bs, labels = names(dat$data))
 get_causal_order_stability <- function(result, labels = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
@@ -101,6 +101,10 @@ get_causal_order_stability <- function(result, labels = NULL) {
 #' @param ... Additional arguments (unused)
 #' @return The input object `x`, invisibly.
 #' @export
+#' @examples
+#' dat <- generate_lingam_sample_6()
+#' bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", seed = 42)
+#' print(get_causal_order_stability(bs, labels = names(dat$data)))
 print.causal_order_stability <- function(x, ...) {
   cat("=== Causal Order Stability ===\n")
   cat(sprintf("Bootstrap samples:       %d\n", x$n_sampling))

@@ -15,3 +15,5 @@
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^CLAUDE\.md$
+^.*\.bak$
+^\.Rhistory$

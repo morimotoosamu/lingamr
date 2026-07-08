@@ -44,6 +44,11 @@
 #' `parallel = TRUE`, L'Ecuyer streams via `parallel::clusterSetRNGStream()` make
 #' results reproducible for a given `seed` and `n_cores`, but they do not match
 #' the sequential (`parallel = FALSE`) results.
+#'
+#' **On iteration failures:** as in [lingam_direct_bootstrap()], each iteration
+#' runs inside a `tryCatch()`; a failing iteration is reported as a warning and
+#' excluded from the result instead of aborting the run. An error is raised
+#' only if every iteration fails.
 #' @importFrom stats median
 #' @export
 #' @examples
@@ -79,7 +84,7 @@ lingam_var_bootstrap <- function(X,
   reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
-  if (reg_method == "ridge" && lambda == "oracle") {
+  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
     stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
          call. = FALSE)
   }
@@ -114,61 +119,69 @@ lingam_var_bootstrap <- function(X,
   n_resid <- nrow(residuals)
 
   # One bootstrap iteration: residual resample -> VAR recursion -> re-estimate.
+  # Wrapped in tryCatch (like lingam_direct_bootstrap) so that one pathological
+  # resample does not abort the entire run; failed iterations are reported as
+  # warnings and excluded from the aggregated result.
   run_one <- function(i) {
-    # i.i.d. resample of residual rows, up to the original series length.
-    ridx <- sample.int(n_resid, n_samples, replace = TRUE)
-    sampled <- residuals[ridx, , drop = FALSE]
+    tryCatch({
+      # i.i.d. resample of residual rows, up to the original series length.
+      ridx <- sample.int(n_resid, n_samples, replace = TRUE)
+      sampled <- residuals[ridx, , drop = FALSE]
 
-    resampled_X <- matrix(0, nrow = n_samples, ncol = n_features)
-    for (j in seq_len(n_samples)) {
-      if (j <= lags) {
-        # seed the first `lags` rows with the resampled noise
-        resampled_X[j, ] <- sampled[j, ]
-      } else {
-        ar <- numeric(n_features)
-        for (k in seq_len(lags)) {
-          ar <- ar + as.numeric(M[k, , ] %*% resampled_X[j - k, ])
-        }
-        resampled_X[j, ] <- ar + sampled[j, ]
-      }
-    }
-
-    res <- lingam_var(resampled_X,
-      lags = lags, criterion = NULL,
-      measure = measure, reg_method = reg_method,
-      lambda = lambda, init_method = init_method, prune = prune
-    )
-    am <- res$adjacency_matrices
-    causal_order <- res$causal_order
-
-    # joined adjacency cbind(B0, B1, ..., Bp): n_features x n_features*(1+lags)
-    am_joined <- do.call(cbind, lapply(seq_len(lags + 1L), function(k) am[k, , ]))
-
-    # total effects over the time-expanded graph (square-padded joined matrix)
-    ncol_j <- ncol(am_joined)
-    am_sq <- matrix(0, nrow = ncol_j, ncol = ncol_j)
-    am_sq[seq_len(n_features), ] <- am_joined
-
-    te <- matrix(0, nrow = n_features, ncol = n_features * (lags + 1L))
-    for (ci in seq_len(n_features)) {
-      to <- rev(causal_order)[ci]
-      # contemporaneous sources: those preceding `to` in the causal order
-      n_earlier <- n_features - ci
-      if (n_earlier >= 1L) {
-        for (from in causal_order[seq_len(n_earlier)]) {
-          te[to, from] <- calculate_total_effect(am_sq, from, to)
+      resampled_X <- matrix(0, nrow = n_samples, ncol = n_features)
+      for (j in seq_len(n_samples)) {
+        if (j <= lags) {
+          # seed the first `lags` rows with the resampled noise
+          resampled_X[j, ] <- sampled[j, ]
+        } else {
+          ar <- numeric(n_features)
+          for (k in seq_len(lags)) {
+            ar <- ar + as.numeric(M[k, , ] %*% resampled_X[j - k, ])
+          }
+          resampled_X[j, ] <- ar + sampled[j, ]
         }
       }
-      # lagged sources: all variables at each lag
-      for (lag in seq_len(lags)) {
-        for (from in seq_len(n_features)) {
-          from_col <- from + n_features * lag
-          te[to, from_col] <- calculate_total_effect(am_sq, from_col, to)
+
+      res <- lingam_var(resampled_X,
+        lags = lags, criterion = NULL,
+        measure = measure, reg_method = reg_method,
+        lambda = lambda, init_method = init_method, prune = prune
+      )
+      am <- res$adjacency_matrices
+      causal_order <- res$causal_order
+
+      # joined adjacency cbind(B0, B1, ..., Bp): n_features x n_features*(1+lags)
+      am_joined <- do.call(cbind, lapply(seq_len(lags + 1L), function(k) am[k, , ]))
+
+      # total effects over the time-expanded graph (square-padded joined matrix)
+      ncol_j <- ncol(am_joined)
+      am_sq <- matrix(0, nrow = ncol_j, ncol = ncol_j)
+      am_sq[seq_len(n_features), ] <- am_joined
+
+      te <- matrix(0, nrow = n_features, ncol = n_features * (lags + 1L))
+      for (ci in seq_len(n_features)) {
+        to <- rev(causal_order)[ci]
+        # contemporaneous sources: those preceding `to` in the causal order
+        n_earlier <- n_features - ci
+        if (n_earlier >= 1L) {
+          for (from in causal_order[seq_len(n_earlier)]) {
+            te[to, from] <- calculate_total_effect(am_sq, from, to)
+          }
+        }
+        # lagged sources: all variables at each lag
+        for (lag in seq_len(lags)) {
+          for (from in seq_len(n_features)) {
+            from_col <- from + n_features * lag
+            te[to, from_col] <- calculate_total_effect(am_sq, from_col, to)
+          }
         }
       }
-    }
 
-    list(adjacency = am_joined, total_effects = te, idx = ridx, causal_order = causal_order)
+      list(ok = TRUE, adjacency = am_joined, total_effects = te, idx = ridx,
+           causal_order = causal_order)
+    }, error = function(e) {
+      list(ok = FALSE, iteration = i, message = conditionMessage(e))
+    })
   }
 
   # Resolve cores (default cap of 2, matching lingam_direct_bootstrap).
@@ -231,12 +244,28 @@ lingam_var_bootstrap <- function(X,
     })
   }
 
+  # Report and drop any failed iterations before aggregating (same failure
+  # policy as lingam_direct_bootstrap).
+  ok <- vapply(res_list, function(r) isTRUE(r$ok), logical(1))
+  if (any(!ok)) {
+    for (r in res_list[!ok]) {
+      warning(sprintf(
+        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
+      ), call. = FALSE)
+    }
+  }
+  res_list <- res_list[ok]
+  n_success <- length(res_list)
+  if (n_success == 0) {
+    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
+  }
+
   # Aggregate.
-  adjacency_matrices <- vector("list", n_sampling)
-  total_effects <- array(0, dim = c(n_sampling, n_features, n_features * (lags + 1L)))
-  causal_orders <- matrix(0L, nrow = n_sampling, ncol = n_features)
-  resampled_indices <- vector("list", n_sampling)
-  for (i in seq_len(n_sampling)) {
+  adjacency_matrices <- vector("list", n_success)
+  total_effects <- array(0, dim = c(n_success, n_features, n_features * (lags + 1L)))
+  causal_orders <- matrix(0L, nrow = n_success, ncol = n_features)
+  resampled_indices <- vector("list", n_success)
+  for (i in seq_len(n_success)) {
     adjacency_matrices[[i]] <- res_list[[i]]$adjacency
     total_effects[i, , ] <- res_list[[i]]$total_effects
     causal_orders[i, ] <- res_list[[i]]$causal_order
@@ -245,7 +274,14 @@ lingam_var_bootstrap <- function(X,
 
   if (verbose) {
     elapsed <- (proc.time() - t_start)["elapsed"]
-    message(sprintf("Completed in %.1f seconds.", elapsed))
+    if (n_success < n_sampling) {
+      message(sprintf(
+        "Completed in %.1f seconds (%d / %d iterations succeeded).",
+        elapsed, n_success, n_sampling
+      ))
+    } else {
+      message(sprintf("Completed in %.1f seconds.", elapsed))
+    }
   }
 
   create_var_bootstrap_result(
@@ -286,8 +322,16 @@ create_var_bootstrap_result <- function(adjacency_matrices, total_effects, lags,
 #'
 #' @param x a VARBootstrapResult object
 #' @param ... additional arguments (unused)
+#' @return The input object `x`, invisibly.
 #' @method print VARBootstrapResult
 #' @export
+#' @examples
+#' s <- generate_varlingam_sample(n = 500, seed = 42)
+#' bs <- lingam_var_bootstrap(s$data,
+#'   n_sampling = 10L, lags = 1, criterion = NULL,
+#'   reg_method = "ols", prune = FALSE, seed = 1, verbose = FALSE
+#' )
+#' print(bs)
 print.VARBootstrapResult <- function(x, ...) {
   n_sampling <- length(x$adjacency_matrices)
   n_features <- nrow(x$adjacency_matrices[[1]])
@@ -382,7 +426,14 @@ get_var_paths <- function(result, from_index, to_index,
   ams <- result$adjacency_matrices
   n_sampling <- length(ams)
   nf <- nrow(ams[[1]])
-  n_lags <- ncol(ams[[1]]) / nf - 1L
+  n_lags <- ncol(ams[[1]]) %/% nf - 1L
+  # Lags beyond the fitted model would index past the time-expanded graph and
+  # surface as a bare "subscript out of bounds" error below.
+  if (from_lag > n_lags || to_lag > n_lags) {
+    stop(sprintf(
+      "from_lag and to_lag must not exceed the model's lag order (%d).", n_lags
+    ), call. = FALSE)
+  }
 
   paths_collector <- vector("list", n_sampling)
   effects_collector <- vector("list", n_sampling)

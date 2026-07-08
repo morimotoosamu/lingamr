@@ -2,3 +2,91 @@ url: https://morimotoosamu.github.io/lingamr/
 template:
   bootstrap: 5
 
+reference:
+- title: Direct LiNGAM
+  desc: Core causal discovery on i.i.d. data
+  contents:
+  - lingam_direct
+  - lingam_high_dim
+  - make_prior_knowledge
+  - summary_lingam
+  - estimate_total_effect
+  - estimate_all_total_effects
+  - get_error_independence_p_values
+  - get_causal_order_stability
+
+- title: Bootstrap stability analysis
+  contents:
+  - lingam_direct_bootstrap
+  - get_probabilities
+  - get_causal_direction_counts
+  - get_directed_acyclic_graph_counts
+  - get_adjacency_matrix_summary
+  - get_total_causal_effects
+  - get_paths
+  - plot_bootstrap_probabilities
+
+- title: VAR-LiNGAM (time series)
+  contents:
+  - lingam_var
+  - lingam_var_bootstrap
+  - get_var_probabilities
+  - get_var_paths
+  - estimate_var_total_effect
+  - check_var_stationarity
+  - test_varlingam_residual_normality
+  - test_varlingam_residual_normality_all
+  - plot_varlingam_residual_qq
+
+- title: MultiGroup Direct LiNGAM
+  desc: Joint estimation across multiple datasets sharing a causal order
+  contents:
+  - lingam_multi_group
+  - lingam_multi_group_bootstrap
+  - get_group_result
+
+- title: BottomUpParceLiNGAM
+  desc: Causal discovery robust against latent confounders
+  contents:
+  - lingam_parce
+  - lingam_parce_bootstrap
+  - estimate_total_effect_parce
+  - get_error_independence_p_values_parce
+
+- title: RCD (Repetitive Causal Discovery)
+  desc: Causal discovery with latent confounder detection
+  contents:
+  - lingam_rcd
+  - lingam_rcd_bootstrap
+  - estimate_total_effect_rcd
+  - get_error_independence_p_values_rcd
+
+- title: LiM (mixed continuous and discrete data)
+  contents:
+  - lingam_lim
+
+- title: Missing data
+  contents:
+  - bootstrap_with_imputation
+  - as_bootstrap_result
+
+- title: Model fit and diagnostics
+  contents:
+  - evaluate_model_fit
+  - test_residual_normality
+  - plot_residual_qq
+  - plot_adjacency
+
+- title: Sample data generation
+  contents:
+  - starts_with("generate_")
+
+- title: Tidiers and autoplot
+  contents:
+  - starts_with("tidy.")
+  - starts_with("glance.")
+  - starts_with("autoplot.")
+
+- title: Print methods
+  contents:
+  - starts_with("print.")

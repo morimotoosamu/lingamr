@@ -17,6 +17,9 @@ mutual_information_kernel(x1, x2, param)
 Mutual information
 }
 \description{
-Kernel-based mutual information
+Dispatches to the incomplete-Cholesky low-rank path for n above the
+low-rank threshold (matching the kappa/sigma switch in
+\code{search_causal_order_kernel()}); below the threshold it calls the exact
+path unchanged.
 }
 \keyword{internal}

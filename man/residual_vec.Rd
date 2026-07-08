@@ -5,14 +5,12 @@
 \title{Residual (residual when xi is regressed on xj)
 Compute the residual vector}
 \usage{
-residual_vec(xi, xj, standardized = FALSE)
+residual_vec(xi, xj)
 }
 \arguments{
 \item{xi}{Target variable vector}
 
 \item{xj}{Explanatory variable vector}
-
-\item{standardized}{Whether the data is already standardized (default: FALSE)}
 }
 \value{
 Residual vector after regression

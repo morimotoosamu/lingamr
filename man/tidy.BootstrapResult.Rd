@@ -22,6 +22,6 @@ so that function's arguments can be passed through \code{...}.
 }
 \examples{
 dat <- generate_lingam_sample_6()
-bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
+bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", seed = 42)
 tidy(bs)
 }

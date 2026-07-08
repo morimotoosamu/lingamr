@@ -47,5 +47,15 @@ test_that("var_total_effect_graph matches the path product", {
   am <- m$adjacency_matrices
   am_joined <- cbind(am[1, , ], am[2, , ])
   graph_te <- var_total_effect_graph(am_joined, 1, 3)
-  expect_equal(graph_te, -0.3, tolerance = 0.1)
+
+  # x0(t) -> x2(t) paths stay in the contemporaneous block (lagged nodes have
+  # no incoming edges), so the graph total effect must equal the manual path
+  # sum over the estimated B0: direct edge plus the x0 -> x1 -> x2 product.
+  B0 <- am[1, , ]
+  manual_te <- B0[3, 1] + B0[2, 1] * B0[3, 2]
+  expect_equal(graph_te, manual_te, tolerance = 1e-8)
+
+  # sanity: close to the true total effect 0.6 * -0.5 = -0.3 (estimation noise
+  # at this seed/n leaves ~13% relative deviation, hence the loose tolerance)
+  expect_equal(graph_te, -0.3, tolerance = 0.2)
 })

@@ -134,6 +134,42 @@ fit_ols <- function(y, Xp) {
 }
 
 
+#' OLS fit for a single predictor, pruned by information criterion
+#'
+#' glmnet requires at least two predictor columns, so the penalized methods
+#' fall back to OLS when only one predictor remains. Plain OLS never yields an
+#' exact zero, which would make single-predictor edges unprunable: the second
+#' variable in the causal order always has exactly one predictor, so a
+#' spurious edge would survive even for fully independent data. To preserve
+#' the sparse behavior of the penalized methods, the OLS coefficient is kept
+#' only when adding the predictor improves the information criterion over the
+#' intercept-only model; otherwise it is set to exactly zero.
+#'
+#' The criterion is AIC for `lambda = "AIC"` and BIC otherwise (the CV /
+#' oracle lambdas have no single-predictor counterpart, so the sparsest
+#' criterion, BIC, is used for them as well).
+#'
+#' @param y response variable (numeric vector)
+#' @param Xp single-column predictor matrix
+#' @param lambda lambda selection method of the calling fit
+#' @return length-1 coefficient vector (0 when the predictor is pruned)
+#' @keywords internal
+fit_ols_ic_pruned <- function(y, Xp, lambda) {
+  fit <- stats::lm.fit(x = cbind(1, as.matrix(Xp)), y = y)
+  coefs <- fit$coefficients[-1]
+  n <- length(y)
+  rss_full <- sum(fit$residuals^2)
+  rss_null <- sum((y - mean(y))^2)
+  # Degenerate fits (zero residual variance on either side) carry no usable
+  # IC information; keep the OLS estimate as-is.
+  if (rss_full <= 0 || rss_null <= 0) return(coefs)
+  penalty <- if (identical(lambda, "AIC")) 2 else log(n)
+  ic_full <- n * log(rss_full / n) + penalty
+  ic_null <- n * log(rss_null / n)
+  if (ic_full < ic_null) coefs else 0
+}
+
+
 #' Select lambda by information criterion
 #'
 #' @param glmnet_model a glmnet model object
@@ -164,6 +200,25 @@ ic_glmnet <- function(glmnet_model) {
 }
 
 
+#' Scale factor used to make the (otherwise fixed, absolute) lambda search
+#' grids adapt to the response's natural scale.
+#'
+#' `lasso_lambda_seq` / `ridge_lambda_seq` are fixed absolute grids. Because
+#' glmnet's `standardize = TRUE` only standardizes the predictors (not the
+#' response `y`), the penalty strength needed for meaningful shrinkage scales
+#' with the magnitude of `y`. Without this scaling, multiplying the whole
+#' input data by a constant changes which edges the default
+#' `adaptive_lasso` + `lambda = "BIC"`/`"AIC"` pipeline selects, even though
+#' the underlying relationships are identical up to that constant.
+#' @param y response variable (numeric vector)
+#' @return a positive scale factor
+#' @keywords internal
+lambda_scale_factor <- function(y) {
+  s <- sd_pop(y)
+  if (s < 1e-10) 1e-10 else s
+}
+
+
 #' Penalized regression via glmnet (IC or CV lambda selection)
 #'
 #' Internal helper shared by [fit_lasso()] and [fit_ridge_reg()]. Both
@@ -174,10 +229,12 @@ ic_glmnet <- function(glmnet_model) {
 #' @param Xp_mat predictor matrix (already coerced to matrix)
 #' @param alpha glmnet mixing parameter: 1 = LASSO, 0 = Ridge
 #' @param lambda lambda selection method ("AIC", "BIC", "lambda.min", "lambda.1se")
-#' @param lambda_seq numeric vector of lambda values passed to glmnet
+#' @param lambda_seq numeric vector of (relative) lambda values, scaled internally
+#'   by [lambda_scale_factor()] to the response's natural scale before use
 #' @return coefficient vector (excluding intercept)
 #' @keywords internal
 fit_penalized_regression <- function(y, Xp_mat, alpha, lambda, lambda_seq) {
+  lambda_seq <- lambda_seq * lambda_scale_factor(y)
   if (lambda %in% c("AIC", "BIC")) {
     fit <- glmnet::glmnet(
       x = Xp_mat, y = y,
@@ -214,7 +271,9 @@ fit_penalized_regression <- function(y, Xp_mat, alpha, lambda, lambda_seq) {
 #' @return coefficient vector
 #' @keywords internal
 fit_lasso <- function(y, Xp, lambda = "BIC") {
-  if (ncol(Xp) == 1) return(fit_ols(y, Xp))
+  # glmnet needs >= 2 columns; use the IC-pruned OLS fallback so that a lone
+  # predictor can still be shrunk to exactly zero (see fit_ols_ic_pruned).
+  if (ncol(Xp) == 1) return(fit_ols_ic_pruned(y, Xp, lambda))
   check_glmnet_available("lasso")
   Xp_mat <- as.matrix(Xp)
   fit_penalized_regression(y, Xp_mat, alpha = 1, lambda = lambda, lambda_seq = lasso_lambda_seq)
@@ -234,6 +293,8 @@ fit_lasso <- function(y, Xp, lambda = "BIC") {
 #' @return coefficient vector
 #' @keywords internal
 fit_ridge_reg <- function(y, Xp, lambda = "BIC") {
+  # Ridge performs no sparse estimation, so the plain OLS fallback (without
+  # the IC pruning used by the lasso-family fits) is the consistent choice.
   if (ncol(Xp) == 1) return(fit_ols(y, Xp))
   if (lambda == "oracle") {
     stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
@@ -257,7 +318,9 @@ fit_adaptive_lasso <- function(y, Xp,
                                lambda = "BIC",
                                gamma_weight = 1.0,
                                init_method = "ols") {
-  if (ncol(Xp) == 1) return(fit_ols(y, Xp))
+  # glmnet needs >= 2 columns; use the IC-pruned OLS fallback so that a lone
+  # predictor can still be shrunk to exactly zero (see fit_ols_ic_pruned).
+  if (ncol(Xp) == 1) return(fit_ols_ic_pruned(y, Xp, lambda))
   check_glmnet_available("adaptive_lasso")
 
   Xp_mat <- as.matrix(Xp)
@@ -285,12 +348,17 @@ fit_adaptive_lasso <- function(y, Xp,
   pf <- 1 / (abs(init_coefs_std)^gamma_weight)
   pf[is.infinite(pf) | is.na(pf)] <- 1e10
 
+  # Scale the (otherwise fixed, absolute) lambda grid to the response's
+  # natural scale; see lambda_scale_factor() for why this is needed.
+  y_scale <- lambda_scale_factor(y)
+  lambda_seq_scaled <- lasso_lambda_seq * y_scale
+
   # --- Step 3: run Adaptive LASSO ---
   fit <- glmnet::glmnet(
     x = Xp_mat, y = y, alpha = 1,
     intercept = TRUE, standardize = TRUE,
     penalty.factor = pf,
-    lambda = lasso_lambda_seq
+    lambda = lambda_seq_scaled
   )
 
   if (lambda %in% c("AIC", "BIC")) {
@@ -304,13 +372,15 @@ fit_adaptive_lasso <- function(y, Xp,
 
   if (lambda == "oracle") {
     # The oracle lambda is not on the search grid, so interpolate with coef().
-    lambda_val <- 5 / (n^(1.75))
+    # Scaled by y_scale for the same reason as the grid itself, so it stays
+    # in the same units as `fit$lambda` for coef()'s interpolation.
+    lambda_val <- (5 / (n^(1.75))) * y_scale
   } else {
     cv_fit <- glmnet::cv.glmnet(
       x = Xp_mat, y = y, alpha = 1,
       intercept = TRUE, standardize = TRUE,
       penalty.factor = pf,
-      lambda = lasso_lambda_seq
+      lambda = lambda_seq_scaled
     )
 
     lambda_val <- cv_fit[[lambda]]

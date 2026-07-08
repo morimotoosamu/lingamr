@@ -66,6 +66,11 @@ Reproducibility follows the same rules as \code{\link[=lingam_direct_bootstrap]{
 \code{parallel = TRUE}, L'Ecuyer streams via \code{parallel::clusterSetRNGStream()} make
 results reproducible for a given \code{seed} and \code{n_cores}, but they do not match
 the sequential (\code{parallel = FALSE}) results.
+
+\strong{On iteration failures:} as in \code{\link[=lingam_direct_bootstrap]{lingam_direct_bootstrap()}}, each iteration
+runs inside a \code{tryCatch()}; a failing iteration is reported as a warning and
+excluded from the result instead of aborting the run. An error is raised
+only if every iteration fails.
 }
 \examples{
 s <- generate_varlingam_sample(n = 500, seed = 42)

@@ -29,7 +29,9 @@ Get DAG counts
 \examples{
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+  n_sampling = 30L, reg_method = "ols", seed = 42
+)
 
 get_directed_acyclic_graph_counts(bs_model)
 }

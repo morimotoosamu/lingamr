@@ -80,7 +80,8 @@ model <- x1k$data |>
 ```
 
 To use HSIC for assessing independence, set the `measure` argument to
-"kernel". Note that HSIC is very computationally expensive.
+"kernel". HSIC is computationally expensive; for `n > 1000`,
+`lingam_direct()` automatically switches to a low-rank approximation.
 
 
 ### Causal Order
@@ -816,6 +817,40 @@ tidy(r10) |>
 ```
 
 
+## High-Dimensional Direct LiNGAM
+
+The $O(p^3)$ independence-test cost shown above becomes a real bottleneck once
+$p$ grows into the tens or hundreds, and breaks down entirely once $p > n$
+(more variables than observations), where the usual regression-based
+adjacency estimation is no longer well defined.
+
+`lingam_high_dim()` implements HighDimDirectLiNGAM (Wang & Drton 2020), a
+variant designed for this regime. Instead of pairwise independence tests, it
+searches the causal order using moment statistics of non-Gaussianity, computed
+from a cached Gram matrix. The algorithm is deterministic (no random
+restarts), and it returns the same `LingamResult` object as `lingam_direct()`,
+so `print()`, `tidy()`, `plot_adjacency()` and `estimate_total_effect()` all
+work unchanged.
+
+```{r high_dim_basic}
+hd_sample <- generate_lingam_sample_6(n = 500, seed = 1)
+hd_result <- lingam_high_dim(hd_sample$data)
+
+hd_result$causal_order
+round(hd_result$adjacency_matrix, 3)
+```
+
+When `n_samples <= n_features`, the usual BIC-based Adaptive LASSO cannot be
+used to estimate the adjacency matrix, so `lingam_high_dim()` falls back to a
+cross-validated LASSO (`glmnet::cv.glmnet`) and emits a warning:
+
+```{r high_dim_wide}
+wide_sample <- generate_lingam_large_sample(p = 30, n = 25, seed = 1)
+wide_result <- lingam_high_dim(wide_sample$data)
+
+wide_result$causal_order
+```
+
 ## A Case Where DirectLiNGAM Struggles: The Measurement Error Paradox
 
 Causal discovery methods have assumptions, and when those are violated they may
@@ -1078,6 +1113,302 @@ get_var_paths(bs_var, from_index = 1, to_index = 3)
 ```{r varlingam_paths_lag}
 # Paths from x0(t-1) to x2(t)  (from_lag = 1)
 get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
+```
+
+
+## LiNGAM for Mixed Data (LiM)
+
+Direct LiNGAM assumes every variable is continuous. `lingam_lim()` relaxes
+this assumption and estimates a causal structure from data containing a
+mixture of continuous and binary (0/1) discrete variables, following
+Zeng et al. (2022). It combines a NOTEARS-style continuous optimization
+(the "global" phase) with a combinatorial local search over edge
+directions, pruning, and edge addition (the "local" phase).
+
+`generate_lim_sample()` generates a small dataset with a known causal chain
+of continuous and discrete variables: `x1` (continuous) -> `x2` (discrete)
+-> `x3` (continuous).
+
+```{r lim_sample}
+set.seed(1)
+lim_dat <- generate_lim_sample(n = 2000)
+head(lim_dat$data)
+lim_dat$is_continuous
+```
+
+`lingam_lim()` requires `is_continuous`, a logical vector marking which
+columns are continuous (`TRUE`) versus binary discrete (`FALSE`).
+Because the optimization starts from a random initial point,
+reproducibility requires `set.seed()`.
+
+```{r lim_fit}
+lim_result <- lingam_lim(lim_dat$data, is_continuous = lim_dat$is_continuous)
+print(lim_result)
+```
+
+As with `lingam_direct()`, `adjacency_matrix` follows the
+`B[i, j]` = j -> i convention (row = to, column = from), and `causal_order`
+lists the estimated topological order as 1-based indices.
+
+```{r lim_order}
+colnames(lim_dat$data)[lim_result$causal_order]
+```
+
+Only binary (0/1) discrete variables are supported; see `?lingam_lim` for
+details on the local phase's edge-weight convention and its numeric
+differences from the Python implementation.
+
+
+## Multi-Group Direct LiNGAM
+
+`lingam_direct()` fits a single dataset. When data comes from several
+sources that plausibly share the same causal structure but not the same
+strength of effect (e.g. the same study run at multiple sites, or the same
+process observed in different time periods), `lingam_multi_group()` jointly
+estimates a **common causal order** across all groups while still allowing
+each group its own adjacency matrix (structural coefficients), following
+Shimizu (2012).
+
+`generate_multi_group_sample()` generates two datasets that share the causal
+structure of `generate_lingam_sample_6()` but with slightly different
+coefficients per group.
+
+```{r multi_group_sample}
+mg <- generate_multi_group_sample(n = c(1000, 1000), seed = 42)
+lapply(mg$data_list, head, 3)
+```
+
+```{r multi_group_fit}
+mg_result <- lingam_multi_group(mg$data_list, reg_method = "ols")
+print(mg_result)
+```
+
+`causal_order` is shared by all groups; `adjacency_matrices` holds one
+matrix per group, each following the usual `B[i, j]` = j -> i convention.
+
+To analyze a single group with the rest of `lingamr`'s single-group
+tooling (total causal effects, independence tests, plotting), extract it
+as a plain `LingamResult` with `get_group_result()`:
+
+```{r multi_group_extract}
+g1 <- get_group_result(mg_result, "group1")
+class(g1)
+
+estimate_all_total_effects(mg$data_list$group1, g1, method = "ols")
+```
+
+`lingam_multi_group_bootstrap()` provides bootstrap stability estimates in
+the same joint fashion: every iteration resamples each group independently,
+then jointly re-estimates the causal order and per-group adjacency
+matrices. It returns a named list of per-group `BootstrapResult` objects, so
+the existing bootstrap query functions apply directly per group:
+
+```{r multi_group_bootstrap}
+mg_bs <- lingam_multi_group_bootstrap(mg$data_list,
+  n_sampling = 20L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(mg_bs$group1)
+```
+
+Note that `lingam_multi_group_bootstrap()`'s total causal effects are
+computed as path-coefficient products over each iteration's adjacency
+matrix, not via regression; this matches the upstream Python
+implementation but differs from `lingam_direct_bootstrap()`'s
+regression-based `estimate_all_total_effects()`.
+
+
+## Causal Discovery with Missing Data
+
+All algorithms above assume a complete data matrix. When `X` contains missing
+values (`NA`), `bootstrap_with_imputation()` combines bootstrap resampling
+with multiple imputation: each resample is imputed into several complete
+datasets, and a common causal structure is jointly estimated across them with
+`lingam_multi_group()` (treating the imputed copies as "groups" that share one
+causal order). This is an R port of the Python
+`lingam.tools.bootstrap_with_imputation()`.
+
+```{r bootstrap_with_imputation_setup, eval = requireNamespace("mice", quietly = TRUE)}
+sample6_na <- generate_lingam_sample_6(n = 1000, seed = 1)
+X_na <- sample6_na$data
+set.seed(1)
+X_na$x5[sample.int(nrow(X_na), size = round(0.1 * nrow(X_na)))] <- NA # MCAR 10% on x5
+```
+
+```{r bootstrap_with_imputation_fit, eval = requireNamespace("mice", quietly = TRUE)}
+bwi <- bootstrap_with_imputation(X_na,
+  n_sampling = 20L, n_repeats = 5L, seed = 42, verbose = FALSE
+)
+print(bwi)
+```
+
+The default imputer is `mice::mice(method = "norm")` (Bayesian linear
+regression), the closest standard R equivalent of the upstream Python default
+(`IterativeImputer(sample_posterior = TRUE)`); numeric results will not match
+the Python implementation. Both the imputer and the causal-discovery step can
+be swapped for a custom `function` via the `imputer` and `cd_fit` arguments.
+
+Because each iteration produces `n_repeats` adjacency matrices (one per
+imputed dataset), the result's shape differs from `lingam_direct_bootstrap()`.
+`as_bootstrap_result()` collapses the `n_repeats` dimension (median or mean)
+into a regular `BootstrapResult`, so the existing bootstrap query functions
+apply as usual:
+
+```{r bootstrap_with_imputation_convert, eval = requireNamespace("mice", quietly = TRUE)}
+bs_na <- as_bootstrap_result(bwi, aggregate = "median")
+get_probabilities(bs_na)
+```
+
+`get_total_causal_effects()` is not available on this `BootstrapResult`, since
+`bootstrap_with_imputation()` never computes total effects.
+
+
+## Latent Confounders: Bottom-Up ParceLiNGAM
+
+Every algorithm above assumes there is no latent (unobserved) confounder: any
+variable that causes two or more of the observed variables must itself be
+observed. When that assumption fails, `lingam_direct()` will still return a
+full causal order, but silently -- some part of it may be wrong, with no
+indication of which part.
+
+`lingam_parce()` (BottomUpParceLiNGAM, Tashiro et al. 2014) is designed for
+this situation. It searches for the causal order from the sink (most
+downstream) side, testing at each step whether a candidate variable's
+residual is independent of the others. As soon as that test is rejected, the
+search stops, and every variable it could not yet place is returned together
+as a single **unresolved block** -- a signal that those variables likely
+share a latent confounder, rather than a (possibly wrong) guess at their
+order.
+
+`generate_parce_sample()` generates a 7-variable model in which `x6` is an
+unobserved common cause of `x2` and `x3`; only `x0`-`x5` are returned as data.
+
+```{r parce_sample}
+# HSIC is O(n^2), so a moderate n keeps this vignette fast to build
+confounded <- generate_parce_sample(n = 500, seed = 1)
+head(confounded$data)
+confounded$confounded_pair
+```
+
+```{r parce_fit}
+parce_result <- lingam_parce(confounded$data, reg_method = "ols")
+print(parce_result)
+```
+
+The causal order's first element is the unresolved block, shown in
+parentheses; here it correctly contains `x2` and `x3`. The corresponding
+entries of the adjacency matrix are `NA`, while edges among the remaining,
+fully-resolved variables are estimated as usual:
+
+```{r parce_block}
+parce_result$causal_order[[1]]
+parce_result$adjacency_matrix[confounded$confounded_pair, confounded$confounded_pair]
+```
+
+Because a confounded variable's true parents cannot be identified,
+`estimate_total_effect_parce()` warns and returns `NA` when asked for a total
+effect *from* a variable in the unresolved block, but still computes normal
+estimates for well-identified pairs:
+
+```{r parce_total_effect}
+# from a confounded variable: warns and returns NA
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = confounded$confounded_pair[1], to_index = "x1"
+)
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = "x0", to_index = "x5"
+)
+```
+
+`lingam_parce_bootstrap()` provides bootstrap stability estimates in the same
+style as `lingam_direct_bootstrap()`. `NA` (unresolved) edges are treated as
+absent when aggregating, so `get_probabilities()` and the other
+`BootstrapResult` query functions work as usual; `get_causal_order_stability()`
+is the one exception, since ParceLiNGAM's blocked causal order does not fit
+its fixed-length format.
+
+```{r parce_bootstrap}
+parce_bs <- lingam_parce_bootstrap(confounded$data,
+  n_sampling = 10L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(parce_bs)
+```
+
+
+## Latent Confounders: RCD
+
+`lingam_rcd()` (Repetitive Causal Discovery; Maeda and Shimizu 2020) tackles
+the same latent-confounder problem as `lingam_parce()`, but from a different
+angle: rather than searching for a causal order and giving up on an
+**unresolved block** once a test is rejected, RCD directly estimates each
+variable's **ancestor set** and then checks individual, parent-free pairs for
+a shared latent confounder. This makes RCD's output pair-level (which specific
+pairs are confounded) rather than block-level (which set of variables could
+not be ordered).
+
+`generate_rcd_sample()` generates a 7-variable model in which `x6` is an
+unobserved common cause of `x2` and `x4`; only `x0`-`x5` are returned as data.
+
+```{r rcd_sample}
+# HSIC is O(n^2), so a moderate n keeps this vignette fast to build
+rcd_confounded <- generate_rcd_sample(n = 300, seed = 1)
+head(rcd_confounded$data)
+rcd_confounded$confounded_pair
+```
+
+```{r rcd_fit}
+rcd_result <- lingam_rcd(rcd_confounded$data)
+print(rcd_result)
+```
+
+`ancestors_list` gives each variable's estimated ancestors (not a causal
+order), and the confounded pair's adjacency-matrix entries are `NA`:
+
+```{r rcd_ancestors}
+rcd_result$ancestors_list
+rcd_result$adjacency_matrix[rcd_confounded$confounded_pair, rcd_confounded$confounded_pair]
+```
+
+As with ParceLiNGAM, `estimate_total_effect_rcd()` warns and returns `NA`
+when asked for a total effect *from* a confounded variable:
+
+```{r rcd_total_effect}
+# from a confounded variable: warns and returns NA
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = rcd_confounded$confounded_pair[1], to_index = rcd_confounded$confounded_pair[2]
+)
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = "x5", to_index = "x0"
+)
+```
+
+
+## Evaluating Model Fit
+
+`evaluate_model_fit()` treats an estimated adjacency matrix as a structural
+equation model (SEM) and reports standard SEM fit measures (CFI, RMSEA,
+AIC/BIC, etc.) via the `lavaan` package (an optional dependency; install it
+with `install.packages("lavaan")`). This is useful for judging whether an
+estimated causal graph is consistent with the data, independent of how it
+was estimated.
+
+```{r evaluate_model_fit, eval = requireNamespace("lavaan", quietly = TRUE)}
+sample6 <- generate_lingam_sample_6()
+fit_result <- lingam_direct(sample6$data, reg_method = "ols")
+
+# fit measures for the estimated graph
+evaluate_model_fit(fit_result, sample6$data)
+```
+
+Reversing the direction of every edge produces a mis-specified model, and
+its fit measures are visibly worse (lower CFI, higher RMSEA):
+
+```{r evaluate_model_fit_reversed, eval = requireNamespace("lavaan", quietly = TRUE)}
+reversed_adjacency <- t(fit_result$adjacency_matrix)
+evaluate_model_fit(reversed_adjacency, sample6$data)
 ```
 
 

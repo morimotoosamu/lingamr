@@ -11,6 +11,17 @@
 
 \item{...}{additional arguments (unused)}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Print a VARBootstrapResult
+}
+\examples{
+s <- generate_varlingam_sample(n = 500, seed = 42)
+bs <- lingam_var_bootstrap(s$data,
+  n_sampling = 10L, lags = 1, criterion = NULL,
+  reg_method = "ols", prune = FALSE, seed = 1, verbose = FALSE
+)
+print(bs)
 }

@@ -17,3 +17,8 @@ The input object \code{x}, invisibly.
 \description{
 Print method for lingam_normality_test
 }
+\examples{
+LiNGAM_sample_1000 <- generate_lingam_sample_6()
+result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
+print(test_residual_normality(LiNGAM_sample_1000$data, result))
+}

@@ -11,6 +11,14 @@
 
 \item{...}{additional arguments (unused)}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Print method for var_stationarity
+}
+\examples{
+s <- generate_varlingam_sample(n = 1000, seed = 42)
+m <- lingam_var(s$data, lags = 1, reg_method = "ols", prune = FALSE)
+print(check_var_stationarity(m))
 }

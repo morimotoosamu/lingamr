@@ -109,6 +109,10 @@ summary_lingam <- function(X, lingam_result,
 #' @param ... Additional arguments (unused)
 #' @return The input object `x`, invisibly.
 #' @export
+#' @examples
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
+#' model <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
+#' print(summary_lingam(LiNGAM_sample_1000$data, model))
 print.lingam_summary <- function(x, ...) {
   cat("=== Direct LiNGAM Model Summary ===\n")
   cat(sprintf("Variables:    %d\n", x$n_variables))

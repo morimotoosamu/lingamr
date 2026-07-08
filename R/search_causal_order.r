@@ -14,6 +14,14 @@
 # =============================================================================
 
 
+# Above this sample size the exact O(n^3) kernel path switches to the
+# incomplete-Cholesky low-rank approximation. The kappa/sigma parameters in
+# search_causal_order_kernel() are tied to this switch, so both
+# mutual_information_kernel() and search_causal_order_kernel() must use this
+# same constant.
+KERNEL_LOWRANK_MAX_N <- 1000L
+
+
 #' Extract partial orders from prior knowledge
 #' @param pk Prior knowledge matrix (NaN = unknown)
 #' @return matrix (n x 2), each row is a (from, to) partial order
@@ -77,19 +85,12 @@ extract_partial_orders <- function(pk) {
 #' Compute the residual vector
 #' @param xi Target variable vector
 #' @param xj Explanatory variable vector
-#' @param standardized Whether the data is already standardized (default: FALSE)
 #' @return Residual vector after regression
 #' @keywords internal
-residual_vec <- function(xi, xj, standardized = FALSE) {
-  if (standardized) {
-    # Fast version: assumes mean = 0
-    beta <- sum(xi * xj) / sum(xj * xj)
-  } else {
-    # General version: includes centering
-    xi_c <- xi - mean(xi)
-    xj_c <- xj - mean(xj)
-    beta <- sum(xi_c * xj_c) / sum(xj_c * xj_c)
-  }
+residual_vec <- function(xi, xj) {
+  xi_c <- xi - mean(xi)
+  xj_c <- xj - mean(xj)
+  beta <- sum(xi_c * xj_c) / sum(xj_c * xj_c)
   xi - beta * xj
 }
 
@@ -310,7 +311,126 @@ kernel_mi_core <- function(E1, x2, kappa, sigma) {
 }
 
 
+#' Gaussian kernel via pivoted incomplete Cholesky
+#'
+#' Low-rank approximation `G` (n x d) with `tcrossprod(G) ~= K`, where
+#' `K[i, j] = exp(-(x[i] - x[j])^2 / (2*sigma^2))`, via the greedy pivoted
+#' incomplete Cholesky of Fine & Scheinberg (2001) / Bach & Jordan (2002,
+#' kernel-ICA). Each step picks the index with the largest diagonal
+#' residual and computes only the kernel column for that pivot, so the
+#' full n x n Gram matrix is never formed. The Gaussian kernel's diagonal
+#' is 1, so residuals start at 1 without evaluating `K`.
+#' @param x Input vector (length n)
+#' @param sigma Width of the Gaussian kernel
+#' @param tol Stop once the largest remaining diagonal residual is at or below this
+#' @param max_rank Upper bound on the approximation rank
+#' @return n x d matrix `G` with `tcrossprod(G) ~= K`
+#' @keywords internal
+incomplete_cholesky_gauss <- function(x, sigma, tol = 1e-4, max_rank = min(length(x), 200)) {
+  n <- length(x)
+  max_rank <- min(max_rank, n)
+  d_vec <- rep(1, n) # diag(K) == 1 for the Gaussian kernel
+  perm <- seq_len(n)
+  G <- matrix(0, n, max_rank)
+  rank <- 0L
+
+  for (k in seq_len(max_rank)) {
+    remaining <- k:n
+    pivot_rel <- which.max(d_vec[perm[remaining]])
+    pivot_pos <- remaining[pivot_rel]
+    if (d_vec[perm[pivot_pos]] <= tol) break
+
+    if (pivot_pos != k) {
+      perm[c(k, pivot_pos)] <- perm[c(pivot_pos, k)]
+    }
+    pk <- perm[k]
+    G[pk, k] <- sqrt(d_vec[pk])
+    rank <- k
+
+    if (k < n) {
+      rest <- perm[(k + 1):n]
+      Kcol <- exp(-1 / (2 * sigma^2) * (x[rest] - x[pk])^2)
+      if (k > 1) {
+        Kcol <- Kcol - as.vector(G[rest, seq_len(k - 1), drop = FALSE] %*% G[pk, seq_len(k - 1)])
+      }
+      G[rest, k] <- Kcol / G[pk, k]
+      d_vec[rest] <- pmax(0, d_vec[rest] - G[rest, k]^2)
+    }
+  }
+
+  if (rank == max_rank && max_rank < n) {
+    unselected <- perm[(max_rank + 1):n]
+    if (max(d_vec[unselected]) > tol) {
+      warning(
+        "incomplete_cholesky_gauss: max_rank reached before tol; ",
+        "the low-rank kernel approximation may be inaccurate"
+      )
+    }
+  }
+
+  G[, seq_len(rank), drop = FALSE]
+}
+
+
+#' Kernel-based mutual information: low-rank precomputation for variable 1
+#'
+#' Low-rank counterpart of `kernel_mi_prepare()`. Via the Woodbury identity,
+#' `E1 = tmp1^-1 K1` collapses to `G1 %*% M1^-1 %*% t(G1)` where
+#' `M1 = c0*I + t(G1) %*% G1`, so the n x n matrix `E1` never needs to be
+#' formed; only the d x d inverse `M1^-1` does.
+#' @param x Vector of variable 1
+#' @param kappa Regularization parameter
+#' @param sigma Width of the Gaussian kernel
+#' @return list(G, Minv, A, c0) describing `E1` in factored form
+#' @keywords internal
+kernel_mi_prepare_lowrank <- function(x, kappa, sigma) {
+  n <- length(x)
+  c0 <- n * kappa / 2
+  G <- incomplete_cholesky_gauss(x, sigma)
+  d <- ncol(G)
+  A <- crossprod(G) # t(G) %*% G
+  Minv <- solve(c0 * diag(d) + A)
+  list(G = G, Minv = Minv, A = A, c0 = c0)
+}
+
+
+#' Kernel-based mutual information: low-rank core
+#'
+#' Low-rank counterpart of `kernel_mi_core()`. With `K2 ~= G2 %*% t(G2)`,
+#' both `S = tmp2^2 - t(W) %*% W` and `tmp2^2` reduce to `c0^2*I + G2 %*% C %*% t(G2)`
+#' for a d2 x d2 matrix `C`, via the Woodbury identity on `W` and the matrix
+#' determinant lemma on the resulting rank-d2 update. The `n*log(c0)` terms
+#' in `logdet(S)` and `logdet(tmp2^2)` cancel in their difference, so only
+#' d2 x d2 matrices remain.
+#' @param prep1 Output of `kernel_mi_prepare_lowrank()` for variable 1
+#' @param x2 Vector of variable 2
+#' @param kappa Regularization parameter
+#' @param sigma Width of the Gaussian kernel
+#' @return Mutual information
+#' @keywords internal
+kernel_mi_core_lowrank <- function(prep1, x2, kappa, sigma) {
+  c0 <- prep1$c0
+  G2 <- incomplete_cholesky_gauss(x2, sigma)
+  d2 <- ncol(G2)
+  A2 <- crossprod(G2)
+  P <- crossprod(prep1$G, G2) # t(G1) %*% G2, d1 x d2
+  D <- crossprod(P, prep1$Minv %*% (prep1$A %*% (prep1$Minv %*% P)))
+  Cprime <- 2 * c0 * diag(d2) + A2 - D
+
+  # logdet(S) and logdet(tmp2^2) each carry a 2*n*log(c0) term that cancels
+  # in the difference below, so only the d2 x d2 determinants remain.
+  logdet_S <- as.numeric(determinant(diag(d2) + Cprime %*% A2 / c0^2, logarithm = TRUE)$modulus)
+  logdet_tmp2 <- as.numeric(determinant(diag(d2) + A2 / c0, logarithm = TRUE)$modulus)
+  (-1 / 2) * (logdet_S - 2 * logdet_tmp2)
+}
+
+
 #' Kernel-based mutual information
+#'
+#' Dispatches to the incomplete-Cholesky low-rank path for n above the
+#' low-rank threshold (matching the kappa/sigma switch in
+#' `search_causal_order_kernel()`); below the threshold it calls the exact
+#' path unchanged.
 #' @param x1 Variable 1
 #' @param x2 Variable 2
 #' @param param Parameter vector (kappa, sigma)
@@ -319,8 +439,13 @@ kernel_mi_core <- function(E1, x2, kappa, sigma) {
 mutual_information_kernel <- function(x1, x2, param) {
   kappa <- param[1]
   sigma <- param[2]
-  E1 <- kernel_mi_prepare(x1, kappa, sigma)
-  kernel_mi_core(E1, x2, kappa, sigma)
+  if (length(x1) > KERNEL_LOWRANK_MAX_N) {
+    prep1 <- kernel_mi_prepare_lowrank(x1, kappa, sigma)
+    kernel_mi_core_lowrank(prep1, x2, kappa, sigma)
+  } else {
+    E1 <- kernel_mi_prepare(x1, kappa, sigma)
+    kernel_mi_core(E1, x2, kappa, sigma)
+  }
 }
 
 
@@ -337,7 +462,10 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
   }
 
   n <- nrow(X)
-  if (n > 1000) {
+  # Above this n, the exact O(n^3) kernel computation dominates runtime, so
+  # switch to the incomplete-Cholesky low-rank path (see mutual_information_kernel()).
+  use_lowrank <- n > KERNEL_LOWRANK_MAX_N
+  if (use_lowrank) {
     param <- c(2e-3, 0.5)
   } else {
     param <- c(2e-2, 1.0)
@@ -350,16 +478,24 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
   for (idx in seq_along(Uc)) {
     j <- Uc[idx]
     # The kernel matrix / inverse for candidate j is invariant across the inner loop, so compute it once
-    E1 <- kernel_mi_prepare(X[, j], kappa, sigma)
+    E1 <- if (use_lowrank) {
+      kernel_mi_prepare_lowrank(X[, j], kappa, sigma)
+    } else {
+      kernel_mi_prepare(X[, j], kappa, sigma)
+    }
     Tkernel <- 0
     for (i in U) {
       if (i == j) next
-      ri_j <- if (j %in% Vj && i %in% Uc) {
+      ri_j <- if (i %in% Vj && j %in% Uc) {
         X[, i]
       } else {
         residual_vec(X[, i], X[, j])
       }
-      Tkernel <- Tkernel + kernel_mi_core(E1, ri_j, kappa, sigma)
+      Tkernel <- Tkernel + if (use_lowrank) {
+        kernel_mi_core_lowrank(E1, ri_j, kappa, sigma)
+      } else {
+        kernel_mi_core(E1, ri_j, kappa, sigma)
+      }
     }
     Tkernels[idx] <- Tkernel
   }

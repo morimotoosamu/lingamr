@@ -127,12 +127,12 @@ build_true_adjacency <- function(var_names, from, to, coef) {
 #' @examples
 #' # Non-Gaussian (LiNGAM works well)
 #' X_nongauss <- generate_lingam_sample_6(noise_dist = "uniform")
-#' result <- lingam_direct(X_nongauss$data)
+#' result <- lingam_direct(X_nongauss$data, reg_method = "ols")
 #' result$causal_order
 #'
 #' # Gaussian (LiNGAM may fail)
 #' X_gauss <- generate_lingam_sample_6(noise_dist = "gaussian")
-#' result <- lingam_direct(X_gauss$data)
+#' result <- lingam_direct(X_gauss$data, reg_method = "ols")
 #' result$causal_order
 #'
 #' @export
@@ -206,12 +206,12 @@ generate_lingam_sample_6 <- function(n = 1000L,
 #' @examples
 #' # Non-Gaussian (LiNGAM works well)
 #' X_nongauss <- generate_lingam_sample_10(noise_dist = "uniform")
-#' result <- lingam_direct(X_nongauss$data)
+#' result <- lingam_direct(X_nongauss$data, reg_method = "ols")
 #' result$causal_order
 #'
 #' # Gaussian (LiNGAM may fail)
 #' X_gauss <- generate_lingam_sample_10(noise_dist = "gaussian")
-#' result <- lingam_direct(X_gauss$data)
+#' result <- lingam_direct(X_gauss$data, reg_method = "ols")
 #' result$causal_order
 #'
 #' @export

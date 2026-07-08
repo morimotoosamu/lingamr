@@ -35,6 +35,6 @@ pairs, and an overall stability score.
 }
 \examples{
 dat <- generate_lingam_sample_6()
-bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, seed = 42)
+bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", seed = 42)
 get_causal_order_stability(bs, labels = names(dat$data))
 }

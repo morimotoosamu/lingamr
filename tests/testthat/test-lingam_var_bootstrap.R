@@ -81,6 +81,8 @@ test_that("bootstrap and path helpers validate inputs", {
   expect_error(get_var_paths(bs, 1, 2, from_lag = 0, to_lag = 1), "from_lag")
   # same variable, same lag is invalid
   expect_error(get_var_paths(bs, 1, 1, from_lag = 0, to_lag = 0), "same")
+  # lags beyond the fitted model's lag order are rejected with a clear message
+  expect_error(get_var_paths(bs, 1, 3, from_lag = 5), "lag order")
 })
 
 test_that("lingam_var_bootstrap runs with pruning (glmnet)", {

@@ -1,0 +1,44 @@
+Type: Package
+Package: lingamr
+Title: 'LiNGAM' Algorithms for Causal Discovery
+Version: 0.1.0
+Authors@R: c(
+    person("Osamu", "Morimoto", , "galactic.supermarket@gmail.com", role = c("aut", "cre", "cph")),
+    person("T.", "Ikeuchi", role = "cph"),
+    person("G.", "Haraoka", role = "cph"),
+    person("M.", "Ide", role = "cph"),
+    person("W.", "Kurebayashi", role = "cph"),
+    person("S.", "Shimizu", role = "cph"))
+Description: R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model)
+    algorithms for causal discovery. Based on the 'Python' implementation by
+    Ikeuchi et al. (2023) <https://github.com/cdt15/lingam>. The 'VAR-LiNGAM'
+    residual diagnostics are inspired by the 'VARLiNGAM' R code of Moneta et al.
+    <https://sites.google.com/site/dorisentner/publications/VARLiNGAM>.
+License: MIT + file LICENSE
+URL: https://github.com/morimotoosamu/lingamr, https://morimotoosamu.github.io/lingamr/
+BugReports: https://github.com/morimotoosamu/lingamr/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    generics,
+    grDevices,
+    parallel,
+    stats,
+    utils
+Suggests:
+    DiagrammeR,
+    ggplot2,
+    glmnet,
+    igraph,
+    knitr,
+    nortest,
+    pcalg,
+    rmarkdown,
+    spelling,
+    testthat (>= 3.0.0),
+    tseries
+VignetteBuilder: knitr
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0

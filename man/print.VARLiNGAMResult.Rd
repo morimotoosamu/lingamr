@@ -13,6 +13,14 @@
 
 \item{...}{additional arguments (unused)}
 }
+\value{
+The input object \code{x}, invisibly.
+}
 \description{
 Print method for VARLiNGAMResult
+}
+\examples{
+sample <- generate_varlingam_sample(n = 500, seed = 42)
+model <- lingam_var(sample$data, lags = 1, reg_method = "ols", prune = FALSE)
+print(model)
 }

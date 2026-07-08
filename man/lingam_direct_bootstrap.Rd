@@ -16,7 +16,8 @@ lingam_direct_bootstrap(
   seed = NULL,
   verbose = TRUE,
   parallel = FALSE,
-  n_cores = NULL
+  n_cores = NULL,
+  compute_total_effects = TRUE
 )
 }
 \arguments{
@@ -48,6 +49,15 @@ each bootstrap iteration is distributed across multiple cores.}
 \item{n_cores}{Number of cores to use (integer, NULL allowed). When \code{NULL},
 the number of cores is limited to a maximum of 2 for safety. Ignored when
 \code{parallel = FALSE}.}
+
+\item{compute_total_effects}{Whether to also estimate total causal effects
+for every variable pair on each bootstrap iteration (logical, default
+\code{TRUE}). For the lasso-family regression methods this roughly doubles
+iteration cost (an additional regression per downstream variable beyond
+the adjacency-matrix fit). Set to \code{FALSE} to skip it when only edge/order
+stability is needed (\code{get_probabilities()}, \code{get_causal_direction_counts()},
+\code{get_directed_acyclic_graph_counts()}, \code{get_causal_order_stability()}); in
+that case \code{get_total_causal_effects()} errors if called on the result.}
 }
 \value{
 BootstrapResult (list)
@@ -60,6 +70,14 @@ When \code{parallel = TRUE} is specified, iterations are distributed across a
 socket cluster created by \code{parallel::makePSOCKcluster()}. The cluster is
 always released via \code{on.exit()}, whether the process finishes normally or
 an error occurs.
+
+\strong{On iteration failures:} each bootstrap iteration is run inside a
+\code{tryCatch()}. If an iteration errors (e.g. a resample produces
+near-singular columns), a warning identifying the failed iteration is
+issued and that iteration is excluded from the result instead of aborting
+the entire run. The returned \code{BootstrapResult} reflects however many
+iterations actually succeeded; an error is raised only if every iteration
+fails.
 
 \strong{On reproducibility:} During parallel execution, L'Ecuyer parallel random
 number streams via \code{parallel::clusterSetRNGStream()} are used. Results are

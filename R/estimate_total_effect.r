@@ -4,7 +4,7 @@
 #' @param lingam_result Return value of lingam_direct()
 #' @param from_index Cause variable (1-based index or variable name)
 #' @param to_index Effect variable (1-based index or variable name)
-#' @param method Regression method ("ols", "lasso", "adaptive_lasso"). Default is adaptive_lasso
+#' @param method Regression method ("ols", "lasso", "adaptive_lasso", "ridge"). Default is adaptive_lasso
 #' @param lambda Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle"). Default is BIC
 #' @param init_method Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")
 #' @return Estimated total causal effect
@@ -14,7 +14,7 @@
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct()
+#'   lingam_direct(reg_method = "ols")
 #'
 #' LiNGAM_sample_1000$data |>
 #'   estimate_total_effect(model, 4, 1)
@@ -22,13 +22,14 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
                                   method = "adaptive_lasso", lambda = "BIC",
                                   init_method = "ols") {
   validate_lingam_result(lingam_result)
-  method <- match.arg(method, c("adaptive_lasso", "lasso", "ols"))
+  method <- match.arg(method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
 
   X <- as.matrix(X)
   col_names <- colnames(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
+  if (anyNA(X)) stop("X must not contain missing values (NA).", call. = FALSE)
 
   n_features <- ncol(X)
   if (ncol(lingam_result$adjacency_matrix) != n_features) {
@@ -39,32 +40,9 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
     )
   }
 
-  # --- Convert variable name -> index ---
-  resolve_index <- function(idx, arg_name) {
-    if (is.character(idx)) {
-      if (is.null(col_names)) {
-        stop(sprintf("'%s' was specified as a name, but X has no column names.", arg_name))
-      }
-      pos <- match(idx, col_names)
-      if (is.na(pos)) {
-        stop(sprintf(
-          "Variable '%s' not found. Available: %s",
-          idx, paste(col_names, collapse = ", ")
-        ))
-      }
-      return(pos)
-    } else if (is.numeric(idx)) {
-      idx <- as.integer(idx)
-      if (idx < 1 || idx > n_features) {
-        stop(sprintf("'%s' must be between 1 and %d.", arg_name, n_features))
-      }
-      return(idx)
-    }
-    stop(sprintf("'%s' must be integer or character.", arg_name))
-  }
-
-  from_index <- resolve_index(from_index, "from_index")
-  to_index <- resolve_index(to_index, "to_index")
+  # --- Convert variable name -> index (shared helper) ---
+  from_index <- resolve_var_index(from_index, "from_index", col_names, n_features)
+  to_index <- resolve_var_index(to_index, "to_index", col_names, n_features)
   if (from_index == to_index) stop("from_index and to_index must differ.")
 
   adjacency_matrix <- lingam_result$adjacency_matrix
@@ -95,7 +73,8 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
   coefs <- switch(method,
     "ols"            = fit_ols(y, Xp),
     "lasso"          = fit_lasso(y, Xp, lambda),
-    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda, init_method = init_method)
+    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda, init_method = init_method),
+    "ridge"          = fit_ridge_reg(y, Xp, lambda)
   )
 
   return(coefs[from_pos])
@@ -106,7 +85,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #'
 #' @param X Original data (n_samples x n_features)
 #' @param lingam_result Return value of lingam_direct()
-#' @param method Regression method ("ols", "lasso", "adaptive_lasso")
+#' @param method Regression method ("ols", "lasso", "adaptive_lasso", "ridge")
 #' @param lambda Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC")
 #' @param init_method Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")
 #' @return Matrix of total causal effects (n_features x n_features).
@@ -118,7 +97,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct()
+#'   lingam_direct(reg_method = "ols")
 #'
 #' LiNGAM_sample_1000$data |>
 #'   estimate_all_total_effects(model)
@@ -128,11 +107,13 @@ estimate_all_total_effects <- function(X,
                                        lambda = "BIC",
                                        init_method = "ols") {
   validate_lingam_result(lingam_result)
-  method <- match.arg(method, c("adaptive_lasso", "lasso", "ols"))
+  method <- match.arg(method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
 
   X <- as.matrix(X)
+  if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
+  if (anyNA(X)) stop("X must not contain missing values (NA).", call. = FALSE)
   n_features <- ncol(X)
   if (ncol(lingam_result$adjacency_matrix) != n_features) {
     stop(
@@ -170,14 +151,15 @@ estimate_all_total_effects <- function(X,
       beta_mat <- solve(cov_xx, cov_xy)
       TE[downstream, from_idx] <- beta_mat[from_pos, ]
     } else {
-      # --- LASSO / Adaptive LASSO ---
+      # --- LASSO / Adaptive LASSO / Ridge ---
       Xp <- X[, predictors, drop = FALSE]
       for (to_idx in downstream) {
         y <- X[, to_idx]
         coefs <- switch(method,
           "lasso"          = fit_lasso(y, Xp, lambda),
           "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda,
-                                                init_method = init_method)
+                                                init_method = init_method),
+          "ridge"          = fit_ridge_reg(y, Xp, lambda)
         )
         TE[to_idx, from_idx] <- coefs[from_pos]
       }

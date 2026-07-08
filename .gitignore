@@ -6,6 +6,9 @@
 .quarto
 .positai
 .claude
+.bak
 docs
 /doc/
 /Meta/
+.Rbuildignore
+CLAUDE.md

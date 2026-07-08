@@ -1,4 +1,25 @@
 SHAPIRO_MAX_N <- 5000L
+KENDALL_MAX_N <- 5000L
+
+
+#' Deterministic subsample for the Shapiro-Wilk test
+#'
+#' `stats::shapiro.test()` has a hard cap of 5000 observations, so larger
+#' inputs are thinned to `SHAPIRO_MAX_N` evenly spaced values. The thinning is
+#' deterministic on purpose: a random subsample would make the reported
+#' p-values change between calls and silently consume the caller's RNG stream
+#' (breaking downstream reproducibility). Even spacing over the input order
+#' does not distort the marginal distribution being tested.
+#'
+#' @param x numeric vector
+#' @return `x` itself when `length(x) <= SHAPIRO_MAX_N`, otherwise a
+#'   deterministic subsample of length `SHAPIRO_MAX_N`
+#' @keywords internal
+shapiro_subsample <- function(x) {
+  n <- length(x)
+  if (n <= SHAPIRO_MAX_N) return(x)
+  x[round(seq(1L, n, length.out = SHAPIRO_MAX_N))]
+}
 
 
 #' Compute residuals (error terms) of a LiNGAM model
@@ -51,7 +72,10 @@ kurtosis_pop <- function(x) {
 #'
 #' @param X original data (matrix or data.frame)
 #' @param lingam_result return value of lingam_direct()
-#' @param method type of correlation coefficient ("spearman", "pearson", "kendall")
+#' @param method type of correlation coefficient ("spearman", "pearson", "kendall").
+#'   "kendall" uses the O(n^2)-per-pair algorithm in [stats::cor.test()]; for
+#'   large `n` (beyond 5000) this warns, and "spearman" is a much faster
+#'   alternative with similar rank-based semantics.
 #' @return matrix of p-values (n_features x n_features)
 #' @importFrom stats cor.test
 #' @export
@@ -61,7 +85,7 @@ kurtosis_pop <- function(x) {
 #'
 #' # Run Direct LiNGAM
 #' result <- LiNGAM_sample_1000$data |>
-#'   lingam_direct()
+#'   lingam_direct(reg_method = "ols")
 #'
 #' # Compute p-values (default: Spearman)
 #' p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)
@@ -76,6 +100,13 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
   # Compute residuals (error terms) (with input validation)
   E <- lingam_residuals(X, lingam_result)
   n_features <- ncol(E)
+
+  if (method == "kendall" && nrow(E) > KENDALL_MAX_N) {
+    warning(sprintf(
+      "Kendall's tau is O(n^2) per variable pair and n = %d > %d here; ",
+      nrow(E), KENDALL_MAX_N
+    ), "this may be slow. Consider using method = \"spearman\" instead.")
+  }
 
   # Generate indices for all pairs (excluding the diagonal)
   pairs <- which(upper.tri(matrix(TRUE, n_features, n_features)), arr.ind = TRUE)
@@ -118,7 +149,7 @@ get_error_independence_p_values <- function(X, lingam_result, method = "spearman
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
 #' # Run Direct LiNGAM
-#' result <- lingam_direct(LiNGAM_sample_1000$data)
+#' result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
 #'
 #' # Shapiro-Wilk (default)
 #' test_residual_normality(LiNGAM_sample_1000$data, result)
@@ -138,8 +169,9 @@ test_residual_normality <- function(X, lingam_result,
 
   # --- Sample size warnings ---
   if (method == "shapiro" && n_samples > SHAPIRO_MAX_N) {
-    warning("Shapiro-Wilk test may not work well with n > 5000. ",
-            "Consider using 'ad' or 'lillie' instead.")
+    warning("Shapiro-Wilk test supports at most 5000 observations; ",
+            "a deterministic evenly-spaced subsample of 5000 is tested instead. ",
+            "Consider using 'ad' or 'lillie' for large n.")
   }
 
   # --- Package check ---
@@ -159,10 +191,7 @@ test_residual_normality <- function(X, lingam_result,
   # --- Test function selector ---
   test_fn <- switch(method,
                     "shapiro" = function(x) {
-                      if (length(x) > SHAPIRO_MAX_N) {
-                        x <- sample(x, SHAPIRO_MAX_N)
-                      }
-                      stats::shapiro.test(x)
+                      stats::shapiro.test(shapiro_subsample(x))
                     },
                     "ks"      = function(x) stats::ks.test(x, "pnorm", mean(x), sd(x)),
                     "ad"      = function(x) nortest::ad.test(x),
@@ -224,6 +253,10 @@ test_residual_normality <- function(X, lingam_result,
 #' @param ... additional arguments
 #' @return The input object `x`, invisibly.
 #' @export
+#' @examples
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
+#' result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
+#' print(test_residual_normality(LiNGAM_sample_1000$data, result))
 print.lingam_normality_test <- function(x, ...) {
   alpha <- attr(x, "alpha")
   n_features <- attr(x, "n_features")
@@ -275,13 +308,15 @@ print.lingam_normality_test <- function(x, ...) {
 #' @return A [ggplot2::ggplot] object with QQ plots of residuals.
 #' @export
 #' @examples
-#' # Load the sample data
-#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   # Load the sample data
+#'   LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' # Run Direct LiNGAM
-#' result <- lingam_direct(LiNGAM_sample_1000$data)
+#'   # Run Direct LiNGAM
+#'   result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
 #'
-#' plot_residual_qq(LiNGAM_sample_1000$data, result)
+#'   plot_residual_qq(LiNGAM_sample_1000$data, result)
+#' }
 plot_residual_qq <- function(X, lingam_result, ncol = 3, nrow = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required. Please install it.", call. = FALSE)

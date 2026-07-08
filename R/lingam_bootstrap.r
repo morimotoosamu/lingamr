@@ -6,6 +6,54 @@
 # =============================================================================
 
 # =============================================================================
+# Shared parallel-worker setup
+# =============================================================================
+
+#' Make this package's functions available on parallel cluster workers
+#'
+#' Used by all `*_bootstrap()` functions before dispatching iterations via
+#' `parallel::parLapply()`. Tries to have each worker `library()` the
+#' installed package; if that is not possible (e.g. during
+#' `devtools::load_all()` development, where the package is not installed),
+#' falls back to exporting every object in the namespace environment of a
+#' representative function from the algorithm being bootstrapped.
+#'
+#' @param cl A `parallel` cluster object (from `parallel::makePSOCKcluster()`).
+#' @param fun A function belonging to the package whose namespace environment
+#'   should be used as the fallback export source (e.g. `lingam_direct`,
+#'   `lingam_rcd`, `lingam_parce`, `lingam_multi_group`).
+#' @return `NULL`, invisibly. Called for the side effect of preparing `cl`.
+#' @keywords internal
+setup_cluster_worker <- function(cl, fun) {
+  pkg <- utils::packageName()
+  ns <- environment(fun)
+  # Because the workers are fresh R sessions, set the same library paths as
+  # the main session so that the same version of this package can be loaded.
+  parallel::clusterCall(cl, function(paths) .libPaths(paths), .libPaths())
+  worker_ready <- FALSE
+  if (!is.null(pkg) && nzchar(pkg)) {
+    worker_ready <- all(unlist(parallel::clusterCall(cl, function(p) {
+      suppressWarnings(suppressMessages(
+        isTRUE(requireNamespace(p, quietly = TRUE))
+      ))
+    }, pkg)))
+    if (worker_ready) {
+      parallel::clusterCall(cl, function(p) {
+        suppressWarnings(suppressMessages(library(p, character.only = TRUE)))
+        invisible(NULL)
+      }, pkg)
+    }
+  }
+  if (!worker_ready) {
+    # Fallback when not installed (e.g. devtools::load_all):
+    # send all objects of the namespace to the workers.
+    parallel::clusterExport(cl, varlist = ls(ns, all.names = TRUE), envir = ns)
+  }
+  invisible(NULL)
+}
+
+
+# =============================================================================
 # Bootstrap execution function
 # =============================================================================
 
@@ -28,12 +76,28 @@
 #' @param n_cores Number of cores to use (integer, NULL allowed). When `NULL`,
 #'   the number of cores is limited to a maximum of 2 for safety. Ignored when
 #'   `parallel = FALSE`.
+#' @param compute_total_effects Whether to also estimate total causal effects
+#'   for every variable pair on each bootstrap iteration (logical, default
+#'   `TRUE`). For the lasso-family regression methods this roughly doubles
+#'   iteration cost (an additional regression per downstream variable beyond
+#'   the adjacency-matrix fit). Set to `FALSE` to skip it when only edge/order
+#'   stability is needed (`get_probabilities()`, `get_causal_direction_counts()`,
+#'   `get_directed_acyclic_graph_counts()`, `get_causal_order_stability()`); in
+#'   that case `get_total_causal_effects()` errors if called on the result.
 #' @return BootstrapResult (list)
 #' @details
 #' When `parallel = TRUE` is specified, iterations are distributed across a
 #' socket cluster created by `parallel::makePSOCKcluster()`. The cluster is
 #' always released via `on.exit()`, whether the process finishes normally or
 #' an error occurs.
+#'
+#' **On iteration failures:** each bootstrap iteration is run inside a
+#' `tryCatch()`. If an iteration errors (e.g. a resample produces
+#' near-singular columns), a warning identifying the failed iteration is
+#' issued and that iteration is excluded from the result instead of aborting
+#' the entire run. The returned `BootstrapResult` reflects however many
+#' iterations actually succeeded; an error is raised only if every iteration
+#' fails.
 #'
 #' **On reproducibility:** During parallel execution, L'Ecuyer parallel random
 #' number streams via `parallel::clusterSetRNGStream()` are used. Results are
@@ -79,12 +143,22 @@ lingam_direct_bootstrap <- function(X,
                              seed = NULL,
                              verbose = TRUE,
                              parallel = FALSE,
-                             n_cores = NULL) {
+                             n_cores = NULL,
+                             compute_total_effects = TRUE) {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
   if (anyNA(X)) stop("X must not contain missing values (NA).", call. = FALSE)
   if (ncol(X) < 2) stop("X must have at least 2 variables (columns).", call. = FALSE)
   if (nrow(X) < 3) stop("X must have at least 3 observations (rows).", call. = FALSE)
+  # Fail fast here instead of once per iteration (inside workers when parallel).
+  validate_no_degenerate_columns(X)
+  if (!is.null(prior_knowledge)) {
+    validate_prior_knowledge(prior_knowledge, ncol(X))
+  }
+  if (!is.logical(compute_total_effects) || length(compute_total_effects) != 1 ||
+        is.na(compute_total_effects)) {
+    stop("compute_total_effects must be a single logical (TRUE or FALSE).", call. = FALSE)
+  }
   # Invalid arguments would otherwise produce confusing errors inside the
   # iterations (within workers when parallel), so validate them here before
   # starting the cluster.
@@ -93,7 +167,7 @@ lingam_direct_bootstrap <- function(X,
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
 
-  if (reg_method == "ridge" && lambda == "oracle") {
+  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
     stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
          call. = FALSE)
   }
@@ -104,31 +178,44 @@ lingam_direct_bootstrap <- function(X,
   n_samples <- nrow(X)
   n_features <- ncol(X)
 
-  # Processing for one iteration: resampling -> estimation -> total effects
+  # Processing for one iteration: resampling -> estimation -> total effects.
+  # Wrapped in tryCatch so that one pathological resample (e.g. a bootstrap
+  # sample with near-singular columns) does not abort the entire run; the
+  # failure is reported back to the caller (see below) and that iteration is
+  # excluded from the aggregated result instead.
   run_one <- function(i) {
-    idx <- sample(n_samples, replace = TRUE)
-    resampled_X <- X[idx, , drop = FALSE]
-    result <- lingam_direct(
-      resampled_X,
-      prior_knowledge = prior_knowledge,
-      apply_prior_knowledge_softly = apply_prior_knowledge_softly,
-      measure = measure,
-      reg_method = reg_method,
-      lambda = lambda,
-      init_method = init_method
-    )
-    te <- estimate_all_total_effects(
-      resampled_X, result,
-      method = reg_method,
-      lambda = lambda,
-      init_method = init_method
-    )
-    list(
-      idx              = idx,
-      adjacency_matrix = result$adjacency_matrix,
-      total_effects    = te,
-      causal_order     = result$causal_order
-    )
+    tryCatch({
+      idx <- sample(n_samples, replace = TRUE)
+      resampled_X <- X[idx, , drop = FALSE]
+      result <- lingam_direct(
+        resampled_X,
+        prior_knowledge = prior_knowledge,
+        apply_prior_knowledge_softly = apply_prior_knowledge_softly,
+        measure = measure,
+        reg_method = reg_method,
+        lambda = lambda,
+        init_method = init_method
+      )
+      te <- if (compute_total_effects) {
+        estimate_all_total_effects(
+          resampled_X, result,
+          method = reg_method,
+          lambda = lambda,
+          init_method = init_method
+        )
+      } else {
+        NULL
+      }
+      list(
+        ok               = TRUE,
+        idx              = idx,
+        adjacency_matrix = result$adjacency_matrix,
+        total_effects    = te,
+        causal_order     = result$causal_order
+      )
+    }, error = function(e) {
+      list(ok = FALSE, iteration = i, message = conditionMessage(e))
+    })
   }
 
   # Resolve the number of cores to use (defaults to a maximum of 2 cores)
@@ -158,34 +245,9 @@ lingam_direct_bootstrap <- function(X,
     cl <- parallel::makePSOCKcluster(n_cores)
     on.exit(parallel::stopCluster(cl), add = TRUE)
 
-    # Make this package's functions available on the workers.
-    # requireNamespace only loads the namespace without adding it to the search
-    # path, so attach the package with library() so that functions referenced
-    # inside the closure can be resolved on the worker side.
-    pkg <- utils::packageName()
-    ns <- environment(lingam_direct)
-    # Because the workers are fresh R sessions, set the same library paths as
-    # the main session so that the same version of this package can be loaded.
-    parallel::clusterCall(cl, function(paths) .libPaths(paths), .libPaths())
-    worker_ready <- FALSE
-    if (!is.null(pkg) && nzchar(pkg)) {
-      worker_ready <- all(unlist(parallel::clusterCall(cl, function(p) {
-        suppressWarnings(suppressMessages(
-          isTRUE(requireNamespace(p, quietly = TRUE))
-        ))
-      }, pkg)))
-      if (worker_ready) {
-        parallel::clusterCall(cl, function(p) {
-          suppressWarnings(suppressMessages(library(p, character.only = TRUE)))
-          invisible(NULL)
-        }, pkg)
-      }
-    }
-    if (!worker_ready) {
-      # Fallback when not installed (e.g. devtools::load_all):
-      # send all objects of the namespace to the workers.
-      parallel::clusterExport(cl, varlist = ls(ns, all.names = TRUE), envir = ns)
-    }
+    # Make this package's functions available on the workers (library() when
+    # installed, otherwise export the namespace, e.g. under devtools::load_all()).
+    setup_cluster_worker(cl, lingam_direct)
 
     # Parallel-safe random number stream (ensures reproducibility; does not
     # match the sequential version)
@@ -202,21 +264,49 @@ lingam_direct_bootstrap <- function(X,
     })
   }
 
-  # Aggregate results into arrays
-  adjacency_matrices <- array(0, dim = c(n_sampling, n_features, n_features))
-  total_effects <- array(0, dim = c(n_sampling, n_features, n_features))
-  causal_orders <- matrix(0L, nrow = n_sampling, ncol = n_features)
-  resampled_indices <- vector("list", n_sampling)
-  for (i in seq_len(n_sampling)) {
+  # Report and drop any failed iterations before aggregating.
+  ok <- vapply(res_list, function(r) isTRUE(r$ok), logical(1))
+  if (any(!ok)) {
+    for (r in res_list[!ok]) {
+      warning(sprintf(
+        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
+      ), call. = FALSE)
+    }
+  }
+  res_list <- res_list[ok]
+  n_success <- length(res_list)
+  if (n_success == 0) {
+    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
+  }
+
+  # Aggregate results into arrays. total_effects is left NULL (not a zero-
+  # filled array) when compute_total_effects = FALSE, so get_total_causal_effects()
+  # can tell "not computed" apart from "no effects found" and error clearly.
+  adjacency_matrices <- array(0, dim = c(n_success, n_features, n_features))
+  total_effects <- if (compute_total_effects) {
+    array(0, dim = c(n_success, n_features, n_features))
+  } else {
+    NULL
+  }
+  causal_orders <- matrix(0L, nrow = n_success, ncol = n_features)
+  resampled_indices <- vector("list", n_success)
+  for (i in seq_len(n_success)) {
     adjacency_matrices[i, , ] <- res_list[[i]]$adjacency_matrix
-    total_effects[i, , ] <- res_list[[i]]$total_effects
+    if (compute_total_effects) total_effects[i, , ] <- res_list[[i]]$total_effects
     causal_orders[i, ] <- res_list[[i]]$causal_order
     resampled_indices[[i]] <- res_list[[i]]$idx
   }
 
   if (verbose) {
     elapsed <- (proc.time() - t_start)["elapsed"]
-    message(sprintf("Completed in %.1f seconds.", elapsed))
+    if (n_success < n_sampling) {
+      message(sprintf(
+        "Completed in %.1f seconds (%d / %d iterations succeeded).",
+        elapsed, n_success, n_sampling
+      ))
+    } else {
+      message(sprintf("Completed in %.1f seconds.", elapsed))
+    }
   }
   create_bootstrap_result(adjacency_matrices, total_effects, resampled_indices, causal_orders)
 }
@@ -256,7 +346,9 @@ create_bootstrap_result <- function(adjacency_matrices, total_effects, resampled
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #'
 #' print(bs_model)
 print.BootstrapResult <- function(x, ...) {
@@ -293,7 +385,9 @@ print.BootstrapResult <- function(x, ...) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #'
 #' get_causal_direction_counts(bs_model, labels = names(LiNGAM_sample_1000$data))
 get_causal_direction_counts <- function(result,
@@ -318,7 +412,7 @@ get_causal_direction_counts <- function(result,
     idx <- which(abs(am) > min_causal_effect, arr.ind = TRUE)
     if (nrow(idx) == 0) next
 
-    effects <- sapply(seq_len(nrow(idx)), function(k) am[idx[k, 1], idx[k, 2]])
+    effects <- am[idx]
 
     if (split_by_causal_effect_sign) {
       directions_list[[length(directions_list) + 1]] <- data.frame(
@@ -361,16 +455,17 @@ get_causal_direction_counts <- function(result,
     group_key <- paste(directions$from, directions$to, sep = "_")
   }
 
-  # Aggregate by group
-  unique_keys <- unique(group_key)
-  results_list <- lapply(unique_keys, function(key) {
-    mask <- group_key == key
-    subset_df <- directions[mask, ]
-    effects <- subset_df$effect
+  # Aggregate by group. split() groups all row indices in a single pass
+  # (levels = unique(group_key) preserves first-appearance order, matching the
+  # previous unique_keys-based iteration), avoiding an O(n_keys x n_rows)
+  # rescan of the whole table for every key.
+  row_idx <- split(seq_len(nrow(directions)), factor(group_key, levels = unique(group_key)))
+  results_list <- lapply(row_idx, function(rows) {
+    effects <- directions$effect[rows]
 
     row <- data.frame(
-      from = subset_df$from[1],
-      to = subset_df$to[1],
+      from = directions$from[rows[1]],
+      to = directions$to[rows[1]],
       count = length(effects),
       proportion = length(effects) / n_sampling,
       mean_effect = base::mean(effects),
@@ -381,7 +476,7 @@ get_causal_direction_counts <- function(result,
     )
 
     if (split_by_causal_effect_sign) {
-      row$sign <- subset_df$sign[1]
+      row$sign <- directions$sign[rows[1]]
     }
 
     row
@@ -420,7 +515,9 @@ get_causal_direction_counts <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #'
 #' get_directed_acyclic_graph_counts(bs_model)
 get_directed_acyclic_graph_counts <- function(result,
@@ -507,7 +604,9 @@ get_directed_acyclic_graph_counts <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #'
 #' get_probabilities(bs_model)
 get_probabilities <- function(result, min_causal_effect = NULL) {
@@ -535,11 +634,21 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #'
 #' get_total_causal_effects(bs_model)
 get_total_causal_effects <- function(result, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
+  if (is.null(result$total_effects)) {
+    stop(
+      "This BootstrapResult has no total effects. It was created with ",
+      "compute_total_effects = FALSE; re-run lingam_direct_bootstrap() with ",
+      "compute_total_effects = TRUE to use get_total_causal_effects().",
+      call. = FALSE
+    )
+  }
 
   if (is.null(min_causal_effect)) min_causal_effect <- 0.0
   if (min_causal_effect < 0) stop("min_causal_effect must be >= 0.")
@@ -597,7 +706,9 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #' get_paths(bs_model, 1, 6)
 get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
   stopifnot(inherits(result, "BootstrapResult"))
@@ -668,10 +779,14 @@ get_paths <- function(result, from_index, to_index, min_causal_effect = NULL) {
 #' @return grViz object
 #' @export
 #' @examples
-#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
-#' plot_bootstrap_probabilities(bs_model)
+#'   bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'     n_sampling = 30L, reg_method = "ols", seed = 42
+#'   )
+#'   plot_bootstrap_probabilities(bs_model)
+#' }
 plot_bootstrap_probabilities <- function(result,
                                          labels = NULL,
                                          min_causal_effect = NULL,
@@ -740,7 +855,9 @@ plot_bootstrap_probabilities <- function(result,
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
+#' bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+#'   n_sampling = 30L, reg_method = "ols", seed = 42
+#' )
 #' get_adjacency_matrix_summary(bs_model)
 get_adjacency_matrix_summary <- function(result,
                                          stat = "median",

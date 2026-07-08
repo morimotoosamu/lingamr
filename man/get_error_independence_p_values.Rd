@@ -11,7 +11,10 @@ get_error_independence_p_values(X, lingam_result, method = "spearman")
 
 \item{lingam_result}{return value of lingam_direct()}
 
-\item{method}{type of correlation coefficient ("spearman", "pearson", "kendall")}
+\item{method}{type of correlation coefficient ("spearman", "pearson", "kendall").
+"kendall" uses the O(n^2)-per-pair algorithm in \code{\link[stats:cor.test]{stats::cor.test()}}; for
+large \code{n} (beyond 5000) this warns, and "spearman" is a much faster
+alternative with similar rank-based semantics.}
 }
 \value{
 matrix of p-values (n_features x n_features)
@@ -25,7 +28,7 @@ LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Run Direct LiNGAM
 result <- LiNGAM_sample_1000$data |>
-  lingam_direct()
+  lingam_direct(reg_method = "ols")
 
 # Compute p-values (default: Spearman)
 p_vals <- get_error_independence_p_values(LiNGAM_sample_1000$data, result)

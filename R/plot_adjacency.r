@@ -44,22 +44,24 @@
 #' @importFrom grDevices col2rgb
 #' @export
 #' @examples
-#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   LiNGAM_sample_1000 <- generate_lingam_sample_6()
 #'
-#' LiNGAM_sample_1000$true_adjacency |>
-#'   plot_adjacency(title = "True Causal Structure")
+#'   LiNGAM_sample_1000$true_adjacency |>
+#'     plot_adjacency(title = "True Causal Structure")
 #'
-#' model <- LiNGAM_sample_1000$data |>
-#'   lingam_direct()
+#'   model <- LiNGAM_sample_1000$data |>
+#'     lingam_direct(reg_method = "ols")
 #'
-#' model$adjacency_matrix |>
-#'   plot_adjacency()
+#'   model$adjacency_matrix |>
+#'     plot_adjacency()
 #'
-#' \donttest{
-#' # Compare with the true structure
-#' # (correct = green, false positive = red, missed = orange dashed)
-#' model$adjacency_matrix |>
-#'   plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
+#'   \donttest{
+#'   # Compare with the true structure
+#'   # (correct = green, false positive = red, missed = orange dashed)
+#'   model$adjacency_matrix |>
+#'     plot_adjacency(true_B = LiNGAM_sample_1000$true_adjacency)
+#'   }
 #' }
 plot_adjacency <- function(B,
                            labels = NULL,

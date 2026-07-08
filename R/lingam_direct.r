@@ -77,13 +77,14 @@ lingam_direct <- function(X,
   if (ncol(X) < 2) stop("X must have at least 2 variables (columns).", call. = FALSE)
   if (nrow(X) < 2) stop("X must have at least 2 observations (rows).", call. = FALSE)
   if (!is.null(col_names)) colnames(X) <- col_names
+  validate_no_degenerate_columns(X)
 
   measure <- match.arg(measure, c("pwling", "kernel"))
   reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
   lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
   init_method <- match.arg(init_method, c("ols", "ridge"))
 
-  if (reg_method == "ridge" && lambda == "oracle") {
+  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
     stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
          call. = FALSE)
   }
@@ -98,11 +99,7 @@ lingam_direct <- function(X,
   Aknw <- NULL
   partial_orders <- NULL
   if (!is.null(prior_knowledge)) {
-    Aknw <- as.matrix(prior_knowledge)
-    if (!all(dim(Aknw) == c(n_features, n_features))) {
-      stop("The shape of prior knowledge must be (n_features, n_features)")
-    }
-    Aknw[Aknw < 0] <- NA
+    Aknw <- validate_prior_knowledge(prior_knowledge, n_features)
     if (!apply_prior_knowledge_softly) {
       partial_orders <- extract_partial_orders(Aknw)
     }
@@ -155,6 +152,10 @@ lingam_direct <- function(X,
 #' @param ... Additional arguments (unused)
 #' @return The input object `x`, invisibly.
 #' @export
+#' @examples
+#' LiNGAM_sample_1000 <- generate_lingam_sample_6()
+#' result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
+#' print(result)
 print.LingamResult <- function(x, digits = 3, ...) {
   n <- length(x$causal_order)
   var_names <- colnames(x$adjacency_matrix)
@@ -188,6 +189,60 @@ validate_lingam_result <- function(x) {
 #' @keywords internal
 sd_pop <- function(x) {
   sqrt(mean((x - mean(x))^2))
+}
+
+
+#' Reject constant or perfectly collinear columns
+#'
+#' Constant and linearly dependent columns produce divisions by zero inside
+#' the pairwise regressions / standardization of the causal order search,
+#' which would otherwise surface as cryptic errors (e.g. "argument is of
+#' length zero") deep in the algorithm. The rank check runs on the centered
+#' matrix so that a column equal to another column plus a constant offset is
+#' also caught.
+#'
+#' @param X numeric matrix
+#' @return `NULL`, invisibly. Stops with an informative error on violation.
+#' @keywords internal
+validate_no_degenerate_columns <- function(X) {
+  col_sds <- apply(X, 2, sd_pop)
+  if (any(col_sds == 0)) {
+    bad <- get_var_names(X)[col_sds == 0]
+    stop("X must not contain constant columns: ",
+         paste(bad, collapse = ", "), call. = FALSE)
+  }
+  Xc <- scale(X, center = TRUE, scale = FALSE)
+  if (qr(Xc)$rank < ncol(X)) {
+    stop("X must not contain linearly dependent (perfectly collinear) columns.",
+         call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+
+#' Validate a prior knowledge matrix and convert unknowns to NA
+#'
+#' Checks the shape and that every entry is -1 (unknown), 0 (no path),
+#' 1 (path), or NA (treated as unknown). Anything else (e.g. 0.5 or 2) would
+#' otherwise be silently interpreted as "path exists" by the candidate
+#' search, so it is rejected here.
+#'
+#' @param prior_knowledge prior knowledge matrix
+#' @param n_features expected number of variables
+#' @return the validated matrix with negative entries replaced by NA
+#' @keywords internal
+validate_prior_knowledge <- function(prior_knowledge, n_features) {
+  Aknw <- as.matrix(prior_knowledge)
+  if (!all(dim(Aknw) == c(n_features, n_features))) {
+    stop("The shape of prior knowledge must be (n_features, n_features)")
+  }
+  vals <- Aknw[!is.na(Aknw)]
+  if (!all(vals %in% c(-1, 0, 1))) {
+    stop("prior_knowledge must contain only -1 (unknown), 0 (no path), ",
+         "or 1 (path).", call. = FALSE)
+  }
+  Aknw[Aknw < 0] <- NA
+  Aknw
 }
 
 #' Get variable names, falling back to x0, x1, ... when colnames is NULL

@@ -24,7 +24,20 @@ releasing it for the purpose of testing and gathering feedback.
 
 ## Features
 
-- Implementation of the Direct LiNGAM algorithm
+- Direct LiNGAM (`lingam_direct()`), with selectable regression backends
+  (OLS, LASSO, adaptive LASSO, ridge) for adjacency-matrix estimation
+- VAR-LiNGAM (`lingam_var()`) for time series causal discovery
+- Algorithms robust against latent confounders: BottomUpParceLiNGAM
+  (`lingam_parce()`) and RCD (`lingam_rcd()`)
+- MultiGroupDirectLiNGAM (`lingam_multi_group()`) for jointly estimating
+  a shared causal order across multiple datasets
+- HighDimDirectLiNGAM (`lingam_high_dim()`) for high-dimensional data
+  (large `p`, or `p > n`)
+- LiM (`lingam_lim()`) for causal discovery on mixed continuous/binary
+  data
+- `bootstrap_with_imputation()` for causal discovery on data with
+  missing values, and `evaluate_model_fit()` for SEM-based fit
+  evaluation via lavaan
 - Stability assessment of causal structures using the bootstrap method,
   including causal-order stability
 - Model diagnostics: residual independence / normality tests and a
@@ -142,8 +155,8 @@ developing this package:
 - JMRA (Japan Marketing Research Association)
 
 Development of this package was assisted by AI coding tools (Google
-Gemini and Anthropic Claude). All AI-generated code was reviewed,
-tested, and validated by the author.
+Gemini and Anthropic Claude). The author reviewed, tested, and
+validated all AI-generated code.
 
 ## Feedback
 

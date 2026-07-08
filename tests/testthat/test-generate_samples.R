@@ -36,6 +36,32 @@ test_that("generate_lingam_sample_10 returns correct dimensions", {
   expect_false(anyNA(out$data))
 })
 
+test_that("generate_lingam_paradox_data returns correct structure and true chain", {
+  out <- generate_lingam_paradox_data(n = 500, seed = 1)
+
+  expect_named(out, c("data", "true_adjacency"))
+  expect_s3_class(out$data, "data.frame")
+  expect_equal(dim(out$data), c(500L, 4L))
+  expect_equal(names(out$data), c("x0", "x1", "x2", "x3"))
+  expect_false(anyNA(out$data))
+
+  B <- out$true_adjacency
+  expect_true(is.matrix(B))
+  expect_equal(dim(B), c(4L, 4L))
+  # true causal chain x0 -> x1 -> x2 -> x3, coefficient 0.8 each
+  expect_equal(B["x1", "x0"], 0.8)
+  expect_equal(B["x2", "x1"], 0.8)
+  expect_equal(B["x3", "x2"], 0.8)
+  # no other edges
+  expect_equal(sum(B != 0), 3L)
+})
+
+test_that("generate_lingam_paradox_data seed is reproducible", {
+  a <- generate_lingam_paradox_data(n = 200, seed = 3)
+  b <- generate_lingam_paradox_data(n = 200, seed = 3)
+  expect_equal(a$data, b$data)
+})
+
 test_that("generate_lingam_hard_sample returns correct structure", {
   out <- generate_lingam_hard_sample(n = 200, seed = 1)
 

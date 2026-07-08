@@ -33,8 +33,12 @@ grViz object
 Draw bootstrap probabilities with DiagrammeR
 }
 \examples{
-LiNGAM_sample_1000 <- generate_lingam_sample_6()
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data, n_sampling = 30L, seed = 42)
-plot_bootstrap_probabilities(bs_model)
+  bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
+    n_sampling = 30L, reg_method = "ols", seed = 42
+  )
+  plot_bootstrap_probabilities(bs_model)
+}
 }

@@ -22,11 +22,13 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object with QQ plots of residuals.
 plot QQ
 }
 \examples{
-# Load the sample data
-LiNGAM_sample_1000 <- generate_lingam_sample_6()
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  # Load the sample data
+  LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
-# Run Direct LiNGAM
-result <- lingam_direct(LiNGAM_sample_1000$data)
+  # Run Direct LiNGAM
+  result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
 
-plot_residual_qq(LiNGAM_sample_1000$data, result)
+  plot_residual_qq(LiNGAM_sample_1000$data, result)
+}
 }

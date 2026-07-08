@@ -33,18 +33,29 @@ roll_rows <- function(M, shift) {
 
 
 #' Resolve a variable identifier to a 1-based integer index
+#'
+#' Shared by [estimate_var_total_effect()] and [estimate_total_effect()].
 #' @keywords internal
 resolve_var_index <- function(idx, arg_name, col_names, n_features) {
   if (is.character(idx)) {
+    if (length(idx) != 1) {
+      stop(sprintf("'%s' must be a single variable name.", arg_name), call. = FALSE)
+    }
     if (is.null(col_names)) {
       stop(sprintf("'%s' was given as a name, but X has no column names.", arg_name),
            call. = FALSE)
     }
     pos <- match(idx, col_names)
     if (is.na(pos)) {
-      stop(sprintf("Variable '%s' not found in X.", idx), call. = FALSE)
+      stop(sprintf(
+        "Variable '%s' not found in X. Available: %s",
+        idx, paste(col_names, collapse = ", ")
+      ), call. = FALSE)
     }
     return(pos)
+  }
+  if (!is.numeric(idx)) {
+    stop(sprintf("'%s' must be integer or character.", arg_name), call. = FALSE)
   }
   idx <- as.integer(idx)
   if (length(idx) != 1 || is.na(idx) || idx < 1 || idx > n_features) {

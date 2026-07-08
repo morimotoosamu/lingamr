@@ -17,7 +17,7 @@ estimate_all_total_effects(
 
 \item{lingam_result}{Return value of lingam_direct()}
 
-\item{method}{Regression method ("ols", "lasso", "adaptive_lasso")}
+\item{method}{Regression method ("ols", "lasso", "adaptive_lasso", "ridge")}
 
 \item{lambda}{Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC")}
 
@@ -35,7 +35,7 @@ Estimate the total causal effects between all variables at once
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 model <- LiNGAM_sample_1000$data |>
-  lingam_direct()
+  lingam_direct(reg_method = "ols")
 
 LiNGAM_sample_1000$data |>
   estimate_all_total_effects(model)

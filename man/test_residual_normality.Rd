@@ -33,7 +33,7 @@ rejecting normality (small p-value) supports the LiNGAM model assumption.
 LiNGAM_sample_1000 <- generate_lingam_sample_6()
 
 # Run Direct LiNGAM
-result <- lingam_direct(LiNGAM_sample_1000$data)
+result <- lingam_direct(LiNGAM_sample_1000$data, reg_method = "ols")
 
 # Shapiro-Wilk (default)
 test_residual_normality(LiNGAM_sample_1000$data, result)

@@ -15,7 +15,8 @@ fit_penalized_regression(y, Xp_mat, alpha, lambda, lambda_seq)
 
 \item{lambda}{lambda selection method ("AIC", "BIC", "lambda.min", "lambda.1se")}
 
-\item{lambda_seq}{numeric vector of lambda values passed to glmnet}
+\item{lambda_seq}{numeric vector of (relative) lambda values, scaled internally
+by \code{\link[=lambda_scale_factor]{lambda_scale_factor()}} to the response's natural scale before use}
 }
 \value{
 coefficient vector (excluding intercept)

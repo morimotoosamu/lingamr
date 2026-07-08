@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery. Based on the 'Python' implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}. The 'VAR-LiNGAM' residual diagnostics are inspired by the 'VARLiNGAM' R code of Moneta et al. \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}.
+R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery, following Shimizu et al. (2011) \url{https://www.jmlr.org/papers/v12/shimizu11a.html}. Based on the 'Python' implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}. The 'VAR-LiNGAM' residual diagnostics are inspired by the 'VARLiNGAM' R code of Moneta et al. \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}.
 }
 \details{
 tutorial: \code{vignette("lingamr", package = "lingamr")}
@@ -27,8 +27,26 @@ independent component analysis: Theory and applications. \emph{Oxford Bulletin o
 Economics and Statistics}, 75(5), 705-730. VARLiNGAM R code:
 \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}
 
-Python implementation (DirectLiNGAM, VAR-LiNGAM): cdt15/lingam,
-\url{https://github.com/cdt15/lingam}
+Shimizu, S. (2012). Joint estimation of linear non-Gaussian acyclic models.
+\emph{Neurocomputing}, 81, 104-107. (MultiGroup Direct LiNGAM)
+
+Tashiro, T., Shimizu, S., Hyvärinen, A., & Washio, T. (2014). ParceLiNGAM: A
+causal ordering method robust against latent confounders. \emph{Neural
+Computation}, 26(1), 57-83.
+
+Maeda, T. N., & Shimizu, S. (2020). RCD: Repetitive causal discovery of
+linear non-Gaussian acyclic models with latent confounders. \emph{AISTATS 2020},
+PMLR 108, 735-745.
+
+Wang, Y. S., & Drton, M. (2020). High-dimensional causal discovery under
+non-Gaussianity. \emph{Biometrika}, 107(1), 41-59.
+
+Zeng, Y., Shimizu, S., Matsui, H., & Sun, F. (2022). Causal discovery for
+linear mixed data. \emph{Proceedings of the First Conference on Causal Learning
+and Reasoning (CLeaR 2022)}, PMLR 177, 994-1009.
+
+Python implementation (DirectLiNGAM, VAR-LiNGAM, MultiGroup, ParceLiNGAM,
+RCD, LiM, HighDim): cdt15/lingam, \url{https://github.com/cdt15/lingam}
 }
 \seealso{
 Useful links:
