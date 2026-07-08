@@ -52,6 +52,7 @@
 #' with `MLHSICR = TRUE`; keep `n_sampling` modest in examples.
 #' @export
 #' @examples
+#' \donttest{
 #' confounded <- generate_rcd_sample(n = 300, seed = 1)
 #'
 #' bs <- lingam_rcd_bootstrap(confounded$data,
@@ -59,6 +60,7 @@
 #'   seed = 42
 #' )
 #' get_probabilities(bs)
+#' }
 lingam_rcd_bootstrap <- function(X,
                                  n_sampling,
                                  max_explanatory_num = 2L,

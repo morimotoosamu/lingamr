@@ -56,6 +56,7 @@
 #' `BootstrapResult` returned by this function.
 #' @export
 #' @examples
+#' \donttest{
 #' confounded <- generate_parce_sample(n = 500, seed = 1)
 #'
 #' bs <- lingam_parce_bootstrap(confounded$data,
@@ -64,6 +65,7 @@
 #'   seed = 42
 #' )
 #' get_probabilities(bs)
+#' }
 lingam_parce_bootstrap <- function(X,
                                    n_sampling,
                                    prior_knowledge = NULL,

@@ -87,6 +87,7 @@ As a result, \code{\link[=get_causal_order_stability]{get_causal_order_stability
 \code{BootstrapResult} returned by this function.
 }
 \examples{
+\donttest{
 confounded <- generate_parce_sample(n = 500, seed = 1)
 
 bs <- lingam_parce_bootstrap(confounded$data,
@@ -95,4 +96,5 @@ bs <- lingam_parce_bootstrap(confounded$data,
   seed = 42
 )
 get_probabilities(bs)
+}
 }

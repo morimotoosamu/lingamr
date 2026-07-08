@@ -83,6 +83,7 @@ RCD's \code{fit} step is HSIC-heavy and can be slow per iteration, especially
 with \code{MLHSICR = TRUE}; keep \code{n_sampling} modest in examples.
 }
 \examples{
+\donttest{
 confounded <- generate_rcd_sample(n = 300, seed = 1)
 
 bs <- lingam_rcd_bootstrap(confounded$data,
@@ -90,4 +91,5 @@ bs <- lingam_rcd_bootstrap(confounded$data,
   seed = 42
 )
 get_probabilities(bs)
+}
 }
