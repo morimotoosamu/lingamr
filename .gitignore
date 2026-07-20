@@ -6,7 +6,7 @@
 .quarto
 .positai
 .claude
-.bak
+*.bak
 docs
 /doc/
 /Meta/
