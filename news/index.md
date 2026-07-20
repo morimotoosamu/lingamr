@@ -2,6 +2,8 @@
 
 ## lingamr 0.1.2
 
+CRAN release: 2026-07-17
+
 - Wrapped long-running bootstrap examples in `\donttest{}` to avoid CRAN
   NOTE for elapsed time \> 10s (`lingam_parce_bootstrap`,
   `lingam_rcd_bootstrap`).

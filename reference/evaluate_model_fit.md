@@ -79,7 +79,7 @@ if (requireNamespace("lavaan", quietly = TRUE)) {
   evaluate_model_fit(result, dat$data)
 }
 #>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
-#> 1   0           15    0           NA       23023.7   1   1    1   1   1     0
+#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
 #>        AIC      BIC    LogLik
 #> 1 1860.598 1958.753 -910.2991
 ```

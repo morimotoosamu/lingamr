@@ -913,7 +913,7 @@ method.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 3.6 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 3.5 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -1311,7 +1311,7 @@ grows by a factor of
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; p = 10 : 0.03 sec</span></span>
 <span><span class="co">#&gt; p = 15 : 0.06 sec</span></span>
-<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.1x</span></span></code></pre></div>
+<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.2x</span></span></code></pre></div>
 <p>We run ICA-LiNGAM on the same data to compare speed directly.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
@@ -1569,7 +1569,7 @@ or is systematic.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.5 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.4 seconds.</span></span>
 <span></span>
 <span><span class="co"># Occurrence probability of each direction (row = to, column = from)</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
@@ -2288,7 +2288,7 @@ independent of how it was estimated.</p>
 <span><span class="co"># fit measures for the estimated graph</span></span>
 <span><span class="fu"><a href="../reference/evaluate_model_fit.html">evaluate_model_fit</a></span><span class="op">(</span><span class="va">fit_result</span>, <span class="va">sample6</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA</span></span>
-<span><span class="co">#&gt; 1   0           15    0           NA       23023.7   1   1    1   1   1     0</span></span>
+<span><span class="co">#&gt; 1   0           15    0           NA       23023.7   1   1   NA   1   1     0</span></span>
 <span><span class="co">#&gt;        AIC      BIC    LogLik</span></span>
 <span><span class="co">#&gt; 1 1860.598 1958.753 -910.2991</span></span></code></pre></div>
 <p>Reversing the direction of every edge produces a mis-specified model,
@@ -2297,7 +2297,7 @@ and its fit measures are visibly worse (lower CFI, higher RMSEA):</p>
 <code class="sourceCode R"><span><span class="va">reversed_adjacency</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">fit_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/evaluate_model_fit.html">evaluate_model_fit</a></span><span class="op">(</span><span class="va">reversed_adjacency</span>, <span class="va">sample6</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI</span></span>
-<span><span class="co">#&gt; 1   0           15 3.197442e-11           NA       23023.7   1   1    1   1   1</span></span>
+<span><span class="co">#&gt; 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1</span></span>
 <span><span class="co">#&gt;   RMSEA       AIC       BIC   LogLik</span></span>
 <span><span class="co">#&gt; 1     0 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
 </div>

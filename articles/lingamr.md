@@ -722,7 +722,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.6 seconds.
+#> Completed in 3.5 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -1146,7 +1146,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 sec
 #> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.1x
+#> theoretical factor 3.4x vs. observed 2.2x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1435,7 +1435,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.5 seconds.
+#> Completed in 1.4 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
@@ -2246,7 +2246,7 @@ fit_result <- lingam_direct(sample6$data, reg_method = "ols")
 # fit measures for the estimated graph
 evaluate_model_fit(fit_result, sample6$data)
 #>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
-#> 1   0           15    0           NA       23023.7   1   1    1   1   1     0
+#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
 #>        AIC      BIC    LogLik
 #> 1 1860.598 1958.753 -910.2991
 ```
@@ -2259,7 +2259,7 @@ and its fit measures are visibly worse (lower CFI, higher RMSEA):
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
 #>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
-#> 1   0           15 3.197442e-11           NA       23023.7   1   1    1   1   1
+#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
 #>   RMSEA       AIC       BIC   LogLik
 #> 1     0 -4264.864 -4166.708 2152.432
 ```
