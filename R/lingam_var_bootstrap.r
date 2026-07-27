@@ -49,7 +49,6 @@
 #' runs inside a `tryCatch()`; a failing iteration is reported as a warning and
 #' excluded from the result instead of aborting the run. An error is raised
 #' only if every iteration fails.
-#' @importFrom stats median
 #' @export
 #' @examples
 #' s <- generate_varlingam_sample(n = 500, seed = 42)
@@ -81,13 +80,10 @@ lingam_var_bootstrap <- function(X,
 
   # Validate up-front (otherwise errors would surface confusingly inside workers).
   measure <- match.arg(measure, c("pwling", "kernel"))
-  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
-  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
-  init_method <- match.arg(init_method, c("ols", "ridge"))
-  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
-    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
-         call. = FALSE)
-  }
+  reg_args <- validate_reg_args(reg_method, lambda, init_method)
+  reg_method <- reg_args$reg_method
+  lambda <- reg_args$lambda
+  init_method <- reg_args$init_method
   if (!is.logical(prune) || length(prune) != 1 || is.na(prune)) {
     stop("prune must be a single logical (TRUE or FALSE).", call. = FALSE)
   }
@@ -184,25 +180,14 @@ lingam_var_bootstrap <- function(X,
     })
   }
 
-  # Resolve cores (default cap of 2, matching lingam_direct_bootstrap).
-  if (parallel) {
-    available <- parallel::detectCores()
-    if (is.na(available)) available <- 1L
-    if (is.null(n_cores)) {
-      n_cores <- min(2L, available)
-    } else {
-      n_cores <- as.integer(n_cores)
-      if (is.na(n_cores) || n_cores < 1L) stop("n_cores must be a positive integer.")
-    }
-    n_cores <- max(1L, min(n_cores, available, n_sampling))
-    if (n_cores == 1L) parallel <- FALSE
-  }
+  cores <- resolve_bootstrap_cores(parallel, n_cores, n_sampling)
+  parallel <- cores$parallel
+  n_cores <- cores$n_cores
 
   if (verbose) {
-    mode_str <- if (parallel) sprintf("parallel, %d cores", n_cores) else "sequential"
     message(sprintf(
       "VAR-LiNGAM bootstrap: %d iterations, lag=%d, method=%s (%s)",
-      n_sampling, lags, reg_method, mode_str
+      n_sampling, lags, reg_method, bootstrap_mode_string(parallel, n_cores)
     ))
     t_start <- proc.time()
   }
@@ -213,24 +198,7 @@ lingam_var_bootstrap <- function(X,
 
     # Make this package available on the workers (same approach as the Direct
     # LiNGAM bootstrap: attach when installed, otherwise export the namespace).
-    pkg <- utils::packageName()
-    ns <- environment(lingam_var)
-    parallel::clusterCall(cl, function(paths) .libPaths(paths), .libPaths())
-    worker_ready <- FALSE
-    if (!is.null(pkg) && nzchar(pkg)) {
-      worker_ready <- all(unlist(parallel::clusterCall(cl, function(p) {
-        suppressWarnings(suppressMessages(isTRUE(requireNamespace(p, quietly = TRUE))))
-      }, pkg)))
-      if (worker_ready) {
-        parallel::clusterCall(cl, function(p) {
-          suppressWarnings(suppressMessages(library(p, character.only = TRUE)))
-          invisible(NULL)
-        }, pkg)
-      }
-    }
-    if (!worker_ready) {
-      parallel::clusterExport(cl, varlist = ls(ns, all.names = TRUE), envir = ns)
-    }
+    setup_cluster_worker(cl, lingam_var)
 
     if (!is.null(seed)) parallel::clusterSetRNGStream(cl, seed)
     res_list <- parallel::parLapply(cl, seq_len(n_sampling), run_one)
@@ -246,19 +214,8 @@ lingam_var_bootstrap <- function(X,
 
   # Report and drop any failed iterations before aggregating (same failure
   # policy as lingam_direct_bootstrap).
-  ok <- vapply(res_list, function(r) isTRUE(r$ok), logical(1))
-  if (any(!ok)) {
-    for (r in res_list[!ok]) {
-      warning(sprintf(
-        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
-      ), call. = FALSE)
-    }
-  }
-  res_list <- res_list[ok]
+  res_list <- filter_bootstrap_failures(res_list)
   n_success <- length(res_list)
-  if (n_success == 0) {
-    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
-  }
 
   # Aggregate.
   adjacency_matrices <- vector("list", n_success)
@@ -272,17 +229,7 @@ lingam_var_bootstrap <- function(X,
     resampled_indices[[i]] <- res_list[[i]]$idx
   }
 
-  if (verbose) {
-    elapsed <- (proc.time() - t_start)["elapsed"]
-    if (n_success < n_sampling) {
-      message(sprintf(
-        "Completed in %.1f seconds (%d / %d iterations succeeded).",
-        elapsed, n_success, n_sampling
-      ))
-    } else {
-      message(sprintf("Completed in %.1f seconds.", elapsed))
-    }
-  }
+  if (verbose) bootstrap_completion_message(t_start, n_success, n_sampling)
 
   create_var_bootstrap_result(
     adjacency_matrices, total_effects, lags, resampled_indices, causal_orders
@@ -398,7 +345,6 @@ get_var_probabilities <- function(result, min_causal_effect = NULL) {
 #' @param to_lag lag of the destination (default 0); must satisfy `to_lag <= from_lag`
 #' @param min_causal_effect minimum |effect| threshold (NULL = 0)
 #' @return a data frame (path, effect, probability), one row per distinct path
-#' @importFrom stats median
 #' @export
 #' @examples
 #' s <- generate_varlingam_sample(n = 500, seed = 42)

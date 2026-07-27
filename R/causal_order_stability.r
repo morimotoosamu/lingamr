@@ -23,7 +23,6 @@
 #'   1 (order agrees across all samples). The closer the precedence
 #'   probability of each variable pair is to 0/1, the higher the score.
 #' * `n_sampling`: The number of bootstrap samples.
-#' @importFrom stats sd median
 #' @export
 #' @examples
 #' dat <- generate_lingam_sample_6()

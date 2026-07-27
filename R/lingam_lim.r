@@ -447,7 +447,6 @@ lim_topological_order <- function(B) {
 #' data. In: Proceedings of the First Conference on Causal Learning and
 #' Reasoning (CLeaR 2022). PMLR 177, pp. 994-1009, 2022.
 #'
-#' @importFrom stats optim plogis glm binomial logLik lm coef runif
 #' @export
 #' @examples
 #' # Reproducibility requires set.seed(), since the optimization starts from

@@ -91,14 +91,10 @@ lingam_parce_bootstrap <- function(X,
   }
 
   independence <- match.arg(independence, c("hsic", "fcorr"))
-  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
-  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
-  init_method <- match.arg(init_method, c("ols", "ridge"))
-
-  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
-    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
-         call. = FALSE)
-  }
+  reg_args <- validate_reg_args(reg_method, lambda, init_method)
+  reg_method <- reg_args$reg_method
+  lambda <- reg_args$lambda
+  init_method <- reg_args$init_method
   if (!is.numeric(alpha) || length(alpha) != 1 || is.na(alpha) || alpha < 0) {
     stop("alpha must be a non-negative numeric scalar.", call. = FALSE)
   }
@@ -161,24 +157,14 @@ lingam_parce_bootstrap <- function(X,
     })
   }
 
-  if (parallel) {
-    available <- parallel::detectCores()
-    if (is.na(available)) available <- 1L
-    if (is.null(n_cores)) {
-      n_cores <- min(2L, available)
-    } else {
-      n_cores <- as.integer(n_cores)
-      if (is.na(n_cores) || n_cores < 1L) stop("n_cores must be a positive integer.")
-    }
-    n_cores <- max(1L, min(n_cores, available, n_sampling))
-    if (n_cores == 1L) parallel <- FALSE
-  }
+  cores <- resolve_bootstrap_cores(parallel, n_cores, n_sampling)
+  parallel <- cores$parallel
+  n_cores <- cores$n_cores
 
   if (verbose) {
-    mode_str <- if (parallel) sprintf("parallel, %d cores", n_cores) else "sequential"
     message(sprintf(
       "Bootstrap: %d iterations, method=%s (%s)",
-      n_sampling, reg_method, mode_str
+      n_sampling, reg_method, bootstrap_mode_string(parallel, n_cores)
     ))
     t_start <- proc.time()
   }
@@ -202,19 +188,8 @@ lingam_parce_bootstrap <- function(X,
     })
   }
 
-  ok <- vapply(res_list, function(r) isTRUE(r$ok), logical(1))
-  if (any(!ok)) {
-    for (r in res_list[!ok]) {
-      warning(sprintf(
-        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
-      ), call. = FALSE)
-    }
-  }
-  res_list <- res_list[ok]
+  res_list <- filter_bootstrap_failures(res_list)
   n_success <- length(res_list)
-  if (n_success == 0) {
-    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
-  }
 
   adjacency_matrices <- array(0, dim = c(n_success, n_features, n_features))
   total_effects <- if (compute_total_effects) {
@@ -229,17 +204,7 @@ lingam_parce_bootstrap <- function(X,
     resampled_indices[[i]] <- res_list[[i]]$idx
   }
 
-  if (verbose) {
-    elapsed <- (proc.time() - t_start)["elapsed"]
-    if (n_success < n_sampling) {
-      message(sprintf(
-        "Completed in %.1f seconds (%d / %d iterations succeeded).",
-        elapsed, n_success, n_sampling
-      ))
-    } else {
-      message(sprintf("Completed in %.1f seconds.", elapsed))
-    }
-  }
+  if (verbose) bootstrap_completion_message(t_start, n_success, n_sampling)
 
   # causal_orders is intentionally NULL; see @details
   create_bootstrap_result(adjacency_matrices, total_effects, resampled_indices, causal_orders = NULL)

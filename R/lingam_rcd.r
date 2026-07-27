@@ -775,12 +775,7 @@ estimate_total_effect_rcd <- function(X, rcd_result, from_index, to_index,
   y <- X[, to_index]
   Xp <- X[, predictors, drop = FALSE]
 
-  coefs <- switch(method,
-    "ols"            = fit_ols(y, Xp),
-    "lasso"          = fit_lasso(y, Xp, lambda),
-    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda, init_method = init_method),
-    "ridge"          = fit_ridge_reg(y, Xp, lambda)
-  )
+  coefs <- fit_coef_by_method(y, Xp, method, lambda, init_method)
 
   coefs[from_pos]
 }

@@ -53,6 +53,121 @@ setup_cluster_worker <- function(cl, fun) {
 }
 
 
+#' Resolve the number of parallel cores for a bootstrap run
+#'
+#' Shared by all `*_bootstrap()` functions. Applies the common policy:
+#' `n_cores = NULL` defaults to a maximum of 2 cores for safety, the resolved
+#' value is capped by the available cores and by `n_sampling`, and a resolved
+#' value of 1 demotes the run to sequential execution.
+#'
+#' @param parallel Whether parallel execution was requested (logical).
+#' @param n_cores Requested number of cores (integer or NULL).
+#' @param n_sampling Number of bootstrap iterations (validated positive integer).
+#' @return `list(parallel = <logical>, n_cores = <integer or NULL>)` with the
+#'   possibly-demoted `parallel` flag and the resolved core count.
+#' @keywords internal
+resolve_bootstrap_cores <- function(parallel, n_cores, n_sampling) {
+  if (parallel) {
+    available <- parallel::detectCores()
+    if (is.na(available)) available <- 1L
+    if (is.null(n_cores)) {
+      n_cores <- min(2L, available)
+    } else {
+      n_cores <- as.integer(n_cores)
+      if (is.na(n_cores) || n_cores < 1L) stop("n_cores must be a positive integer.")
+    }
+    n_cores <- max(1L, min(n_cores, available, n_sampling))
+    if (n_cores == 1L) parallel <- FALSE
+  }
+  list(parallel = parallel, n_cores = n_cores)
+}
+
+
+#' Human-readable execution-mode label for bootstrap progress messages
+#'
+#' @param parallel Whether the run is parallel (logical, after core resolution).
+#' @param n_cores Resolved core count (used only when `parallel` is `TRUE`).
+#' @return `"parallel, N cores"` or `"sequential"`.
+#' @keywords internal
+bootstrap_mode_string <- function(parallel, n_cores) {
+  if (parallel) sprintf("parallel, %d cores", n_cores) else "sequential"
+}
+
+
+#' Report and drop failed bootstrap iterations
+#'
+#' Shared post-processing for all `*_bootstrap()` functions: issues one
+#' warning per failed iteration (an element with `ok = FALSE`), removes the
+#' failures, and aborts only when every iteration failed.
+#'
+#' @param res_list List of per-iteration results; each element has `ok`
+#'   (logical) plus either the iteration payload or `iteration` / `message`
+#'   describing the failure.
+#' @return The list restricted to successful iterations (never empty).
+#' @keywords internal
+filter_bootstrap_failures <- function(res_list) {
+  ok <- vapply(res_list, function(r) isTRUE(r$ok), logical(1))
+  if (any(!ok)) {
+    for (r in res_list[!ok]) {
+      warning(sprintf(
+        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
+      ), call. = FALSE)
+    }
+  }
+  res_list <- res_list[ok]
+  if (length(res_list) == 0) {
+    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
+  }
+  res_list
+}
+
+
+#' Emit the shared bootstrap completion message
+#'
+#' @param t_start Result of `proc.time()` captured before the iterations began.
+#' @param n_success Number of iterations that succeeded.
+#' @param n_sampling Number of iterations that were requested.
+#' @return `NULL`, invisibly. Called for the `message()` side effect.
+#' @keywords internal
+bootstrap_completion_message <- function(t_start, n_success, n_sampling) {
+  elapsed <- (proc.time() - t_start)["elapsed"]
+  if (n_success < n_sampling) {
+    message(sprintf(
+      "Completed in %.1f seconds (%d / %d iterations succeeded).",
+      elapsed, n_success, n_sampling
+    ))
+  } else {
+    message(sprintf("Completed in %.1f seconds.", elapsed))
+  }
+  invisible(NULL)
+}
+
+
+#' Validate the regression-method argument trio shared by bootstrap functions
+#'
+#' Applies `match.arg()` to `reg_method` / `lambda` / `init_method` and
+#' rejects the unsupported `lambda = "oracle"` combination, with the same
+#' error text as the algorithm entry points. Bootstrap functions call this
+#' before starting the cluster so invalid arguments fail fast instead of
+#' erroring confusingly inside workers.
+#'
+#' @param reg_method Regression method argument as received.
+#' @param lambda Lambda selection argument as received.
+#' @param init_method Adaptive-LASSO initial estimator argument as received.
+#' @return `list(reg_method = , lambda = , init_method = )` with matched values.
+#' @keywords internal
+validate_reg_args <- function(reg_method, lambda, init_method) {
+  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
+  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
+  init_method <- match.arg(init_method, c("ols", "ridge"))
+  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
+    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
+         call. = FALSE)
+  }
+  list(reg_method = reg_method, lambda = lambda, init_method = init_method)
+}
+
+
 # =============================================================================
 # Bootstrap execution function
 # =============================================================================
@@ -163,14 +278,10 @@ lingam_direct_bootstrap <- function(X,
   # iterations (within workers when parallel), so validate them here before
   # starting the cluster.
   measure <- match.arg(measure, c("pwling", "kernel"))
-  reg_method <- match.arg(reg_method, c("adaptive_lasso", "lasso", "ols", "ridge"))
-  lambda <- match.arg(lambda, c("BIC", "AIC", "lambda.min", "lambda.1se", "oracle"))
-  init_method <- match.arg(init_method, c("ols", "ridge"))
-
-  if (reg_method %in% c("lasso", "ridge") && lambda == "oracle") {
-    stop("lambda = \"oracle\" is only supported for reg_method = \"adaptive_lasso\".",
-         call. = FALSE)
-  }
+  reg_args <- validate_reg_args(reg_method, lambda, init_method)
+  reg_method <- reg_args$reg_method
+  lambda <- reg_args$lambda
+  init_method <- reg_args$init_method
   n_sampling <- suppressWarnings(as.integer(n_sampling))
   if (length(n_sampling) != 1 || is.na(n_sampling) || n_sampling <= 0) {
     stop("n_sampling must be a positive integer.", call. = FALSE)
@@ -218,25 +329,14 @@ lingam_direct_bootstrap <- function(X,
     })
   }
 
-  # Resolve the number of cores to use (defaults to a maximum of 2 cores)
-  if (parallel) {
-    available <- parallel::detectCores()
-    if (is.na(available)) available <- 1L
-    if (is.null(n_cores)) {
-      n_cores <- min(2L, available)
-    } else {
-      n_cores <- as.integer(n_cores)
-      if (is.na(n_cores) || n_cores < 1L) stop("n_cores must be a positive integer.")
-    }
-    n_cores <- max(1L, min(n_cores, available, n_sampling))
-    if (n_cores == 1L) parallel <- FALSE
-  }
+  cores <- resolve_bootstrap_cores(parallel, n_cores, n_sampling)
+  parallel <- cores$parallel
+  n_cores <- cores$n_cores
 
   if (verbose) {
-    mode_str <- if (parallel) sprintf("parallel, %d cores", n_cores) else "sequential"
     message(sprintf(
       "Bootstrap: %d iterations, method=%s (%s)",
-      n_sampling, reg_method, mode_str
+      n_sampling, reg_method, bootstrap_mode_string(parallel, n_cores)
     ))
     t_start <- proc.time()
   }
@@ -265,19 +365,8 @@ lingam_direct_bootstrap <- function(X,
   }
 
   # Report and drop any failed iterations before aggregating.
-  ok <- vapply(res_list, function(r) isTRUE(r$ok), logical(1))
-  if (any(!ok)) {
-    for (r in res_list[!ok]) {
-      warning(sprintf(
-        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
-      ), call. = FALSE)
-    }
-  }
-  res_list <- res_list[ok]
+  res_list <- filter_bootstrap_failures(res_list)
   n_success <- length(res_list)
-  if (n_success == 0) {
-    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
-  }
 
   # Aggregate results into arrays. total_effects is left NULL (not a zero-
   # filled array) when compute_total_effects = FALSE, so get_total_causal_effects()
@@ -297,17 +386,7 @@ lingam_direct_bootstrap <- function(X,
     resampled_indices[[i]] <- res_list[[i]]$idx
   }
 
-  if (verbose) {
-    elapsed <- (proc.time() - t_start)["elapsed"]
-    if (n_success < n_sampling) {
-      message(sprintf(
-        "Completed in %.1f seconds (%d / %d iterations succeeded).",
-        elapsed, n_success, n_sampling
-      ))
-    } else {
-      message(sprintf("Completed in %.1f seconds.", elapsed))
-    }
-  }
+  if (verbose) bootstrap_completion_message(t_start, n_success, n_sampling)
   create_bootstrap_result(adjacency_matrices, total_effects, resampled_indices, causal_orders)
 }
 
@@ -380,7 +459,6 @@ print.BootstrapResult <- function(x, ...) {
 #' * `ci_lower`, `ci_upper`: The lower (2.5%) and upper (97.5%) bounds of the bootstrap confidence interval for the causal effect.
 #' * `sign` (optional): The sign of the causal effect (1 for positive, -1 for negative), included if `split_by_causal_effect_sign = TRUE`.
 #' * `from_name`, `to_name` (optional): Character labels for the variables, included if `labels` were provided.
-#' @importFrom stats sd median quantile
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -629,7 +707,6 @@ get_probabilities <- function(result, min_causal_effect = NULL) {
 #' @param result BootstrapResult object
 #' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
 #' @return data.frame (from, to, effect, probability)
-#' @importFrom stats median
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -701,7 +778,6 @@ get_total_causal_effects <- function(result, min_causal_effect = NULL) {
 #' @param to_index End index (1-based)
 #' @param min_causal_effect Minimum threshold for the causal effect (NULL = 0)
 #' @return data.frame (path, effect, probability)
-#' @importFrom stats median
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()

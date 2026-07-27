@@ -73,3 +73,26 @@ test_that("estimate_all_total_effects errors on invalid lingam_result", {
 
   expect_error(estimate_all_total_effects(dat$data, fake), "must be the return value of lingam_direct")
 })
+
+test_that("estimate_total_effect recovers known effects with method = 'adaptive_lasso'", {
+  skip_if_not_installed("glmnet")
+  dat <- generate_lingam_sample_6(n = 2000, seed = 42)
+  res <- lingam_direct(dat$data, reg_method = "ols")
+
+  te_direct <- estimate_total_effect(dat$data, res, "x3", "x0", method = "adaptive_lasso")
+  expect_equal(unname(te_direct), 3.0, tolerance = 0.2)
+
+  te_indirect <- estimate_total_effect(dat$data, res, "x3", "x1", method = "adaptive_lasso")
+  expect_equal(unname(te_indirect), 21.0, tolerance = 1.0)
+})
+
+test_that("estimate_all_total_effects recovers known effects with method = 'adaptive_lasso'", {
+  skip_if_not_installed("glmnet")
+  dat <- generate_lingam_sample_6(n = 2000, seed = 42)
+  res <- lingam_direct(dat$data, reg_method = "ols")
+  TE  <- estimate_all_total_effects(dat$data, res, method = "adaptive_lasso")
+
+  expect_equal(dim(TE), c(6L, 6L))
+  expect_equal(TE["x0", "x3"], 3.0, tolerance = 0.2)   # x3 -> x0, direct
+  expect_equal(TE["x1", "x3"], 21.0, tolerance = 1.0)  # x3 -> x1, via x0 and x2
+})

@@ -49,7 +49,6 @@
 #'   Zero elements indicate no causal relationship.
 #' * `causal_order`: estimated causal order (integer vector of 1-based indices).
 #'   Earlier elements are more upstream (closer to exogenous variables).
-#' @importFrom stats sd lm.fit cov median quantile
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()

@@ -15,10 +15,9 @@
 
 
 # Above this sample size the exact O(n^3) kernel path switches to the
-# incomplete-Cholesky low-rank approximation. The kappa/sigma parameters in
-# search_causal_order_kernel() are tied to this switch, so both
-# mutual_information_kernel() and search_causal_order_kernel() must use this
-# same constant.
+# incomplete-Cholesky low-rank approximation. The kappa/sigma parameters are
+# tied to this switch, so search_causal_order_kernel() and f_correlation()
+# (in f_correlation.r) must both use this same constant.
 KERNEL_LOWRANK_MAX_N <- 1000L
 
 
@@ -107,21 +106,6 @@ entropy_approx <- function(u) {
   (1 + log(2 * pi)) / 2 -
     k1 * (sum(log(cosh(u))) / n - gamma)^2 -
     k2 * (sum(u * exp(-u^2 / 2)) / n)^2
-}
-
-
-#' Difference of mutual information
-#' @param xi_std Standardized xi
-#' @param xj_std Standardized xj
-#' @param ri_j Residual of xi regressed on xj
-#' @param rj_i Residual of xj regressed on xi
-#' @return Difference of mutual information
-#' @keywords internal
-diff_mutual_info <- function(xi_std, xj_std, ri_j, rj_i) {
-  sd_ri_j <- sd_pop(ri_j)
-  sd_rj_i <- sd_pop(rj_i)
-  (entropy_approx(xj_std) + entropy_approx(ri_j / sd_ri_j)) -
-    (entropy_approx(xi_std) + entropy_approx(rj_i / sd_rj_i))
 }
 
 
@@ -234,8 +218,9 @@ search_causal_order_pwling <- function(X, U, Uc, Vj) {
     xi_std <- X_std[, i]
     for (j in U) {
       if (i == j) next
-      # diff_mutual_info is antisymmetric (dm_ji = -dm_ij), so for pairs
-      # where both are candidates, compute once on the i < j side and add to both.
+      # The pairwise mutual-information difference is antisymmetric
+      # (dm_ji = -dm_ij), so for pairs where both are candidates, compute
+      # once on the i < j side and add to both.
       if (in_Uc[j] && j < i) next
       xj_std <- X_std[, j]
       r_ij <- R[pos[i], pos[j]]
@@ -425,30 +410,6 @@ kernel_mi_core_lowrank <- function(prep1, x2, kappa, sigma) {
 }
 
 
-#' Kernel-based mutual information
-#'
-#' Dispatches to the incomplete-Cholesky low-rank path for n above the
-#' low-rank threshold (matching the kappa/sigma switch in
-#' `search_causal_order_kernel()`); below the threshold it calls the exact
-#' path unchanged.
-#' @param x1 Variable 1
-#' @param x2 Variable 2
-#' @param param Parameter vector (kappa, sigma)
-#' @return Mutual information
-#' @keywords internal
-mutual_information_kernel <- function(x1, x2, param) {
-  kappa <- param[1]
-  sigma <- param[2]
-  if (length(x1) > KERNEL_LOWRANK_MAX_N) {
-    prep1 <- kernel_mi_prepare_lowrank(x1, kappa, sigma)
-    kernel_mi_core_lowrank(prep1, x2, kappa, sigma)
-  } else {
-    E1 <- kernel_mi_prepare(x1, kappa, sigma)
-    kernel_mi_core(E1, x2, kappa, sigma)
-  }
-}
-
-
 #' Causal order search via the kernel method
 #' @param X Data matrix
 #' @param U All variables
@@ -463,7 +424,8 @@ search_causal_order_kernel <- function(X, U, Uc, Vj) {
 
   n <- nrow(X)
   # Above this n, the exact O(n^3) kernel computation dominates runtime, so
-  # switch to the incomplete-Cholesky low-rank path (see mutual_information_kernel()).
+  # switch to the incomplete-Cholesky low-rank path
+  # (kernel_mi_prepare_lowrank() / kernel_mi_core_lowrank()).
   use_lowrank <- n > KERNEL_LOWRANK_MAX_N
   if (use_lowrank) {
     param <- c(2e-3, 0.5)

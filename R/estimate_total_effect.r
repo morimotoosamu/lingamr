@@ -8,7 +8,6 @@
 #' @param lambda Lambda selection ("lambda.min", "lambda.1se", "AIC", "BIC", "oracle"). Default is BIC
 #' @param init_method Method for estimating the initial weights of adaptive LASSO regression ("ols" or "ridge")
 #' @return Estimated total causal effect
-#' @importFrom stats cov
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -70,12 +69,7 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
   y <- X[, to_index]
   Xp <- X[, predictors, drop = FALSE]
 
-  coefs <- switch(method,
-    "ols"            = fit_ols(y, Xp),
-    "lasso"          = fit_lasso(y, Xp, lambda),
-    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda, init_method = init_method),
-    "ridge"          = fit_ridge_reg(y, Xp, lambda)
-  )
+  coefs <- fit_coef_by_method(y, Xp, method, lambda, init_method)
 
   return(coefs[from_pos])
 }
@@ -91,7 +85,6 @@ estimate_total_effect <- function(X, lingam_result, from_index, to_index,
 #' @return Matrix of total causal effects (n_features x n_features).
 #'   **Convention: `TE[i, j]` is the total causal effect from variable j to variable i (j -> i).**
 #'   Same index convention as the adjacency matrix `adjacency_matrix`. The sum of direct and indirect effects.
-#' @importFrom stats cov
 #' @export
 #' @examples
 #' LiNGAM_sample_1000 <- generate_lingam_sample_6()
@@ -155,12 +148,9 @@ estimate_all_total_effects <- function(X,
       Xp <- X[, predictors, drop = FALSE]
       for (to_idx in downstream) {
         y <- X[, to_idx]
-        coefs <- switch(method,
-          "lasso"          = fit_lasso(y, Xp, lambda),
-          "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda,
-                                                init_method = init_method),
-          "ridge"          = fit_ridge_reg(y, Xp, lambda)
-        )
+        # method is guaranteed non-OLS here (OLS takes the cov-batch fast
+        # path above), so the dispatcher's "ols" branch is never reached.
+        coefs <- fit_coef_by_method(y, Xp, method, lambda, init_method)
         TE[to_idx, from_idx] <- coefs[from_pos]
       }
     }

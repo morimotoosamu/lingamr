@@ -97,7 +97,6 @@
 #' Tashiro, T., Shimizu, S., Hyvarinen, A., and Washio, T. (2014).
 #' ParceLiNGAM: a causal ordering method robust against latent confounders.
 #' Neural Computation, 26(1), 57-83.
-#' @importFrom stats cov pchisq
 #' @export
 #' @examples
 #' confounded <- generate_parce_sample(n = 500, seed = 1)
@@ -484,15 +483,7 @@ estimate_adjacency_matrix_parce <- function(X, causal_order, prior_knowledge,
       y <- X[, target]
       Xp <- X[, predictors, drop = FALSE]
 
-      coefs <- switch(method,
-        "ols"            = fit_ols(y, Xp),
-        "lasso"          = fit_lasso(y, Xp, lambda = lambda),
-        "adaptive_lasso" = fit_adaptive_lasso(y, Xp,
-                                              lambda = lambda,
-                                              init_method = init_method),
-        "ridge"          = fit_ridge_reg(y, Xp, lambda = lambda)
-      )
-      B[target, predictors] <- coefs
+      B[target, predictors] <- fit_coef_by_method(y, Xp, method, lambda, init_method)
     }
   }
 
@@ -636,12 +627,7 @@ estimate_total_effect_parce <- function(X, parce_result, from_index, to_index,
   y <- X[, to_index]
   Xp <- X[, predictors, drop = FALSE]
 
-  coefs <- switch(method,
-    "ols"            = fit_ols(y, Xp),
-    "lasso"          = fit_lasso(y, Xp, lambda),
-    "adaptive_lasso" = fit_adaptive_lasso(y, Xp, lambda, init_method = init_method),
-    "ridge"          = fit_ridge_reg(y, Xp, lambda)
-  )
+  coefs <- fit_coef_by_method(y, Xp, method, lambda, init_method)
 
   coefs[from_pos]
 }

@@ -136,7 +136,9 @@ f_correlation <- function(x, y) {
   x <- (x - mean(x)) / sd_pop(x)
   y <- (y - mean(y)) / sd_pop(y)
 
-  if (n > 1000) {
+  # Same sample-size threshold and parameter values as the kernel-measure
+  # path in search_causal_order.r (KERNEL_LOWRANK_MAX_N is defined there).
+  if (n > KERNEL_LOWRANK_MAX_N) {
     kappa <- 2e-3
     sigma <- 0.5
   } else {

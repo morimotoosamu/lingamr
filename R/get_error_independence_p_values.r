@@ -77,7 +77,6 @@ kurtosis_pop <- function(x) {
 #'   large `n` (beyond 5000) this warns, and "spearman" is a much faster
 #'   alternative with similar rank-based semantics.
 #' @return matrix of p-values (n_features x n_features)
-#' @importFrom stats cor.test
 #' @export
 #' @examples
 #' # Load the sample data

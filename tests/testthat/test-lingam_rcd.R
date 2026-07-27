@@ -133,6 +133,16 @@ test_that("estimate_total_effect_rcd warns and returns NA for a confounded 'from
   expect_true(is.numeric(eff2) && !is.na(eff2))
 })
 
+test_that("estimate_total_effect_rcd works with method = 'ols'", {
+  dat <- generate_rcd_sample(n = 300, seed = 42)
+  res <- lingam_rcd(dat$data)
+
+  eff <- estimate_total_effect_rcd(dat$data, res,
+                                   from_index = 6L, to_index = 1L,
+                                   method = "ols")
+  expect_true(is.numeric(eff) && !is.na(eff))
+})
+
 test_that("get_error_independence_p_values_rcd gives NA for NA-linked pairs and [0,1] otherwise", {
   dat <- generate_rcd_sample(n = 300, seed = 42)
   res <- lingam_rcd(dat$data)

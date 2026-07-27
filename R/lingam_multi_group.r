@@ -338,8 +338,9 @@ search_causal_order_pwling_multi <- function(X_list, U, Uc, Vj) {
       xi_std <- X_std[, i]
       for (j in U) {
         if (i == j) next
-        # diff_mutual_info is antisymmetric, so for pairs where both are
-        # candidates, compute once on the i < j side and add to both.
+        # The pairwise mutual-information difference is antisymmetric, so for
+        # pairs where both are candidates, compute once on the i < j side and
+        # add to both.
         if (in_Uc[j] && j < i) next
         xj_std <- X_std[, j]
         r_ij <- R[pos[i], pos[j]]

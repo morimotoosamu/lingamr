@@ -330,7 +330,6 @@ estimate_adjacency_matrix_high_dim_np <- function(X, causal_order) {
 #' Wang, Y. S. and Drton, M. (2020). High-dimensional causal discovery under
 #' non-Gaussianity. Biometrika, 107(1), 41-59.
 #'
-#' @importFrom stats lm.fit coef
 #' @export
 #' @examples
 #' sample <- generate_lingam_sample_6(n = 300, seed = 1)

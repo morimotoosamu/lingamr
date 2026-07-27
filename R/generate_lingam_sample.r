@@ -21,7 +21,6 @@
 #'   "lognormal"   : Log-normal(0, 1) - skewed, non-Gaussian
 #'   "exponential" : Exponential(1) - skewed, non-Gaussian
 #'   "t3"          : t-distribution (df=3) - heavy tails
-#' @importFrom stats rexp rlnorm rt runif rnorm
 #' @return function(n) that generates n random numbers
 #' @keywords internal
 make_noise_fn <- function(noise_dist) {

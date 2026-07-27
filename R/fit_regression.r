@@ -105,20 +105,37 @@ estimate_adjacency_matrix <- function(X,
     y <- X[, target]
     Xp <- X[, predictors, drop = FALSE]
 
-    # --- branch by regression method ---
-    coefs <- switch(method,
-      "ols"            = fit_ols(y, Xp),
-      "lasso"          = fit_lasso(y, Xp, lambda = lambda),
-      "adaptive_lasso" = fit_adaptive_lasso(y, Xp,
-                                            lambda = lambda,
-                                            init_method = init_method),
-      "ridge"          = fit_ridge_reg(y, Xp, lambda = lambda)
-    )
-
-    B[target, predictors] <- coefs
+    B[target, predictors] <- fit_coef_by_method(y, Xp, method, lambda, init_method)
   }
 
   return(B)
+}
+
+
+#' Dispatch a single regression to the backend selected by `method`
+#'
+#' Central dispatcher shared by every place that fits "y on Xp with the
+#' user-chosen regression method" (adjacency estimation, total effects,
+#' Parce/RCD variants). Callers are expected to have validated `method`,
+#' `lambda`, and `init_method` already; no validation happens here so that
+#' error behaviour stays with the caller.
+#'
+#' @param y response variable (numeric vector)
+#' @param Xp predictor matrix
+#' @param method one of "ols", "lasso", "adaptive_lasso", "ridge"
+#' @param lambda lambda selection rule (ignored for OLS)
+#' @param init_method initial estimator for adaptive LASSO (ignored otherwise)
+#' @return coefficient vector (excluding intercept)
+#' @keywords internal
+fit_coef_by_method <- function(y, Xp, method, lambda, init_method) {
+  switch(method,
+    "ols"            = fit_ols(y, Xp),
+    "lasso"          = fit_lasso(y, Xp, lambda = lambda),
+    "adaptive_lasso" = fit_adaptive_lasso(y, Xp,
+                                          lambda = lambda,
+                                          init_method = init_method),
+    "ridge"          = fit_ridge_reg(y, Xp, lambda = lambda)
+  )
 }
 
 

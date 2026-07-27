@@ -107,6 +107,16 @@ test_that("estimate_total_effect_parce warns and returns NA for a confounded var
   expect_true(is.numeric(eff2) && !is.na(eff2))
 })
 
+test_that("estimate_total_effect_parce works with method = 'ols'", {
+  dat <- generate_parce_sample(n = 1000, seed = 42)
+  res <- lingam_parce(dat$data, reg_method = "ols")
+
+  eff <- estimate_total_effect_parce(dat$data, res,
+                                     from_index = 1L, to_index = 6L,
+                                     method = "ols")
+  expect_true(is.numeric(eff) && !is.na(eff))
+})
+
 test_that("get_error_independence_p_values_parce returns NA for confounded pairs and valid p-values elsewhere", {
   dat <- generate_parce_sample(n = 1000, seed = 42)
   res <- lingam_parce(dat$data, reg_method = "ols")

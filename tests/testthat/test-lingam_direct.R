@@ -166,15 +166,17 @@ test_that("measure = 'kernel' returns a valid LingamResult", {
   expect_equal(dim(res$adjacency_matrix), c(6L, 6L))
 })
 
-test_that("mutual_information_kernel returns finite non-negative values", {
+test_that("kernel mutual information (prepare + core) returns finite values", {
   set.seed(1)
   x <- rnorm(100)
   y <- 0.8 * x + runif(100)
   z <- rnorm(100)
-  param <- c(2e-2, 1.0)
+  kappa <- 2e-2
+  sigma <- 1.0
 
-  mi_dep <- mutual_information_kernel(x, y, param)
-  mi_ind <- mutual_information_kernel(x, z, param)
+  E1 <- kernel_mi_prepare(x, kappa, sigma)
+  mi_dep <- kernel_mi_core(E1, y, kappa, sigma)
+  mi_ind <- kernel_mi_core(E1, z, kappa, sigma)
 
   expect_true(is.finite(mi_dep) && is.finite(mi_ind))
   # the MI of the dependent pair is greater than that of the independent pair

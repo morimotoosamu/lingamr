@@ -392,19 +392,8 @@ bootstrap_with_imputation <- function(X,
     if (is.null(effective_n_repeats)) effective_n_repeats <- this_n_repeats
   }
 
-  ok <- vapply(results, function(r) isTRUE(r$ok), logical(1))
-  if (any(!ok)) {
-    for (r in results[!ok]) {
-      warning(sprintf(
-        "Bootstrap iteration %d failed and was skipped: %s", r$iteration, r$message
-      ), call. = FALSE)
-    }
-  }
-  results <- results[ok]
+  results <- filter_bootstrap_failures(results)
   n_success <- length(results)
-  if (n_success == 0) {
-    stop("All bootstrap iterations failed; see warnings above for details.", call. = FALSE)
-  }
   n_repeats_final <- effective_n_repeats
 
   causal_orders <- matrix(0L, nrow = n_success, ncol = p)
@@ -429,17 +418,7 @@ bootstrap_with_imputation <- function(X,
     # identities aligned to var_names), so it intentionally gets no dimnames.
   }
 
-  if (verbose) {
-    elapsed <- (proc.time() - t_start)["elapsed"]
-    if (n_success < n_sampling) {
-      message(sprintf(
-        "Completed in %.1f seconds (%d / %d iterations succeeded).",
-        elapsed, n_success, n_sampling
-      ))
-    } else {
-      message(sprintf("Completed in %.1f seconds.", elapsed))
-    }
-  }
+  if (verbose) bootstrap_completion_message(t_start, n_success, n_sampling)
 
   result <- list(
     causal_orders = causal_orders,
@@ -519,7 +498,6 @@ print.ImputationBootstrapResult <- function(x, ...) {
 #'   # get_total_causal_effects() is not available: total effects were never computed
 #'   tryCatch(get_total_causal_effects(bs), error = function(e) conditionMessage(e))
 #' }
-#' @importFrom stats median
 as_bootstrap_result <- function(x, aggregate = c("median", "mean")) {
   if (!inherits(x, "ImputationBootstrapResult")) {
     stop("x must be the return value of bootstrap_with_imputation().", call. = FALSE)
