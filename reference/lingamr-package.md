@@ -1,10 +1,10 @@
-# lingamr: 'LiNGAM' Algorithms for Causal Discovery
+# lingamr: LiNGAM Algorithms for Causal Discovery
 
-R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model)
+R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model)
 algorithms for causal discovery, following Shimizu et al. (2011)
 <https://www.jmlr.org/papers/v12/shimizu11a.html>. Based on the 'Python'
 implementation by Ikeuchi et al. (2023)
-<https://github.com/cdt15/lingam>. The 'VAR-LiNGAM' residual diagnostics
+<https://github.com/cdt15/lingam>. The VAR-LiNGAM residual diagnostics
 are inspired by the 'VARLiNGAM' R code of Moneta et al.
 <https://sites.google.com/site/dorisentner/publications/VARLiNGAM>.
 

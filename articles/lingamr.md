@@ -1146,7 +1146,7 @@ cat(sprintf(
 ))
 #> p = 10 : 0.03 sec
 #> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.2x
+#> theoretical factor 3.4x vs. observed 2.1x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1163,7 +1163,7 @@ cat(sprintf(
 ))
 #>               p = 10   p = 15
 #> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.02 sec   0.03 sec
+#> ICA-LiNGAM    :  0.01 sec   0.02 sec
 ```
 
 The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
@@ -1435,7 +1435,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.5 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
