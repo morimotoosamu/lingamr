@@ -4,11 +4,11 @@
 \name{lingamr-package}
 \alias{lingamr}
 \alias{lingamr-package}
-\title{lingamr: 'LiNGAM' Algorithms for Causal Discovery}
+\title{lingamr: LiNGAM Algorithms for Causal Discovery}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery, following Shimizu et al. (2011) \url{https://www.jmlr.org/papers/v12/shimizu11a.html}. Based on the 'Python' implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}. The 'VAR-LiNGAM' residual diagnostics are inspired by the 'VARLiNGAM' R code of Moneta et al. \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}.
+R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model) algorithms for causal discovery, following Shimizu et al. (2011) \url{https://www.jmlr.org/papers/v12/shimizu11a.html}. Based on the 'Python' implementation by Ikeuchi et al. (2023) \url{https://github.com/cdt15/lingam}. The VAR-LiNGAM residual diagnostics are inspired by the 'VARLiNGAM' R code of Moneta et al. \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}.
 }
 \details{
 tutorial: \code{vignette("lingamr", package = "lingamr")}

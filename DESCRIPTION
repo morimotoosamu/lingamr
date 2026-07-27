@@ -1,6 +1,6 @@
 Type: Package
 Package: lingamr
-Title: 'LiNGAM' Algorithms for Causal Discovery
+Title: LiNGAM Algorithms for Causal Discovery
 Version: 0.1.2
 Authors@R: c(
     person("Osamu", "Morimoto", , "galactic.supermarket@gmail.com", role = c("aut", "cre", "cph")),
@@ -9,11 +9,11 @@ Authors@R: c(
     person("M.", "Ide", role = "cph"),
     person("W.", "Kurebayashi", role = "cph"),
     person("S.", "Shimizu", role = "cph"))
-Description: R implementation of 'LiNGAM' (Linear Non-Gaussian Acyclic Model)
+Description: R implementation of LiNGAM (Linear Non-Gaussian Acyclic Model)
     algorithms for causal discovery, following Shimizu et al. (2011)
     <https://www.jmlr.org/papers/v12/shimizu11a.html>. Based on the 'Python'
     implementation by Ikeuchi et al. (2023) <https://github.com/cdt15/lingam>.
-    The 'VAR-LiNGAM' residual diagnostics are inspired by the 'VARLiNGAM' R
+    The VAR-LiNGAM residual diagnostics are inspired by the 'VARLiNGAM' R
     code of Moneta et al.
     <https://sites.google.com/site/dorisentner/publications/VARLiNGAM>.
 License: MIT + file LICENSE
