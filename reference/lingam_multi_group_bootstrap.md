@@ -138,7 +138,7 @@ bs <- lingam_multi_group_bootstrap(mg$data_list,
 #> Multi-group bootstrap: 10 iterations, 2 groups, method=ols (sequential)
 #>   iteration 1 / 10
 #>   iteration 10 / 10
-#> Completed in 0.2 seconds.
+#> Completed in 0.1 seconds.
 get_probabilities(bs[[1]])
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]  0.0  0.0  0.4    1  0.0  0.0

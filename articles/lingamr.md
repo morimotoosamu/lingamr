@@ -1163,7 +1163,7 @@ cat(sprintf(
 ))
 #>               p = 10   p = 15
 #> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.01 sec   0.02 sec
+#> ICA-LiNGAM    :  0.02 sec   0.03 sec
 ```
 
 The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
