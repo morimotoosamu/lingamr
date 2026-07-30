@@ -4,7 +4,7 @@ Central dispatcher shared by every place that fits "y on Xp with the
 user-chosen regression method" (adjacency estimation, total effects,
 Parce/RCD variants). Callers are expected to have validated `method`,
 `lambda`, and `init_method` already; no validation happens here so that
-error behaviour stays with the caller.
+error behavior stays with the caller.
 
 ## Usage
 

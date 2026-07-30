@@ -36,6 +36,12 @@
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="../articles/lingamr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/lingamr-ja.html">lingamr detailed tutorial (Japanese)</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -1310,8 +1316,8 @@ grows by a factor of
 <span>  <span class="va">t15</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t10</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; p = 10 : 0.03 sec</span></span>
-<span><span class="co">#&gt; p = 15 : 0.06 sec</span></span>
-<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.1x</span></span></code></pre></div>
+<span><span class="co">#&gt; p = 15 : 0.05 sec</span></span>
+<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.0x</span></span></code></pre></div>
 <p>We run ICA-LiNGAM on the same data to compare speed directly.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
@@ -1323,7 +1329,7 @@ grows by a factor of
 <span>  <span class="va">t10_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="va">t15_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;               p = 10   p = 15</span></span>
-<span><span class="co">#&gt; Direct LiNGAM :  0.03 sec   0.06 sec</span></span>
+<span><span class="co">#&gt; Direct LiNGAM :  0.03 sec   0.05 sec</span></span>
 <span><span class="co">#&gt; ICA-LiNGAM    :  0.02 sec   0.03 sec</span></span></code></pre></div>
 <p>The larger
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
@@ -1569,7 +1575,7 @@ or is systematic.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.5 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.4 seconds.</span></span>
 <span></span>
 <span><span class="co"># Occurrence probability of each direction (row = to, column = from)</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
@@ -2296,10 +2302,10 @@ and its fit measures are visibly worse (lower CFI, higher RMSEA):</p>
 <div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reversed_adjacency</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">fit_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/evaluate_model_fit.html">evaluate_model_fit</a></span><span class="op">(</span><span class="va">reversed_adjacency</span>, <span class="va">sample6</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI</span></span>
-<span><span class="co">#&gt; 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1</span></span>
-<span><span class="co">#&gt;   RMSEA       AIC       BIC   LogLik</span></span>
-<span><span class="co">#&gt; 1     0 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
+<span><span class="co">#&gt;   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA</span></span>
+<span><span class="co">#&gt; 1   0           15    0           NA       23023.7   1   1   NA   1   1     0</span></span>
+<span><span class="co">#&gt;         AIC       BIC   LogLik</span></span>
+<span><span class="co">#&gt; 1 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="when-lingam-cannot-be-used">When LiNGAM Cannot Be Used<a class="anchor" aria-label="anchor" href="#when-lingam-cannot-be-used"></a>

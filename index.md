@@ -10,9 +10,6 @@ Non-Gaussian Acyclic Model), which is available in Python.
 - [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 - [lingam (Python)](https://github.com/cdt15/lingam)
 
-This is currently an alpha version under development, and we are
-releasing it for the purpose of testing and gathering feedback.
-
 ## Features
 
 - Direct LiNGAM
