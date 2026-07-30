@@ -227,3 +227,40 @@ test_that("generate_resit_sample is reproducible with a seed and validates input
   expect_error(generate_resit_sample(n = 1), "n must be")
   expect_error(generate_resit_sample(n = 100, seed = "x"), "seed")
 })
+
+
+# ── generate_camuv_sample ─────────────────────────────────────────────────────
+
+test_that("generate_camuv_sample returns the documented structure", {
+  dat <- generate_camuv_sample(n = 100, seed = 1)
+
+  expect_named(dat, c("data", "adjacency_matrix", "confounded_pairs"))
+  expect_s3_class(dat$data, "data.frame")
+  expect_equal(dim(dat$data), c(100L, 6L))
+  expect_equal(names(dat$data), paste0("x", 0:5))
+
+  B <- dat$adjacency_matrix
+  expect_equal(dim(B), c(6L, 6L))
+  expect_equal(dimnames(B), list(names(dat$data), names(dat$data)))
+  expect_true(all(B %in% c(0, 1) | is.na(B)))
+  expect_equal(B["x1", "x0"], 1)
+  expect_equal(B["x3", "x0"], 1)
+  expect_equal(B["x4", "x2"], 1)
+  expect_equal(sum(B > 0, na.rm = TRUE), 3)
+
+  # UCP pair {x2, x5} and UBP pair {x3, x4} are NA in both directions
+  expect_true(is.na(B["x2", "x5"]) && is.na(B["x5", "x2"]))
+  expect_true(is.na(B["x3", "x4"]) && is.na(B["x4", "x3"]))
+  expect_equal(sum(is.na(B)), 4)
+
+  expect_equal(unname(dat$confounded_pairs), rbind(c(3L, 6L), c(4L, 5L)))
+})
+
+test_that("generate_camuv_sample is reproducible with a seed and validates inputs", {
+  a <- generate_camuv_sample(n = 150, seed = 7)
+  b <- generate_camuv_sample(n = 150, seed = 7)
+  expect_equal(a, b)
+
+  expect_error(generate_camuv_sample(n = 1), "n must be")
+  expect_error(generate_camuv_sample(n = 100, seed = "x"), "seed")
+})

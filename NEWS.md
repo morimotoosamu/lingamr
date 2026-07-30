@@ -1,5 +1,19 @@
 # lingamr (development version)
 
+* Added `lingam_camuv()` and `generate_camuv_sample()`, an R port of CAM-UV
+  (Causal Additive Models with Unobserved Variables; Maeda and Shimizu
+  2021) for causal discovery on nonlinear additive models with unobserved
+  variables. The result is a new `CAMUVResult` class: the adjacency matrix
+  holds 0/1 edge indicators (no coefficients are estimated), and variable
+  pairs suspected to be connected through an unobserved causal or backdoor
+  path are `NA`, with matching `print()` / `tidy()` / `glance()` /
+  `autoplot()` methods. The regressor is pluggable as in `lingam_resit()`
+  (the Python implementation hardcodes pygam's `LinearGAM`; the default
+  here is mgcv's `gam()`). Prior knowledge uses the upstream pair format
+  (`c(i, j)` = "variable i cannot be a cause of variable j", 1-based).
+  `independence = "fcorr"` is restricted to `num_explanatory_vals = 2`,
+  where the Python implementation silently breaks on larger subsets.
+  There is no bootstrap variant, matching the Python implementation.
 * Added `lingam_resit()`, `lingam_resit_bootstrap()`, and
   `generate_resit_sample()`, an R port of RESIT (Regression with Subsequent
   Independence Test; Peters et al. 2014) for causal discovery on nonlinear

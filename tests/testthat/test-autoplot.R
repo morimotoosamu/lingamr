@@ -90,3 +90,13 @@ test_that("autoplot.ResitResult returns a ggplot object", {
   expect_s3_class(ggplot2::autoplot(res), "ggplot")
   expect_s3_class(ggplot2::autoplot(res, label_edges = TRUE), "ggplot")
 })
+
+test_that("autoplot.CAMUVResult draws NA entries as dashed segments", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("igraph")
+
+  res <- fake_camuv_result()
+
+  expect_s3_class(ggplot2::autoplot(res), "ggplot")
+  expect_s3_class(ggplot2::autoplot(res, label_edges = TRUE), "ggplot")
+})

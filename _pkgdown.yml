@@ -66,6 +66,10 @@ reference:
   - lingam_resit
   - lingam_resit_bootstrap
 
+- title: CAM-UV (nonlinear models with unobserved variables)
+  contents:
+  - lingam_camuv
+
 - title: LiM (mixed continuous and discrete data)
   contents:
   - lingam_lim

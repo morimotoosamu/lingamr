@@ -169,3 +169,24 @@ test_that("tidy/glance for ResitResult work", {
   expect_equal(g$regressor, "gam")
   expect_equal(g$causal_order, "x0 -> x1 -> x2")
 })
+
+test_that("tidy/glance for CAMUVResult keep NA pairs and count them", {
+  fake <- fake_camuv_result()
+
+  td <- tidy(fake)
+  expect_named(td, c("from", "to", "estimate"))
+  # 1 identified edge (a -> b) + the a/c NA pair in both directions
+  expect_equal(sum(!is.na(td$estimate)), 1L)
+  expect_equal(sum(is.na(td$estimate)), 2L)
+
+  g <- glance(fake)
+  expect_equal(
+    names(g),
+    c("n_variables", "n_edges", "n_confounded_pairs", "regressor")
+  )
+  expect_equal(g$n_variables, 3L)
+  expect_equal(g$n_edges, 1L)
+  expect_equal(g$n_confounded_pairs, 1L)
+  expect_equal(g$regressor, "gam")
+  expect_false("causal_order" %in% names(g))
+})

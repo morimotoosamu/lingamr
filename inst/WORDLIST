@@ -13,6 +13,7 @@ Bonferroni
 BootstrapResult
 BottomUpParceLiNGAM
 BottomUpParceLiNGAM's
+CAMUVResult
 CFI
 CFIは
 CLeaR
@@ -104,6 +105,7 @@ ParceLiNGAMと
 ParceLiNGAMのブロック
 ParceLingamResult
 Penrose
+Proc
 Pythonの
 Pythonのデフォルト
 QQプロットでも
@@ -131,6 +133,9 @@ StandardScaler
 TLI
 Takahiko
 Tashiro
+UAI
+UBP
+UCP
 Uc
 Umeyama
 VARBootstrapResult
@@ -182,6 +187,7 @@ ggraph
 glmnet
 glmnet's
 grViz
+hardcodes
 hqic
 hsic
 i's
@@ -208,6 +214,7 @@ localフェーズがポアソン
 localフェーズのエッジ
 logdets
 mgcv
+mgcv's
 mis
 moduli
 multicollinearity
@@ -227,6 +234,7 @@ pre
 precomputation
 pwling
 py
+pygam's
 rcd
 recomputation
 resid

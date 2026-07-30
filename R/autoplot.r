@@ -366,3 +366,40 @@ autoplot.ResitResult <- function(object, threshold = 0,
     label_edges = label_edges, label_pos = label_pos
   )
 }
+
+
+#' Plot the causal graph of a CAMUVResult with ggplot2
+#'
+#' Draws the estimated causal structure as a ggplot2-based directed graph,
+#' like [autoplot.LingamResult()]. Variable pairs suspected to be connected
+#' through an unobserved variable (`NA` entries in the adjacency matrix) are
+#' drawn as dashed, arrowless segments. Because CAM-UV returns 0/1 edge
+#' indicators rather than coefficients, edge labels are hidden by default
+#' (`label_edges = FALSE`); a constant "1" on every edge carries no
+#' information.
+#'
+#' @param object Return value of [lingam_camuv()] (a `CAMUVResult` object)
+#' @param label_edges Whether to display edge labels (default: FALSE, since
+#'   every edge would be labeled "1")
+#' @inheritParams autoplot.LingamResult
+#' @return A ggplot object
+#' @exportS3Method ggplot2::autoplot
+#' @examples
+#' \donttest{
+#' if (requireNamespace("ggplot2", quietly = TRUE) &&
+#'     requireNamespace("igraph", quietly = TRUE) &&
+#'     requireNamespace("mgcv", quietly = TRUE)) {
+#'   library(ggplot2)
+#'   confounded <- generate_camuv_sample(n = 200, seed = 1)
+#'   model <- lingam_camuv(confounded$data)
+#'   autoplot(model)
+#' }
+#' }
+autoplot.CAMUVResult <- function(object, threshold = 0,
+                                 node_size = 16, node_color = "lightblue",
+                                 label_edges = FALSE, label_pos = 0.35, ...) {
+  autoplot_causal_graph(object$adjacency_matrix,
+    threshold = threshold, node_size = node_size, node_color = node_color,
+    label_edges = label_edges, label_pos = label_pos, dashed_na = TRUE
+  )
+}

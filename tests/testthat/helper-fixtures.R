@@ -39,6 +39,7 @@ sample6_2000_s42 <- memo(function() generate_lingam_sample_6(n = 2000, seed = 42
 
 rcd_sample_300    <- memo(function() generate_rcd_sample(n = 300, seed = 42))
 resit_sample_300  <- memo(function() generate_resit_sample(n = 300, seed = 1))
+camuv_sample_500  <- memo(function() generate_camuv_sample(n = 500, seed = 1))
 parce_sample_500  <- memo(function() generate_parce_sample(n = 500, seed = 42))
 parce_sample_1000 <- memo(function() generate_parce_sample(n = 1000, seed = 42))
 mg_sample_300     <- memo(function() generate_multi_group_sample(n = c(300, 300), seed = 1))
@@ -67,6 +68,8 @@ fit_direct_2000 <- memo(function() lingam_direct(sample6_2000_s42()$data, reg_me
 fit_rcd_300    <- memo(function() lingam_rcd(rcd_sample_300()$data))
 # mgcv 依存: このフィクスチャを使うテストは先に skip_if_not_installed("mgcv")
 fit_resit_300  <- memo(function() lingam_resit(resit_sample_300()$data))
+# mgcv 依存: fit_resit_300 と同じ扱い
+fit_camuv_500  <- memo(function() lingam_camuv(camuv_sample_500()$data))
 fit_parce_500  <- memo(function() lingam_parce(parce_sample_500()$data, reg_method = "ols"))
 fit_parce_1000 <- memo(function() lingam_parce(parce_sample_1000()$data, reg_method = "ols"))
 fit_mg_300     <- memo(function() lingam_multi_group(mg_sample_300()$data_list, reg_method = "ols"))
@@ -137,6 +140,17 @@ fake_resit_result <- function() {
   structure(
     list(adjacency_matrix = B, causal_order = 1:3, regressor = "gam"),
     class = "ResitResult"
+  )
+}
+
+fake_camuv_result <- function(adjacency_matrix = fake_na_adjacency_3(),
+                              parents_list = list(a = integer(0), b = 1L, c = integer(0)),
+                              confounded_pairs = matrix(c(1L, 3L), nrow = 1,
+                                                        dimnames = list(NULL, c("var1", "var2")))) {
+  structure(
+    list(adjacency_matrix = adjacency_matrix, parents_list = parents_list,
+         confounded_pairs = confounded_pairs, regressor = "gam"),
+    class = "CAMUVResult"
   )
 }
 

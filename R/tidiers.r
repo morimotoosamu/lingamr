@@ -439,3 +439,63 @@ glance.ResitResult <- function(x, ...) {
     causal_order = paste(var_names[x$causal_order], collapse = " -> ")
   )
 }
+
+
+#' Convert a CAMUVResult to a tidy data.frame
+#'
+#' Converts the estimated adjacency matrix into a long-format data.frame with
+#' one edge per row, like [tidy.LingamResult()]. Because CAM-UV is a nonlinear
+#' method, `estimate` is 1 for identified edges (an edge indicator, not a
+#' coefficient), and `NA` for variable pairs suspected to be connected through
+#' an unobserved variable (UCP/UBP); the `NA` rows appear in both directions.
+#' Drop them with e.g. `subset(tidy(x), !is.na(estimate))` if not needed.
+#'
+#' @param x The return value of [lingam_camuv()] (a `CAMUVResult` object)
+#' @param threshold Kept for interface consistency with the other `tidy()`
+#'   methods (default: 0); with 0/1 entries any value in `[0, 1)` returns
+#'   all edges. `NA` entries are always kept.
+#' @param ... Unused
+#' @return data.frame(from, to, estimate)
+#' @export
+#' @examples
+#' \donttest{
+#' if (requireNamespace("mgcv", quietly = TRUE)) {
+#'   confounded <- generate_camuv_sample(n = 200, seed = 1)
+#'   model <- lingam_camuv(confounded$data)
+#'   tidy(model)
+#' }
+#' }
+tidy.CAMUVResult <- function(x, threshold = 0, ...) {
+  adjacency_edges(x$adjacency_matrix, threshold, include_na = TRUE)
+}
+
+
+#' Get a one-row summary of a CAMUVResult
+#'
+#' Like [glance.LingamResult()], but without a causal order (CAM-UV does not
+#' estimate one). `n_edges` counts non-`NA` edges only, and
+#' `n_confounded_pairs` counts the variable pairs whose adjacency-matrix
+#' entries are `NA` (suspected unobserved causal/backdoor path).
+#'
+#' @param x The return value of [lingam_camuv()] (a `CAMUVResult` object)
+#' @param ... Unused
+#' @return A one-row data.frame(n_variables, n_edges, n_confounded_pairs,
+#'   regressor)
+#' @export
+#' @examples
+#' \donttest{
+#' if (requireNamespace("mgcv", quietly = TRUE)) {
+#'   confounded <- generate_camuv_sample(n = 200, seed = 1)
+#'   model <- lingam_camuv(confounded$data)
+#'   glance(model)
+#' }
+#' }
+glance.CAMUVResult <- function(x, ...) {
+  B <- x$adjacency_matrix
+  data.frame(
+    n_variables        = ncol(B),
+    n_edges            = sum(abs(B) > 0, na.rm = TRUE),
+    n_confounded_pairs = nrow(x$confounded_pairs),
+    regressor          = x$regressor
+  )
+}
