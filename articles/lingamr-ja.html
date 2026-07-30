@@ -886,7 +886,7 @@ LASSOは余分なエッジを0に縮小する。Ridgeは係数の<strong>大き�
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 3.6 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 2.9 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -1155,7 +1155,7 @@ al. 2006）。<code><a href="../reference/lingam_direct.html">lingam_direct()</
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n"</span>,</span>
 <span>            <span class="va">t_cmp_direct</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="va">t_cmp_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Direct LiNGAM : 0.01 sec</span></span>
-<span><span class="co">#&gt; ICA-LiNGAM    : 0.02 sec</span></span></code></pre></div>
+<span><span class="co">#&gt; ICA-LiNGAM    : 0.01 sec</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="推定係数の比較">推定係数の比較<a class="anchor" aria-label="anchor" href="#%E6%8E%A8%E5%AE%9A%E4%BF%82%E6%95%B0%E3%81%AE%E6%AF%94%E8%BC%83"></a>
@@ -1272,9 +1272,9 @@ LiNGAMは各ステップで、残っているすべての変数ペアについ�
 <span>  <span class="fl">15</span><span class="op">^</span><span class="fl">3</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">3</span>,</span>
 <span>  <span class="va">t15</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t10</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; p = 10 : 0.03 sec</span></span>
-<span><span class="co">#&gt; p = 15 : 0.06 sec</span></span>
-<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.1x</span></span></code></pre></div>
+<span><span class="co">#&gt; p = 10 : 0.02 sec</span></span>
+<span><span class="co">#&gt; p = 15 : 0.05 sec</span></span>
+<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.0x</span></span></code></pre></div>
 <p>同じデータでICA-LiNGAMも実行し、速度を直接比較する。</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
@@ -1286,8 +1286,8 @@ LiNGAMは各ステップで、残っているすべての変数ペアについ�
 <span>  <span class="va">t10_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="va">t15_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;               p = 10   p = 15</span></span>
-<span><span class="co">#&gt; Direct LiNGAM :  0.03 sec   0.06 sec</span></span>
-<span><span class="co">#&gt; ICA-LiNGAM    :  0.02 sec   0.03 sec</span></span></code></pre></div>
+<span><span class="co">#&gt; Direct LiNGAM :  0.02 sec   0.05 sec</span></span>
+<span><span class="co">#&gt; ICA-LiNGAM    :  0.01 sec   0.02 sec</span></span></code></pre></div>
 <p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
 が大きくなるほどDirect
 LiNGAMの<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>p</mi><mn>3</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(p^3)</annotation></semantics></math>コストが支配的になり、両者の差は広がる。
@@ -1516,7 +1516,7 @@ x0）、x0はほとんどsinkのように扱われて しまっている。</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.5 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.1 seconds.</span></span>
 <span></span>
 <span><span class="co"># Occurrence probability of each direction (row = to, column = from)</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
@@ -1782,6 +1782,71 @@ VAR残差のみをリサンプルし、系列の時間的構造を保持する�
 </div>
 </div>
 <div class="section level2">
+<h2 id="varma-lingam移動平均誤差を持つ時系列">VARMA-LiNGAM：移動平均誤差を持つ時系列<a class="anchor" aria-label="anchor" href="#varma-lingam%E7%A7%BB%E5%8B%95%E5%B9%B3%E5%9D%87%E8%AA%A4%E5%B7%AE%E3%82%92%E6%8C%81%E3%81%A4%E6%99%82%E7%B3%BB%E5%88%97"></a>
+</h2>
+<p><strong>VARMA-LiNGAM</strong>（Kawahara et al.,
+2011）はVAR-LiNGAMを移動平均（MA）項で拡張した モデルであり、
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msub><mi>B</mi><mn>0</mn></msub><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msubsup><mo>∑</mo><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></msubsup><msub><mi>ψ</mi><mi>τ</mi></msub><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>+</mo><msub><mi>e</mi><mi>t</mi></msub><mo>+</mo><msubsup><mo>∑</mo><mrow><mi>ω</mi><mo>=</mo><mn>1</mn></mrow><mi>q</mi></msubsup><msub><mi mathvariant="normal">Ω</mi><mi>ω</mi></msub><msub><mi>e</mi><mrow><mi>t</mi><mo>−</mo><mi>ω</mi></mrow></msub></mrow><annotation encoding="application/x-tex">x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
+\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}</annotation></semantics></math>
+という形で、ラグ付き変数に加えて過去の撹乱項が現在に影響できる。
+<code><a href="../reference/lingam_varma.html">lingam_varma()</a></code>
+は誘導形VARMA係数を決定的な二段階Hannan-Rissanen法で推定し
+（Python実装は状態空間の最尤法を使う）、残差にDirect LiNGAMを適用して、
+AR側の行列 <code>psis</code>（<code>psis[1, , ]</code>
+がB0）とMA側の行列 <code>omegas</code> を返す。</p>
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">s_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_varmalingam_sample.html">generate_varmalingam_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">model_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_varma.html">lingam_varma</a></span><span class="op">(</span><span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>, order <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">model_varma</span><span class="op">)</span></span>
+<span><span class="co">#&gt; VARMA-LiNGAM Result</span></span>
+<span><span class="co">#&gt;   Variables : 3</span></span>
+<span><span class="co">#&gt;   Order (p, q) : (1, 0)</span></span>
+<span><span class="co">#&gt;   Causal order (instantaneous): x0 -&gt; x1 -&gt; x2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Instantaneous adjacency matrix B0 (row = to, col = from):</span></span>
+<span><span class="co">#&gt;       x0     x1 x2</span></span>
+<span><span class="co">#&gt; x0 0.000  0.000  0</span></span>
+<span><span class="co">#&gt; x1 0.613  0.000  0</span></span>
+<span><span class="co">#&gt; x2 0.000 -0.474  0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Lagged adjacency matrix psi1 (row = to, col = from):</span></span>
+<span><span class="co">#&gt;        x0    x1     x2</span></span>
+<span><span class="co">#&gt; x0  0.472 0.000  0.176</span></span>
+<span><span class="co">#&gt; x1 -0.169 0.350 -0.166</span></span>
+<span><span class="co">#&gt; x2  0.000 0.216  0.501</span></span></code></pre></div>
+<p><code><a href="../reference/check_varma_stationarity.html">check_varma_stationarity()</a></code>
+はARの固有値（定常性）に加えて、Hannan-Rissanen法が
+保証しないMAの固有値（可逆性）も確認する。</p>
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/check_varma_stationarity.html">check_varma_stationarity</a></span><span class="op">(</span><span class="va">model_varma</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === VARMA Stationarity / Invertibility Check ===</span></span>
+<span><span class="co">#&gt; Order (p, q):         (1, 0)</span></span>
+<span><span class="co">#&gt; Max |AR eigenvalue|:  0.5507  (threshold 1.00)</span></span>
+<span><span class="co">#&gt; Stationary:           YES</span></span>
+<span><span class="co">#&gt; Max |MA eigenvalue|:  0.0000  (threshold 1.00)</span></span>
+<span><span class="co">#&gt; Invertible:           YES</span></span></code></pre></div>
+<p>ブートストラップ・エッジ確率・パス列挙（<code><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap()</a></code>、
+<code><a href="../reference/get_varma_probabilities.html">get_varma_probabilities()</a></code>、<code><a href="../reference/get_varma_paths.html">get_varma_paths()</a></code>）、総効果
+（<code><a href="../reference/estimate_varma_total_effect.html">estimate_varma_total_effect()</a></code>）、残差正規性の診断はVAR-LiNGAM版と対応する。
+確率行列では、最初の <code>1 + p</code>
+個の列ブロックがpsi（ラグ）行列に、最後の <code>q</code> 個の
+ブロックがomega（MA）行列に対応する。</p>
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bs_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap</a></span><span class="op">(</span></span>
+<span>  <span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>,</span>
+<span>  n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
+<span>  order      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  criterion  <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  seed       <span class="op">=</span> <span class="fl">42</span>,</span>
+<span>  verbose    <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_varma_probabilities.html">get_varma_probabilities</a></span><span class="op">(</span><span class="va">bs_varma</span>, min_causal_effect <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]</span></span>
+<span><span class="co">#&gt; [1,] 0.00    0    0 0.99 0.00 0.93 0.73 0.00 0.00</span></span>
+<span><span class="co">#&gt; [2,] 1.00    0    0 0.75 1.00 0.84 0.09 0.01 0.06</span></span>
+<span><span class="co">#&gt; [3,] 0.07    1    0 0.16 0.08 0.89 0.11 0.00 0.99</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="混合データのためのlingamlim">混合データのためのLiNGAM（LiM）<a class="anchor" aria-label="anchor" href="#%E6%B7%B7%E5%90%88%E3%83%87%E3%83%BC%E3%82%BF%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AElingamlim"></a>
 </h2>
 <p>Direct
@@ -1795,7 +1860,7 @@ LiNGAMはすべての変数が連続であることを仮定する。<code><a hr
 は、連続変数と離散変数からなる既知の因果連鎖<code>x1</code>（連続）
 -&gt; <code>x2</code>（離散）-&gt;
 <code>x3</code>（連続）を持つ小規模なデータセットを生成する。</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">lim_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lim_sample.html">generate_lim_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lim_dat</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -1813,7 +1878,7 @@ LiNGAMはすべての変数が連続であることを仮定する。<code><a hr
 <code>is_continuous</code>
 が必要である。最適化はランダムな初期点から始まるため、再現性を持たせる
 には <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> が必要である。</p>
-<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lim_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_lim.html">lingam_lim</a></span><span class="op">(</span><span class="va">lim_dat</span><span class="op">$</span><span class="va">data</span>, is_continuous <span class="op">=</span> <span class="va">lim_dat</span><span class="op">$</span><span class="va">is_continuous</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">lim_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; LiM Result</span></span>
@@ -1831,7 +1896,7 @@ LiNGAMはすべての変数が連続であることを仮定する。<code><a hr
 from）に従い、<code>causal_order</code>
 は推定されたトポロジカル順序を1始まり
 のインデックスで並べたものである。</p>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">lim_dat</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">[</span><span class="va">lim_result</span><span class="op">$</span><span class="va">causal_order</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "x1" "x2" "x3"</span></span></code></pre></div>
 <p>離散変数は既定では二値（0/1）である。<code>is_poisson = TRUE</code>
@@ -1856,7 +1921,7 @@ from）に従い、<code>causal_order</code>
 <p><code><a href="../reference/generate_multi_group_sample.html">generate_multi_group_sample()</a></code>
 は、<code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code> の因果構造を共有
 しつつ、グループごとに係数がわずかに異なる2つのデータセットを生成する。</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_multi_group_sample.html">generate_multi_group_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">1000</span><span class="op">)</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mg</span><span class="op">$</span><span class="va">data_list</span>, <span class="va">head</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $group1</span></span>
@@ -1870,7 +1935,7 @@ from）に従い、<code>causal_order</code>
 <span><span class="co">#&gt; 1 0.7259014  5.482225 0.9301592 0.01259095  5.275903  3.321061</span></span>
 <span><span class="co">#&gt; 2 2.4321051 17.252303 3.3989705 0.41696287 16.459975 11.368701</span></span>
 <span><span class="co">#&gt; 3 1.5550457 10.342355 1.8713591 0.24518297 10.520165  7.859683</span></span></code></pre></div>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mg_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_multi_group.html">lingam_multi_group</a></span><span class="op">(</span><span class="va">mg</span><span class="op">$</span><span class="va">data_list</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">mg_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Multi-Group Direct LiNGAM Result</span></span>
@@ -1903,7 +1968,7 @@ from）に従い、<code>causal_order</code>
 のシングルグループ向けツール群（総因果効果、独立性検定、プロット）で
 単一グループを分析するには、<code><a href="../reference/get_group_result.html">get_group_result()</a></code> で通常の
 <code>LingamResult</code> として 取り出す。</p>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_group_result.html">get_group_result</a></span><span class="op">(</span><span class="va">mg_result</span>, <span class="st">"group1"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">g1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "LingamResult"</span></span>
@@ -1923,7 +1988,7 @@ from）に従い、<code>causal_order</code>
 <code>BootstrapResult</code> オブジェクト
 からなる名前付きリストを返すため、既存のブートストラップ照会関数をグループごとに
 そのまま適用できる。</p>
-<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mg_bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_multi_group_bootstrap.html">lingam_multi_group_bootstrap</a></span><span class="op">(</span><span class="va">mg</span><span class="op">$</span><span class="va">data_list</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">20L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -1953,12 +2018,12 @@ from）に従い、<code>causal_order</code>
 して扱う）を用いて、それらにわたって共通の因果構造が結合的に推定される。これは
 Pythonの <code>lingam.tools.bootstrap_with_imputation()</code>
 のR移植版である。</p>
-<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sample6_na</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">X_na</span> <span class="op">&lt;-</span> <span class="va">sample6_na</span><span class="op">$</span><span class="va">data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">X_na</span><span class="op">$</span><span class="va">x5</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X_na</span><span class="op">)</span>, size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">0.1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X_na</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span> <span class="co"># MCAR 10% on x5</span></span></code></pre></div>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bwi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_with_imputation.html">bootstrap_with_imputation</a></span><span class="op">(</span><span class="va">X_na</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">20L</span>, n_repeats <span class="op">=</span> <span class="fl">5L</span>, seed <span class="op">=</span> <span class="fl">42</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -1978,7 +2043,7 @@ R実装である。数値結果はPython実装とは一致しない。補完器�
 次元を（中央値または平均で）集約し、通常の <code>BootstrapResult</code>
 に変換
 するため、既存のブートストラップ照会関数をそのまま適用できる。</p>
-<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_na</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_bootstrap_result.html">as_bootstrap_result</a></span><span class="op">(</span><span class="va">bwi</span>, aggregate <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="va">bs_na</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x0 x1 x2 x3 x4 x5</span></span>
@@ -2013,7 +2078,7 @@ al. 2014）は、この状況のために
 <code>x2</code> と <code>x3</code> の未観測の共通原因である7変数
 モデルを生成する。データとして返されるのは
 <code>x0</code>-<code>x5</code> のみである。</p>
-<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># HSIC is O(n^2), so a moderate n keeps this vignette fast to build</span></span>
 <span><span class="va">confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_parce_sample.html">generate_parce_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -2026,7 +2091,7 @@ al. 2014）は、この状況のために
 <span><span class="co">#&gt; 6 1.7671488 1.8838085 1.8358794 2.7663075  0.90699176 1.3624485</span></span>
 <span><span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span></span>
 <span><span class="co">#&gt; [1] 3 4</span></span></code></pre></div>
-<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_parce.html">lingam_parce</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">parce_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bottom-Up ParceLiNGAM Result</span></span>
@@ -2047,7 +2112,7 @@ al. 2014）は、この状況のために
 <code>x2</code> と <code>x3</code>
 が正しく含まれている。隣接行列の対応するエントリは <code>NA</code>
 になり、 残りの完全に解決された変数間のエッジは通常通り推定される。</p>
-<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_result</span><span class="op">$</span><span class="va">causal_order</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] 3 4</span></span>
 <span><span class="va">parce_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">[</span><span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span>, <span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">]</span></span>
@@ -2059,7 +2124,7 @@ al. 2014）は、この状況のために
 未解決ブロック内の変数を<em>起点</em>とする総効果を求められた場合には警告を発して
 <code>NA</code> を
 返すが、十分に識別可能なペアについては通常通り推定値を計算する。</p>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># from a confounded variable: warns and returns NA</span></span>
 <span><span class="fu"><a href="../reference/estimate_total_effect_parce.html">estimate_total_effect_parce</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">parce_result</span>,</span>
 <span>  from_index <span class="op">=</span> <span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, to_index <span class="op">=</span> <span class="st">"x1"</span></span>
@@ -2082,7 +2147,7 @@ al. 2014）は、この状況のために
 <code>BootstrapResult</code> 照会 関数は通常通り機能する。ただし
 <code><a href="../reference/get_causal_order_stability.html">get_causal_order_stability()</a></code> だけは例外で、
 ParceLiNGAMのブロック化された因果順序はその固定長フォーマットに合わないためである。</p>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_parce_bootstrap.html">lingam_parce_bootstrap</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">10L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -2110,7 +2175,7 @@ RCDは各変数の<strong>祖先集合</strong>を直接推定し、そのうえ
 <code>x2</code> と <code>x4</code> の未観測の共通原因である7変数
 モデルを生成する。データとして返されるのは
 <code>x0</code>-<code>x5</code> のみである。</p>
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># HSIC is O(n^2), so a moderate n keeps this vignette fast to build</span></span>
 <span><span class="va">rcd_confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_rcd_sample.html">generate_rcd_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -2123,7 +2188,7 @@ RCDは各変数の<strong>祖先集合</strong>を直接推定し、そのうえ
 <span><span class="co">#&gt; 6 -0.30389184 -0.225029302 -0.5032249 -0.172267536  0.5221642 -0.0690391705</span></span>
 <span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span></span>
 <span><span class="co">#&gt; [1] 3 5</span></span></code></pre></div>
-<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcd_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_rcd.html">lingam_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rcd_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RCD Result</span></span>
@@ -2150,7 +2215,7 @@ RCDは各変数の<strong>祖先集合</strong>を直接推定し、そのうえ
 <p><code>ancestors_list</code>
 は各変数の推定された祖先を与える（因果順序ではない）。交絡された
 ペアの隣接行列エントリは <code>NA</code> になる。</p>
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcd_result</span><span class="op">$</span><span class="va">ancestors_list</span></span>
 <span><span class="co">#&gt; $x0</span></span>
 <span><span class="co">#&gt; [1] 2 4 6</span></span>
@@ -2176,7 +2241,7 @@ RCDは各変数の<strong>祖先集合</strong>を直接推定し、そのうえ
 <p>ParceLiNGAMと同様、<code><a href="../reference/estimate_total_effect_rcd.html">estimate_total_effect_rcd()</a></code>
 は交絡された変数を起点とする総効果 を求められた場合、警告を発して
 <code>NA</code> を返す。</p>
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># from a confounded variable: warns and returns NA</span></span>
 <span><span class="fu"><a href="../reference/estimate_total_effect_rcd.html">estimate_total_effect_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">rcd_result</span>,</span>
 <span>  from_index <span class="op">=</span> <span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, to_index <span class="op">=</span> <span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
@@ -2204,7 +2269,7 @@ RCDは各変数の<strong>祖先集合</strong>を直接推定し、そのうえ
 経由で標準的なSEM適合度指標（CFI、RMSEA、AIC/BICなど）を報告する。これは、推定
 された因果グラフが、どのように推定されたかとは独立に、データとどれだけ整合的かを
 判断する際に有用である。</p>
-<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sample6</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">fit_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">sample6</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
 <span></span>
@@ -2216,13 +2281,13 @@ RCDは各変数の<strong>祖先集合</strong>を直接推定し、そのうえ
 <span><span class="co">#&gt; 1 1860.598 1958.753 -910.2991</span></span></code></pre></div>
 <p>すべてのエッジの方向を逆転させると誤指定のモデルになり、その適合度指標は明らかに
 悪化する（CFIは低下し、RMSEAは上昇する）。</p>
-<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reversed_adjacency</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">fit_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/evaluate_model_fit.html">evaluate_model_fit</a></span><span class="op">(</span><span class="va">reversed_adjacency</span>, <span class="va">sample6</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI</span></span>
-<span><span class="co">#&gt; 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1</span></span>
-<span><span class="co">#&gt;   RMSEA       AIC       BIC   LogLik</span></span>
-<span><span class="co">#&gt; 1     0 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
+<span><span class="co">#&gt;   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA</span></span>
+<span><span class="co">#&gt; 1   0           15    0           NA       23023.7   1   1   NA   1   1     0</span></span>
+<span><span class="co">#&gt;         AIC       BIC   LogLik</span></span>
+<span><span class="co">#&gt; 1 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="lingamが使えない場合">LiNGAMが使えない場合<a class="anchor" aria-label="anchor" href="#lingam%E3%81%8C%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E5%A0%B4%E5%90%88"></a>

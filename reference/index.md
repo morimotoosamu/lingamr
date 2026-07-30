@@ -64,6 +64,29 @@ Core causal discovery on i.i.d. data
 - [`plot_varlingam_residual_qq()`](https://morimotoosamu.github.io/lingamr/reference/plot_varlingam_residual_qq.md)
   : Q-Q plots of VAR-LiNGAM residuals
 
+## VARMA-LiNGAM (time series with moving-average errors)
+
+- [`lingam_varma()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma.md)
+  : VARMA-LiNGAM for time series causal discovery
+- [`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md)
+  : Bootstrap for VARMA-LiNGAM
+- [`get_varma_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.md)
+  : Bootstrap probabilities for a VARMA-LiNGAM model
+- [`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)
+  : Enumerate bootstrap paths between two variables in a VARMA-LiNGAM
+  model
+- [`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)
+  : Estimate a total causal effect in a VARMA-LiNGAM model
+- [`check_varma_stationarity()`](https://morimotoosamu.github.io/lingamr/reference/check_varma_stationarity.md)
+  : Check the stationarity and invertibility of a fitted VARMA-LiNGAM
+  model
+- [`test_varmalingam_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality.md)
+  : Test the non-Gaussianity of VARMA-LiNGAM residuals
+- [`test_varmalingam_residual_normality_all()`](https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality_all.md)
+  : Run several normality tests on VARMA-LiNGAM residuals at once
+- [`plot_varmalingam_residual_qq()`](https://morimotoosamu.github.io/lingamr/reference/plot_varmalingam_residual_qq.md)
+  : Q-Q plots of VARMA-LiNGAM residuals
+
 ## MultiGroup Direct LiNGAM
 
 Joint estimation across multiple datasets sharing a causal order
@@ -167,6 +190,8 @@ Causal discovery with latent confounder detection
   RESIT)
 - [`generate_varlingam_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_varlingam_sample.md)
   : Generate sample data from a VAR-LiNGAM model
+- [`generate_varmalingam_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_varmalingam_sample.md)
+  : Generate sample data from a VARMA-LiNGAM model
 
 ## Tidiers and autoplot
 
@@ -245,6 +270,10 @@ Causal discovery with latent confounder detection
   : Print a VARBootstrapResult
 - [`print(`*`<VARLiNGAMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.VARLiNGAMResult.md)
   : Print method for VARLiNGAMResult
+- [`print(`*`<VARMABootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.VARMABootstrapResult.md)
+  : Print a VARMABootstrapResult
+- [`print(`*`<VARMALiNGAMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.VARMALiNGAMResult.md)
+  : Print method for VARMALiNGAMResult
 - [`print(`*`<causal_order_stability>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.causal_order_stability.md)
   : print method for causal_order_stability
 - [`print(`*`<lingam_normality_test>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.lingam_normality_test.md)
@@ -253,3 +282,5 @@ Causal discovery with latent confounder detection
   : print method for lingam_summary
 - [`print(`*`<var_stationarity>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.var_stationarity.md)
   : Print method for var_stationarity
+- [`print(`*`<varma_stationarity>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.varma_stationarity.md)
+  : Print method for varma_stationarity

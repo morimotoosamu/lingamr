@@ -157,7 +157,7 @@ bs_lasso <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 1.0 seconds.
+#> Completed in 0.8 seconds.
 
 # Parallel execution on 2 cores
 bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
@@ -167,6 +167,6 @@ bs_par <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
   n_cores = 2L
 )
 #> Bootstrap: 30 iterations, method=adaptive_lasso (parallel, 2 cores)
-#> Completed in 1.8 seconds.
+#> Completed in 1.4 seconds.
 # }
 ```

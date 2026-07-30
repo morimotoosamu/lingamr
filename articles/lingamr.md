@@ -722,7 +722,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.4 seconds.
+#> Completed in 2.7 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -1144,9 +1144,9 @@ cat(sprintf(
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.03 sec
-#> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.1x
+#> p = 10 : 0.02 sec
+#> p = 15 : 0.05 sec
+#> theoretical factor 3.4x vs. observed 2.2x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1162,8 +1162,8 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.02 sec   0.03 sec
+#> Direct LiNGAM :  0.02 sec   0.05 sec
+#> ICA-LiNGAM    :  0.01 sec   0.02 sec
 ```
 
 The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
@@ -1435,7 +1435,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.1 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
@@ -1739,6 +1739,85 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 #> 9       4, 6, 3  0.040411503        0.02
 #> 10      4, 2, 3 -0.068176510        0.01
 #> 11 4, 5, 6,.... -0.018273144        0.01
+```
+
+## VARMA-LiNGAM: Time Series with Moving-Average Errors
+
+**VARMA-LiNGAM** (Kawahara et al., 2011) extends VAR-LiNGAM with a
+moving-average (MA) part: the model is
+$`x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
+\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}`$, so past disturbances
+can influence the present alongside the lagged variables.
+[`lingam_varma()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma.md)
+estimates the reduced-form VARMA coefficients by the deterministic
+two-stage Hannan-Rissanen procedure (the Python reference uses
+state-space maximum likelihood), applies Direct LiNGAM to the residuals,
+and returns the AR-side matrices `psis` (with `psis[1, , ]` = B0) and
+the MA-side matrices `omegas`.
+
+``` r
+
+s_varma <- generate_varmalingam_sample(n = 1000, seed = 42)
+model_varma <- lingam_varma(s_varma$data, order = c(1, 1))
+print(model_varma)
+#> VARMA-LiNGAM Result
+#>   Variables : 3
+#>   Order (p, q) : (1, 0)
+#>   Causal order (instantaneous): x0 -> x1 -> x2
+#> 
+#> Instantaneous adjacency matrix B0 (row = to, col = from):
+#>       x0     x1 x2
+#> x0 0.000  0.000  0
+#> x1 0.613  0.000  0
+#> x2 0.000 -0.474  0
+#> 
+#> Lagged adjacency matrix psi1 (row = to, col = from):
+#>        x0    x1     x2
+#> x0  0.472 0.000  0.176
+#> x1 -0.169 0.350 -0.166
+#> x2  0.000 0.216  0.501
+```
+
+[`check_varma_stationarity()`](https://morimotoosamu.github.io/lingamr/reference/check_varma_stationarity.md)
+checks the AR eigenvalues (stationarity) and also the MA eigenvalues
+(invertibility), which Hannan-Rissanen does not enforce.
+
+``` r
+
+check_varma_stationarity(model_varma)
+#> === VARMA Stationarity / Invertibility Check ===
+#> Order (p, q):         (1, 0)
+#> Max |AR eigenvalue|:  0.5507  (threshold 1.00)
+#> Stationary:           YES
+#> Max |MA eigenvalue|:  0.0000  (threshold 1.00)
+#> Invertible:           YES
+```
+
+The bootstrap, edge probabilities, path enumeration
+([`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md),
+[`get_varma_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.md),
+[`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)),
+total effects
+([`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)),
+and residual normality diagnostics mirror their VAR-LiNGAM counterparts.
+In the probability matrix, the first `1 + p` column blocks are the psi
+(lag) matrices and the final `q` blocks are the omega (MA) matrices.
+
+``` r
+
+bs_varma <- lingam_varma_bootstrap(
+  s_varma$data,
+  n_sampling = 100L,
+  order      = c(1, 1),
+  criterion  = NULL,
+  seed       = 42,
+  verbose    = FALSE
+)
+round(get_varma_probabilities(bs_varma, min_causal_effect = 0.1), 2)
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]
+#> [1,] 0.00    0    0 0.99 0.00 0.93 0.73 0.00 0.00
+#> [2,] 1.00    0    0 0.75 1.00 0.84 0.09 0.01 0.06
+#> [3,] 0.07    1    0 0.16 0.08 0.89 0.11 0.00 0.99
 ```
 
 ## LiNGAM for Mixed Data (LiM)
@@ -2262,10 +2341,10 @@ and its fit measures are visibly worse (lower CFI, higher RMSEA):
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
-#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
-#>   RMSEA       AIC       BIC   LogLik
-#> 1     0 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
+#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
+#>         AIC       BIC   LogLik
+#> 1 -4264.864 -4166.708 2152.432
 ```
 
 ## When LiNGAM Cannot Be Used

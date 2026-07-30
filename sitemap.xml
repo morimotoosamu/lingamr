@@ -45,10 +45,15 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_mgcv_available.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_mice_available.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_var_stationarity.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/check_varma_stationarity.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/collect_time_expanded_paths.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/companion_moduli.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/compute_varlingam_residuals.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/compute_varmalingam_residuals.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/contract_violation.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/create_bootstrap_result.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/create_var_bootstrap_result.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/create_varma_bootstrap_result.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/default_cd_fit.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/default_imputer.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/entropy_approx.html</loc></url>
@@ -60,6 +65,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect_parce.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect_rcd.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/estimate_var_total_effect.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/evaluate_model_fit.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/exists_ancestor_in_U.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/extract_adjacency_matrix.html</loc></url>
@@ -70,6 +76,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/f_correlation.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fcorr_svd_transform.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/filter_bootstrap_failures.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/filter_varma_residuals.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/find_all_paths.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/find_exo_vec.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_adaptive_lasso.html</loc></url>
@@ -80,6 +87,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_penalized_regression.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_ridge_reg.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_var_ols.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_varma_hr.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_camuv_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lim_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.html</loc></url>
@@ -93,6 +101,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_rcd_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_resit_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_varlingam_sample.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_varmalingam_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_adjacency_matrix_summary.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_causal_direction_counts.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.html</loc></url>
@@ -108,6 +117,8 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_names.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_paths.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_probabilities.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.CAMUVResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.LiMResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.LingamResult.html</loc></url>
@@ -116,6 +127,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.RCDResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.ResitResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/high_dim_causal_order.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/hr_long_ar_order.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_gram_matrix.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_kernel_width.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_sqdist.html</loc></url>
@@ -125,6 +137,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/incomplete_cholesky_gauss.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/is_independent_of_resid.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/joined_varma_matrix.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_core.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_core_lowrank.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/kernel_mi_prepare.html</loc></url>
@@ -160,6 +173,8 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_resit_bootstrap.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_var.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_var_bootstrap.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_varma.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingamr-package.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/make_noise_fn.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.html</loc></url>
@@ -175,6 +190,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/plot_bootstrap_probabilities.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/plot_residual_qq.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/plot_varlingam_residual_qq.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/plot_varmalingam_residual_qq.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/predict_adaptive_lasso_cv.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.BootstrapResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.CAMUVResult.html</loc></url>
@@ -188,11 +204,15 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.ResitResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.VARBootstrapResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.VARLiNGAMResult.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/print.VARMABootstrapResult.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/print.VARMALiNGAMResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.causal_order_stability.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.lingam_normality_test.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.lingam_summary.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.var_stationarity.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/print.varma_stationarity.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/prune_var_lingam.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/prune_varma_lingam.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/rcd_is_correlated.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/rcd_is_independent.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/rcd_is_non_gaussian_all.html</loc></url>
@@ -214,6 +234,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/search_causal_order_pwling.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/search_causal_order_pwling_multi.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/select_var_lag.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/select_varma_order.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/setup_cluster_worker.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/shapiro_subsample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/skewness_pop.html</loc></url>
@@ -221,6 +242,8 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/test_residual_normality.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/test_varlingam_residual_normality.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/test_varlingam_residual_normality_all.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality_all.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.BootstrapResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.CAMUVResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.ImputationBootstrapResult.html</loc></url>
@@ -240,7 +263,9 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_rcd_result.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_reg_args.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_sample_args.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_varma_coef_array.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/var_total_effect_graph.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/varma_total_effect_core.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/zero_lingam_result.html</loc></url>
 </urlset>
 

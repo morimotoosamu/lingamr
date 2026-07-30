@@ -140,7 +140,7 @@ bs <- lingam_parce_bootstrap(confounded$data,
 #> Bootstrap: 10 iterations, method=ols (sequential)
 #>   iteration 1 / 10
 #>   iteration 10 / 10
-#> Completed in 14.8 seconds.
+#> Completed in 13.0 seconds.
 get_probabilities(bs)
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]  0.0  0.2  0.4  0.4  0.0  0.0

@@ -36,7 +36,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.2 seconds.
+#> Completed in 0.1 seconds.
 
 print(bs_model)
 #> BootstrapResult: 30 samplings, 6 features

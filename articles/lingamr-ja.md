@@ -692,7 +692,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.6 seconds.
+#> Completed in 2.9 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -986,7 +986,7 @@ t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data
 cat(sprintf("Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n",
             t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
 #> Direct LiNGAM : 0.01 sec
-#> ICA-LiNGAM    : 0.02 sec
+#> ICA-LiNGAM    : 0.01 sec
 ```
 
 ### 推定係数の比較
@@ -1109,9 +1109,9 @@ cat(sprintf(
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.03 sec
-#> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.1x
+#> p = 10 : 0.02 sec
+#> p = 15 : 0.05 sec
+#> theoretical factor 3.4x vs. observed 2.0x
 ```
 
 同じデータでICA-LiNGAMも実行し、速度を直接比較する。
@@ -1127,8 +1127,8 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.02 sec   0.03 sec
+#> Direct LiNGAM :  0.02 sec   0.05 sec
+#> ICA-LiNGAM    :  0.01 sec   0.02 sec
 ```
 
 $`p`$ が大きくなるほどDirect
@@ -1386,7 +1386,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.5 seconds.
+#> Completed in 1.1 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
@@ -1688,6 +1688,79 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 #> 9       4, 6, 3  0.040411503        0.02
 #> 10      4, 2, 3 -0.068176510        0.01
 #> 11 4, 5, 6,.... -0.018273144        0.01
+```
+
+## VARMA-LiNGAM：移動平均誤差を持つ時系列
+
+**VARMA-LiNGAM**（Kawahara et al.,
+2011）はVAR-LiNGAMを移動平均（MA）項で拡張した モデルであり、
+$`x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
+\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}`$
+という形で、ラグ付き変数に加えて過去の撹乱項が現在に影響できる。
+[`lingam_varma()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma.md)
+は誘導形VARMA係数を決定的な二段階Hannan-Rissanen法で推定し
+（Python実装は状態空間の最尤法を使う）、残差にDirect LiNGAMを適用して、
+AR側の行列 `psis`（`psis[1, , ]` がB0）とMA側の行列 `omegas` を返す。
+
+``` r
+
+s_varma <- generate_varmalingam_sample(n = 1000, seed = 42)
+model_varma <- lingam_varma(s_varma$data, order = c(1, 1))
+print(model_varma)
+#> VARMA-LiNGAM Result
+#>   Variables : 3
+#>   Order (p, q) : (1, 0)
+#>   Causal order (instantaneous): x0 -> x1 -> x2
+#> 
+#> Instantaneous adjacency matrix B0 (row = to, col = from):
+#>       x0     x1 x2
+#> x0 0.000  0.000  0
+#> x1 0.613  0.000  0
+#> x2 0.000 -0.474  0
+#> 
+#> Lagged adjacency matrix psi1 (row = to, col = from):
+#>        x0    x1     x2
+#> x0  0.472 0.000  0.176
+#> x1 -0.169 0.350 -0.166
+#> x2  0.000 0.216  0.501
+```
+
+[`check_varma_stationarity()`](https://morimotoosamu.github.io/lingamr/reference/check_varma_stationarity.md)
+はARの固有値（定常性）に加えて、Hannan-Rissanen法が
+保証しないMAの固有値（可逆性）も確認する。
+
+``` r
+
+check_varma_stationarity(model_varma)
+#> === VARMA Stationarity / Invertibility Check ===
+#> Order (p, q):         (1, 0)
+#> Max |AR eigenvalue|:  0.5507  (threshold 1.00)
+#> Stationary:           YES
+#> Max |MA eigenvalue|:  0.0000  (threshold 1.00)
+#> Invertible:           YES
+```
+
+ブートストラップ・エッジ確率・パス列挙（[`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md)、
+[`get_varma_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.md)、[`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)）、総効果
+（[`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)）、残差正規性の診断はVAR-LiNGAM版と対応する。
+確率行列では、最初の `1 + p` 個の列ブロックがpsi（ラグ）行列に、最後の
+`q` 個の ブロックがomega（MA）行列に対応する。
+
+``` r
+
+bs_varma <- lingam_varma_bootstrap(
+  s_varma$data,
+  n_sampling = 100L,
+  order      = c(1, 1),
+  criterion  = NULL,
+  seed       = 42,
+  verbose    = FALSE
+)
+round(get_varma_probabilities(bs_varma, min_causal_effect = 0.1), 2)
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]
+#> [1,] 0.00    0    0 0.99 0.00 0.93 0.73 0.00 0.00
+#> [2,] 1.00    0    0 0.75 1.00 0.84 0.09 0.01 0.06
+#> [3,] 0.07    1    0 0.16 0.08 0.89 0.11 0.00 0.99
 ```
 
 ## 混合データのためのLiNGAM（LiM）
@@ -2202,10 +2275,10 @@ evaluate_model_fit(fit_result, sample6$data)
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
-#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
-#>   RMSEA       AIC       BIC   LogLik
-#> 1     0 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
+#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
+#>         AIC       BIC   LogLik
+#> 1 -4264.864 -4166.708 2152.432
 ```
 
 ## LiNGAMが使えない場合

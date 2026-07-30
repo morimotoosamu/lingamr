@@ -919,7 +919,7 @@ method.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 3.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 2.7 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -1315,9 +1315,9 @@ grows by a factor of
 <span>  <span class="fl">15</span><span class="op">^</span><span class="fl">3</span> <span class="op">/</span> <span class="fl">10</span><span class="op">^</span><span class="fl">3</span>,</span>
 <span>  <span class="va">t15</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">t10</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; p = 10 : 0.03 sec</span></span>
-<span><span class="co">#&gt; p = 15 : 0.06 sec</span></span>
-<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.1x</span></span></code></pre></div>
+<span><span class="co">#&gt; p = 10 : 0.02 sec</span></span>
+<span><span class="co">#&gt; p = 15 : 0.05 sec</span></span>
+<span><span class="co">#&gt; theoretical factor 3.4x vs. observed 2.2x</span></span></code></pre></div>
 <p>We run ICA-LiNGAM on the same data to compare speed directly.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">t10_ica</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="op">{</span> <span class="fu">pcalg</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pcalg/man/LINGAM.html" class="external-link">lingam</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">d10</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span>
@@ -1329,8 +1329,8 @@ grows by a factor of
 <span>  <span class="va">t10_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span>, <span class="va">t15_ica</span><span class="op">[</span><span class="st">"elapsed"</span><span class="op">]</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;               p = 10   p = 15</span></span>
-<span><span class="co">#&gt; Direct LiNGAM :  0.03 sec   0.06 sec</span></span>
-<span><span class="co">#&gt; ICA-LiNGAM    :  0.02 sec   0.03 sec</span></span></code></pre></div>
+<span><span class="co">#&gt; Direct LiNGAM :  0.02 sec   0.05 sec</span></span>
+<span><span class="co">#&gt; ICA-LiNGAM    :  0.01 sec   0.02 sec</span></span></code></pre></div>
 <p>The larger
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
 becomes, the more Direct LiNGAM’s
@@ -1575,7 +1575,7 @@ or is systematic.</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 1.4 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 1.1 seconds.</span></span>
 <span></span>
 <span><span class="co"># Occurrence probability of each direction (row = to, column = from)</span></span>
 <span><span class="va">bs_paradox</span> <span class="op">|&gt;</span></span>
@@ -1869,6 +1869,74 @@ average total effect and detection probability.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="varma-lingam-time-series-with-moving-average-errors">VARMA-LiNGAM: Time Series with Moving-Average Errors<a class="anchor" aria-label="anchor" href="#varma-lingam-time-series-with-moving-average-errors"></a>
+</h2>
+<p><strong>VARMA-LiNGAM</strong> (Kawahara et al., 2011) extends
+VAR-LiNGAM with a moving-average (MA) part: the model is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msub><mi>B</mi><mn>0</mn></msub><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msubsup><mo>∑</mo><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></msubsup><msub><mi>ψ</mi><mi>τ</mi></msub><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mi>τ</mi></mrow></msub><mo>+</mo><msub><mi>e</mi><mi>t</mi></msub><mo>+</mo><msubsup><mo>∑</mo><mrow><mi>ω</mi><mo>=</mo><mn>1</mn></mrow><mi>q</mi></msubsup><msub><mi mathvariant="normal">Ω</mi><mi>ω</mi></msub><msub><mi>e</mi><mrow><mi>t</mi><mo>−</mo><mi>ω</mi></mrow></msub></mrow><annotation encoding="application/x-tex">x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
+\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}</annotation></semantics></math>,
+so past disturbances can influence the present alongside the lagged
+variables. <code><a href="../reference/lingam_varma.html">lingam_varma()</a></code> estimates the reduced-form VARMA
+coefficients by the deterministic two-stage Hannan-Rissanen procedure
+(the Python reference uses state-space maximum likelihood), applies
+Direct LiNGAM to the residuals, and returns the AR-side matrices
+<code>psis</code> (with <code>psis[1, , ]</code> = B0) and the MA-side
+matrices <code>omegas</code>.</p>
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">s_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_varmalingam_sample.html">generate_varmalingam_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">model_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_varma.html">lingam_varma</a></span><span class="op">(</span><span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>, order <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">model_varma</span><span class="op">)</span></span>
+<span><span class="co">#&gt; VARMA-LiNGAM Result</span></span>
+<span><span class="co">#&gt;   Variables : 3</span></span>
+<span><span class="co">#&gt;   Order (p, q) : (1, 0)</span></span>
+<span><span class="co">#&gt;   Causal order (instantaneous): x0 -&gt; x1 -&gt; x2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Instantaneous adjacency matrix B0 (row = to, col = from):</span></span>
+<span><span class="co">#&gt;       x0     x1 x2</span></span>
+<span><span class="co">#&gt; x0 0.000  0.000  0</span></span>
+<span><span class="co">#&gt; x1 0.613  0.000  0</span></span>
+<span><span class="co">#&gt; x2 0.000 -0.474  0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Lagged adjacency matrix psi1 (row = to, col = from):</span></span>
+<span><span class="co">#&gt;        x0    x1     x2</span></span>
+<span><span class="co">#&gt; x0  0.472 0.000  0.176</span></span>
+<span><span class="co">#&gt; x1 -0.169 0.350 -0.166</span></span>
+<span><span class="co">#&gt; x2  0.000 0.216  0.501</span></span></code></pre></div>
+<p><code><a href="../reference/check_varma_stationarity.html">check_varma_stationarity()</a></code> checks the AR eigenvalues
+(stationarity) and also the MA eigenvalues (invertibility), which
+Hannan-Rissanen does not enforce.</p>
+<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/check_varma_stationarity.html">check_varma_stationarity</a></span><span class="op">(</span><span class="va">model_varma</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === VARMA Stationarity / Invertibility Check ===</span></span>
+<span><span class="co">#&gt; Order (p, q):         (1, 0)</span></span>
+<span><span class="co">#&gt; Max |AR eigenvalue|:  0.5507  (threshold 1.00)</span></span>
+<span><span class="co">#&gt; Stationary:           YES</span></span>
+<span><span class="co">#&gt; Max |MA eigenvalue|:  0.0000  (threshold 1.00)</span></span>
+<span><span class="co">#&gt; Invertible:           YES</span></span></code></pre></div>
+<p>The bootstrap, edge probabilities, path enumeration
+(<code><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap()</a></code>,
+<code><a href="../reference/get_varma_probabilities.html">get_varma_probabilities()</a></code>, <code><a href="../reference/get_varma_paths.html">get_varma_paths()</a></code>),
+total effects (<code><a href="../reference/estimate_varma_total_effect.html">estimate_varma_total_effect()</a></code>), and residual
+normality diagnostics mirror their VAR-LiNGAM counterparts. In the
+probability matrix, the first <code>1 + p</code> column blocks are the
+psi (lag) matrices and the final <code>q</code> blocks are the omega
+(MA) matrices.</p>
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bs_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap</a></span><span class="op">(</span></span>
+<span>  <span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>,</span>
+<span>  n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
+<span>  order      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  criterion  <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  seed       <span class="op">=</span> <span class="fl">42</span>,</span>
+<span>  verbose    <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_varma_probabilities.html">get_varma_probabilities</a></span><span class="op">(</span><span class="va">bs_varma</span>, min_causal_effect <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9]</span></span>
+<span><span class="co">#&gt; [1,] 0.00    0    0 0.99 0.00 0.93 0.73 0.00 0.00</span></span>
+<span><span class="co">#&gt; [2,] 1.00    0    0 0.75 1.00 0.84 0.09 0.01 0.06</span></span>
+<span><span class="co">#&gt; [3,] 0.07    1    0 0.16 0.08 0.89 0.11 0.00 0.99</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="lingam-for-mixed-data-lim">LiNGAM for Mixed Data (LiM)<a class="anchor" aria-label="anchor" href="#lingam-for-mixed-data-lim"></a>
 </h2>
 <p>Direct LiNGAM assumes every variable is continuous.
@@ -1882,7 +1950,7 @@ phase).</p>
 known causal chain of continuous and discrete variables: <code>x1</code>
 (continuous) -&gt; <code>x2</code> (discrete) -&gt; <code>x3</code>
 (continuous).</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">lim_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lim_sample.html">generate_lim_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lim_dat</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -1900,7 +1968,7 @@ logical vector marking which columns are continuous (<code>TRUE</code>)
 versus discrete (<code>FALSE</code>). Because the optimization starts
 from a random initial point, reproducibility requires
 <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code>.</p>
-<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lim_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_lim.html">lingam_lim</a></span><span class="op">(</span><span class="va">lim_dat</span><span class="op">$</span><span class="va">data</span>, is_continuous <span class="op">=</span> <span class="va">lim_dat</span><span class="op">$</span><span class="va">is_continuous</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">lim_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; LiM Result</span></span>
@@ -1917,7 +1985,7 @@ from a random initial point, reproducibility requires
 follows the <code>B[i, j]</code> = j -&gt; i convention (row = to,
 column = from), and <code>causal_order</code> lists the estimated
 topological order as 1-based indices.</p>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">lim_dat</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">[</span><span class="va">lim_result</span><span class="op">$</span><span class="va">causal_order</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "x1" "x2" "x3"</span></span></code></pre></div>
 <p>Discrete variables are binary (0/1) by default; setting
@@ -1943,7 +2011,7 @@ its own adjacency matrix (structural coefficients), following Shimizu
 that share the causal structure of
 <code><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6()</a></code> but with slightly different
 coefficients per group.</p>
-<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_multi_group_sample.html">generate_multi_group_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">1000</span><span class="op">)</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">mg</span><span class="op">$</span><span class="va">data_list</span>, <span class="va">head</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $group1</span></span>
@@ -1957,7 +2025,7 @@ coefficients per group.</p>
 <span><span class="co">#&gt; 1 0.7259014  5.482225 0.9301592 0.01259095  5.275903  3.321061</span></span>
 <span><span class="co">#&gt; 2 2.4321051 17.252303 3.3989705 0.41696287 16.459975 11.368701</span></span>
 <span><span class="co">#&gt; 3 1.5550457 10.342355 1.8713591 0.24518297 10.520165  7.859683</span></span></code></pre></div>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mg_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_multi_group.html">lingam_multi_group</a></span><span class="op">(</span><span class="va">mg</span><span class="op">$</span><span class="va">data_list</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">mg_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Multi-Group Direct LiNGAM Result</span></span>
@@ -1989,7 +2057,7 @@ following the usual <code>B[i, j]</code> = j -&gt; i convention.</p>
 single-group tooling (total causal effects, independence tests,
 plotting), extract it as a plain <code>LingamResult</code> with
 <code><a href="../reference/get_group_result.html">get_group_result()</a></code>:</p>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">g1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_group_result.html">get_group_result</a></span><span class="op">(</span><span class="va">mg_result</span>, <span class="st">"group1"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">g1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "LingamResult"</span></span>
@@ -2008,7 +2076,7 @@ each group independently, then jointly re-estimates the causal order and
 per-group adjacency matrices. It returns a named list of per-group
 <code>BootstrapResult</code> objects, so the existing bootstrap query
 functions apply directly per group:</p>
-<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mg_bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_multi_group_bootstrap.html">lingam_multi_group_bootstrap</a></span><span class="op">(</span><span class="va">mg</span><span class="op">$</span><span class="va">data_list</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">20L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -2037,12 +2105,12 @@ datasets, and a common causal structure is jointly estimated across them
 with <code><a href="../reference/lingam_multi_group.html">lingam_multi_group()</a></code> (treating the imputed copies as
 “groups” that share one causal order). This is an R port of the Python
 <code>lingam.tools.bootstrap_with_imputation()</code>.</p>
-<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sample6_na</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">X_na</span> <span class="op">&lt;-</span> <span class="va">sample6_na</span><span class="op">$</span><span class="va">data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">X_na</span><span class="op">$</span><span class="va">x5</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X_na</span><span class="op">)</span>, size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">0.1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X_na</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span> <span class="co"># MCAR 10% on x5</span></span></code></pre></div>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bwi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_with_imputation.html">bootstrap_with_imputation</a></span><span class="op">(</span><span class="va">X_na</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">20L</span>, n_repeats <span class="op">=</span> <span class="fl">5L</span>, seed <span class="op">=</span> <span class="fl">42</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -2062,7 +2130,7 @@ matrices (one per imputed dataset), the result’s shape differs from
 <code><a href="../reference/as_bootstrap_result.html">as_bootstrap_result()</a></code> collapses the <code>n_repeats</code>
 dimension (median or mean) into a regular <code>BootstrapResult</code>,
 so the existing bootstrap query functions apply as usual:</p>
-<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_na</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_bootstrap_result.html">as_bootstrap_result</a></span><span class="op">(</span><span class="va">bwi</span>, aggregate <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="va">bs_na</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x0 x1 x2 x3 x4 x5</span></span>
@@ -2098,7 +2166,7 @@ confounder, rather than a (possibly wrong) guess at their order.</p>
 which <code>x6</code> is an unobserved common cause of <code>x2</code>
 and <code>x3</code>; only <code>x0</code>-<code>x5</code> are returned
 as data.</p>
-<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># HSIC is O(n^2), so a moderate n keeps this vignette fast to build</span></span>
 <span><span class="va">confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_parce_sample.html">generate_parce_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -2111,7 +2179,7 @@ as data.</p>
 <span><span class="co">#&gt; 6 1.7671488 1.8838085 1.8358794 2.7663075  0.90699176 1.3624485</span></span>
 <span><span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span></span>
 <span><span class="co">#&gt; [1] 3 4</span></span></code></pre></div>
-<div class="sourceCode" id="cb79"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_parce.html">lingam_parce</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">parce_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Bottom-Up ParceLiNGAM Result</span></span>
@@ -2133,7 +2201,7 @@ parentheses; here it correctly contains <code>x2</code> and
 <code>x3</code>. The corresponding entries of the adjacency matrix are
 <code>NA</code>, while edges among the remaining, fully-resolved
 variables are estimated as usual:</p>
-<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_result</span><span class="op">$</span><span class="va">causal_order</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] 3 4</span></span>
 <span><span class="va">parce_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">[</span><span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span>, <span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">]</span></span>
@@ -2145,7 +2213,7 @@ variables are estimated as usual:</p>
 <code>NA</code> when asked for a total effect <em>from</em> a variable
 in the unresolved block, but still computes normal estimates for
 well-identified pairs:</p>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># from a confounded variable: warns and returns NA</span></span>
 <span><span class="fu"><a href="../reference/estimate_total_effect_parce.html">estimate_total_effect_parce</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">parce_result</span>,</span>
 <span>  from_index <span class="op">=</span> <span class="va">confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, to_index <span class="op">=</span> <span class="st">"x1"</span></span>
@@ -2168,7 +2236,7 @@ aggregating, so <code><a href="../reference/get_probabilities.html">get_probabil
 <code><a href="../reference/get_causal_order_stability.html">get_causal_order_stability()</a></code> is the one exception, since
 ParceLiNGAM’s blocked causal order does not fit its fixed-length
 format.</p>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_parce_bootstrap.html">lingam_parce_bootstrap</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">10L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -2197,7 +2265,7 @@ block-level (which set of variables could not be ordered).</p>
 which <code>x6</code> is an unobserved common cause of <code>x2</code>
 and <code>x4</code>; only <code>x0</code>-<code>x5</code> are returned
 as data.</p>
-<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># HSIC is O(n^2), so a moderate n keeps this vignette fast to build</span></span>
 <span><span class="va">rcd_confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_rcd_sample.html">generate_rcd_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -2210,7 +2278,7 @@ as data.</p>
 <span><span class="co">#&gt; 6 -0.30389184 -0.225029302 -0.5032249 -0.172267536  0.5221642 -0.0690391705</span></span>
 <span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span></span>
 <span><span class="co">#&gt; [1] 3 5</span></span></code></pre></div>
-<div class="sourceCode" id="cb84"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcd_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_rcd.html">lingam_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rcd_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RCD Result</span></span>
@@ -2237,7 +2305,7 @@ as data.</p>
 <p><code>ancestors_list</code> gives each variable’s estimated ancestors
 (not a causal order), and the confounded pair’s adjacency-matrix entries
 are <code>NA</code>:</p>
-<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcd_result</span><span class="op">$</span><span class="va">ancestors_list</span></span>
 <span><span class="co">#&gt; $x0</span></span>
 <span><span class="co">#&gt; [1] 2 4 6</span></span>
@@ -2263,7 +2331,7 @@ are <code>NA</code>:</p>
 <p>As with ParceLiNGAM, <code><a href="../reference/estimate_total_effect_rcd.html">estimate_total_effect_rcd()</a></code> warns
 and returns <code>NA</code> when asked for a total effect <em>from</em>
 a confounded variable:</p>
-<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># from a confounded variable: warns and returns NA</span></span>
 <span><span class="fu"><a href="../reference/estimate_total_effect_rcd.html">estimate_total_effect_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">rcd_result</span>,</span>
 <span>  from_index <span class="op">=</span> <span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, to_index <span class="op">=</span> <span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
@@ -2290,7 +2358,7 @@ measures (CFI, RMSEA, AIC/BIC, etc.) via the <code>lavaan</code> package
 <code>install.packages("lavaan")</code>). This is useful for judging
 whether an estimated causal graph is consistent with the data,
 independent of how it was estimated.</p>
-<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb90"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sample6</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_lingam_sample_6.html">generate_lingam_sample_6</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">fit_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_direct.html">lingam_direct</a></span><span class="op">(</span><span class="va">sample6</span><span class="op">$</span><span class="va">data</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span><span class="op">)</span></span>
 <span></span>
@@ -2302,13 +2370,13 @@ independent of how it was estimated.</p>
 <span><span class="co">#&gt; 1 1860.598 1958.753 -910.2991</span></span></code></pre></div>
 <p>Reversing the direction of every edge produces a mis-specified model,
 and its fit measures are visibly worse (lower CFI, higher RMSEA):</p>
-<div class="sourceCode" id="cb88"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reversed_adjacency</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">fit_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/evaluate_model_fit.html">evaluate_model_fit</a></span><span class="op">(</span><span class="va">reversed_adjacency</span>, <span class="va">sample6</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI</span></span>
-<span><span class="co">#&gt; 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1</span></span>
-<span><span class="co">#&gt;   RMSEA       AIC       BIC   LogLik</span></span>
-<span><span class="co">#&gt; 1     0 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
+<span><span class="co">#&gt;   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA</span></span>
+<span><span class="co">#&gt; 1   0           15    0           NA       23023.7   1   1   NA   1   1     0</span></span>
+<span><span class="co">#&gt;         AIC       BIC   LogLik</span></span>
+<span><span class="co">#&gt; 1 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="when-lingam-cannot-be-used">When LiNGAM Cannot Be Used<a class="anchor" aria-label="anchor" href="#when-lingam-cannot-be-used"></a>

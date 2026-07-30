@@ -35,7 +35,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.2 seconds.
+#> Completed in 0.1 seconds.
 
 get_total_causal_effects(bs_model)
 #>    from to       effect probability
