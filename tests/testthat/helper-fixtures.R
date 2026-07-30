@@ -7,8 +7,9 @@
 #   そこで高コストなデータ生成・フィットを memo() でメモ化し、ファイル横断で共有する。
 # - lingam_lim だけは ambient RNG を消費する（optim 初期値の runif）ため、
 #   test-lingam_lim.R はこのフィクスチャを一切使わない（除外対象）。
-#   その他の除外: test-lingam_var_snapshot.R（golden-value）、test-hsic.R、
-#   test-generate_samples.R、test-prior_knowledge.R、再現性テスト（同 seed 2回比較）。
+#   その他の除外: test-lingam_var_snapshot.R / test-lingam_varma_snapshot.R
+#   （golden-value）、test-hsic.R、test-generate_samples.R、
+#   test-prior_knowledge.R、再現性テスト（同 seed 2回比較）。
 # - フィクスチャの引数（n / seed / reg_method / n_sampling など）を変更すると
 #   golden 的な期待値を持つテストが壊れるので変更しないこと。
 #   条件が異なるケースは各テストファイル側で直接呼び出す。
@@ -48,6 +49,9 @@ vars_1000_s42 <- memo(function() generate_varlingam_sample(n = 1000, seed = 42))
 vars_1500_s42 <- memo(function() generate_varlingam_sample(n = 1500, seed = 42))
 vars_2000_s42 <- memo(function() generate_varlingam_sample(n = 2000, seed = 42))
 
+varmas_1000_s42 <- memo(function() generate_varmalingam_sample(n = 1000, seed = 42))
+varmas_2000_s42 <- memo(function() generate_varmalingam_sample(n = 2000, seed = 42))
+
 # x5 列に NA を混ぜた sample6（多重代入テスト用）。自前で set.seed するので決定的。
 make_missing_sample6 <- function(n = 300, seed = 1, na_frac = 0.1) {
   sample6 <- generate_lingam_sample_6(n = n, seed = seed)
@@ -82,6 +86,14 @@ fit_var_default <- function(data) {
 fit_var_1000 <- memo(function() fit_var_default(vars_1000_s42()$data))
 fit_var_1500 <- memo(function() fit_var_default(vars_1500_s42()$data))
 fit_var_2000 <- memo(function() fit_var_default(vars_2000_s42()$data))
+
+# VARMA-LiNGAM の共通引数ラッパ（非キャッシュ。小さい n の一回きりフィット用）
+fit_varma_default <- function(data) {
+  lingam_varma(data, order = c(1, 1), reg_method = "ols", criterion = NULL, prune = FALSE)
+}
+
+fit_varma_1000 <- memo(function() fit_varma_default(varmas_1000_s42()$data))
+fit_varma_2000 <- memo(function() fit_varma_default(varmas_2000_s42()$data))
 
 # --- bootstrap フィクスチャ（seed 固定なので内部 set.seed により決定的） ------
 

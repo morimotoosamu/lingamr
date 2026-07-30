@@ -1116,6 +1116,53 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 ```
 
 
+## VARMA-LiNGAM: Time Series with Moving-Average Errors
+
+**VARMA-LiNGAM** (Kawahara et al., 2011) extends VAR-LiNGAM with a
+moving-average (MA) part: the model is
+$x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
+\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}$,
+so past disturbances can influence the present alongside the lagged
+variables. `lingam_varma()` estimates the reduced-form VARMA coefficients by
+the deterministic two-stage Hannan-Rissanen procedure (the Python reference
+uses state-space maximum likelihood), applies Direct LiNGAM to the residuals,
+and returns the AR-side matrices `psis` (with `psis[1, , ]` = B0) and the
+MA-side matrices `omegas`.
+
+```{r lingam_varma}
+s_varma <- generate_varmalingam_sample(n = 1000, seed = 42)
+model_varma <- lingam_varma(s_varma$data, order = c(1, 1))
+print(model_varma)
+```
+
+`check_varma_stationarity()` checks the AR eigenvalues (stationarity) and
+also the MA eigenvalues (invertibility), which Hannan-Rissanen does not
+enforce.
+
+```{r varma_stationarity}
+check_varma_stationarity(model_varma)
+```
+
+The bootstrap, edge probabilities, path enumeration
+(`lingam_varma_bootstrap()`, `get_varma_probabilities()`,
+`get_varma_paths()`), total effects (`estimate_varma_total_effect()`), and
+residual normality diagnostics mirror their VAR-LiNGAM counterparts. In the
+probability matrix, the first `1 + p` column blocks are the psi (lag)
+matrices and the final `q` blocks are the omega (MA) matrices.
+
+```{r varma_bootstrap}
+bs_varma <- lingam_varma_bootstrap(
+  s_varma$data,
+  n_sampling = 100L,
+  order      = c(1, 1),
+  criterion  = NULL,
+  seed       = 42,
+  verbose    = FALSE
+)
+round(get_varma_probabilities(bs_varma, min_causal_effect = 0.1), 2)
+```
+
+
 ## LiNGAM for Mixed Data (LiM)
 
 Direct LiNGAM assumes every variable is continuous. `lingam_lim()` relaxes

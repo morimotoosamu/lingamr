@@ -1,7 +1,7 @@
 # =============================================================================
-# Bootstrap for VAR-LiNGAM - R Implementation
+# Bootstrap for VARMA-LiNGAM - R Implementation
 # Based on the Python implementation from the LiNGAM Project
-# https://github.com/cdt15/lingam  (lingam/var_lingam.py)
+# https://github.com/cdt15/lingam  (lingam/varma_lingam.py)
 #
 # License: MIT + file LICENSE
 #
@@ -13,32 +13,32 @@
 # =============================================================================
 
 
-#' Bootstrap for VAR-LiNGAM
+#' Bootstrap for VARMA-LiNGAM
 #'
 #' Evaluates the statistical reliability of the estimated time-series DAG by
-#' resampling. Unlike the i.i.d. row resampling used for Direct LiNGAM, this
-#' uses a **residual bootstrap**: the VAR is fitted once on the original data,
-#' the residuals are resampled with replacement, and a new series is rebuilt by
-#' the VAR recursion before re-estimating VAR-LiNGAM on it (this preserves the
-#' autoregressive structure). Port of the Python reference `VARLiNGAM.bootstrap`.
+#' resampling. Like [lingam_var_bootstrap()], this uses a **residual
+#' bootstrap**: the VARMA model is fitted once on the original data, the
+#' residuals are resampled with replacement, and a new series is rebuilt by
+#' the VARMA recursion before re-estimating VARMA-LiNGAM on it. Port of the
+#' Python reference `VARMALiNGAM.bootstrap`.
 #'
 #' @param X numeric matrix or data frame (n_samples x n_features), rows ordered
 #'   in time.
 #' @param n_sampling number of bootstrap iterations (positive integer).
-#' @param lags maximum lag order. When `criterion` is not NULL, the lag is
-#'   selected once on the original data and then fixed across all iterations.
-#' @param criterion lag-selection criterion ("bic", "aic", "hqic", "fpe") or
-#'   NULL to use `lags` directly.
+#' @param order VARMA order `c(p, q)`. When `criterion` is not NULL, the order
+#'   is selected once on the original data and then fixed across all iterations.
+#' @param criterion order-selection criterion ("bic", "aic", "hqic") or NULL to
+#'   use `order` directly.
 #' @param measure independence measure for [lingam_direct()] ("pwling"/"kernel").
 #' @param reg_method regression method for the instantaneous matrix.
 #' @param lambda penalty selection (see [lingam_direct()]).
 #' @param init_method initial-weight method for adaptive LASSO.
-#' @param prune logical; passed to [lingam_var()] on each iteration (default TRUE).
+#' @param prune logical; passed to [lingam_varma()] on each iteration (default TRUE).
 #' @param seed random seed (NULL allowed).
 #' @param verbose whether to print progress (logical).
 #' @param parallel whether to distribute iterations across cores (logical).
 #' @param n_cores number of cores (integer or NULL; NULL caps at 2 for safety).
-#' @return a `VARBootstrapResult` object.
+#' @return a `VARMABootstrapResult` object.
 #' @details
 #' Reproducibility follows the same rules as [lingam_direct_bootstrap()]: with
 #' `parallel = TRUE`, L'Ecuyer streams via `parallel::clusterSetRNGStream()` make
@@ -49,29 +49,40 @@
 #' runs inside a `tryCatch()`; a failing iteration is reported as a warning and
 #' excluded from the result instead of aborting the run. An error is raised
 #' only if every iteration fails.
+#'
+#' As in the Python reference, the series regeneration omits the estimated
+#' intercept, so resampled series are centered near zero even when the
+#' original data are not; each refit re-estimates its own intercept, so the
+#' resampled coefficient estimates are unaffected.
+#'
+#' Total effects are estimated by the back-door regression of
+#' [estimate_varma_total_effect()] (the Python reference does the same) and
+#' cover the instantaneous block and the AR lags 1..p; the MA (omega) blocks
+#' describe effects of past disturbances, not of observed variables, and are
+#' therefore excluded from `total_effects`.
 #' @export
 #' @examples
-#' s <- generate_varlingam_sample(n = 500, seed = 42)
+#' s <- generate_varmalingam_sample(n = 300, seed = 42)
 #'
 #' # Fast example: OLS instantaneous structure, no pruning (no glmnet needed)
-#' bs <- lingam_var_bootstrap(s$data,
-#'   n_sampling = 10L, lags = 1, criterion = NULL,
+#' bs <- lingam_varma_bootstrap(s$data,
+#'   n_sampling = 5L, order = c(1, 1), criterion = NULL,
 #'   reg_method = "ols", prune = FALSE, seed = 1, verbose = FALSE
 #' )
-#' get_var_probabilities(bs)
-lingam_var_bootstrap <- function(X,
-                                 n_sampling,
-                                 lags = 1L,
-                                 criterion = "bic",
-                                 measure = "pwling",
-                                 reg_method = "adaptive_lasso",
-                                 lambda = "BIC",
-                                 init_method = "ols",
-                                 prune = TRUE,
-                                 seed = NULL,
-                                 verbose = TRUE,
-                                 parallel = FALSE,
-                                 n_cores = NULL) {
+#' get_varma_probabilities(bs)
+lingam_varma_bootstrap <- function(X,
+                                   n_sampling,
+                                   order = c(1L, 1L),
+                                   criterion = "bic",
+                                   measure = "pwling",
+                                   reg_method = "adaptive_lasso",
+                                   lambda = "BIC",
+                                   init_method = "ols",
+                                   prune = TRUE,
+                                   seed = NULL,
+                                   verbose = TRUE,
+                                   parallel = FALSE,
+                                   n_cores = NULL) {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
   if (anyNA(X)) stop("X must not contain missing values (NA).", call. = FALSE)
@@ -91,30 +102,37 @@ lingam_var_bootstrap <- function(X,
   if (length(n_sampling) != 1 || is.na(n_sampling) || n_sampling <= 0) {
     stop("n_sampling must be a positive integer.", call. = FALSE)
   }
-  lags <- suppressWarnings(as.integer(lags))
-  if (length(lags) != 1 || is.na(lags) || lags < 1) {
-    stop("lags must be a positive integer.", call. = FALSE)
+  order <- suppressWarnings(as.integer(order))
+  if (length(order) != 2 || anyNA(order) || any(order < 0) || sum(order) < 1) {
+    stop("order must be two non-negative integers c(p, q), not both zero.", call. = FALSE)
   }
 
-  # Select the lag order once on the original data, then fix it for all
-  # iterations (mirrors the Python reference, which disables selection inside
-  # the bootstrap loop).
+  # Select the order once on the original data, then fix it for all iterations
+  # (mirrors the Python reference, which disables selection inside the loop).
   if (!is.null(criterion)) {
-    criterion <- match.arg(criterion, c("bic", "aic", "hqic", "fpe"))
-    lags <- select_var_lag(X, max_lag = lags, criterion = criterion)
+    criterion <- match.arg(criterion, c("bic", "aic", "hqic"))
+    order <- select_varma_order(X,
+      max_p = order[1], max_q = order[2],
+      criterion = criterion
+    )
   }
+  p_order <- order[1]
+  q_order <- order[2]
+  k0 <- max(p_order, q_order)
 
   n_samples <- nrow(X)
   n_features <- ncol(X)
 
-  # Pre-fit the VAR on the original data: M (ar coefs) and residuals drive the
-  # residual bootstrap below.
-  vf <- fit_var_ols(X, lags)
-  M <- vf$coefs          # array (lags, n_features, n_features)
-  residuals <- vf$residuals
+  # Pre-fit the VARMA on the original data: Phi/Theta and the filtered
+  # residuals drive the residual bootstrap below.
+  hr <- fit_varma_hr(X, p_order, q_order)
+  phis <- hr$phis
+  thetas <- hr$thetas
+  E_full <- filter_varma_residuals(X, phis, thetas, hr$const)
+  residuals <- E_full[(k0 + 1L):n_samples, , drop = FALSE]
   n_resid <- nrow(residuals)
 
-  # One bootstrap iteration: residual resample -> VAR recursion -> re-estimate.
+  # One bootstrap iteration: residual resample -> VARMA recursion -> re-estimate.
   # Wrapped in tryCatch (like lingam_direct_bootstrap) so that one pathological
   # resample does not abort the entire run; failed iterations are reported as
   # warnings and excluded from the aggregated result.
@@ -126,49 +144,59 @@ lingam_var_bootstrap <- function(X,
 
       resampled_X <- matrix(0, nrow = n_samples, ncol = n_features)
       for (j in seq_len(n_samples)) {
-        if (j <= lags) {
-          # seed the first `lags` rows with the resampled noise
+        if (j <= k0) {
+          # seed the first max(p, q) rows with the resampled noise
           resampled_X[j, ] <- sampled[j, ]
         } else {
-          ar <- numeric(n_features)
-          for (k in seq_len(lags)) {
-            ar <- ar + as.numeric(M[k, , ] %*% resampled_X[j - k, ])
+          pred <- numeric(n_features)
+          for (tau in seq_len(p_order)) {
+            pred <- pred + as.numeric(phis[tau, , ] %*% resampled_X[j - tau, ])
           }
-          resampled_X[j, ] <- ar + sampled[j, ]
+          for (w in seq_len(q_order)) {
+            pred <- pred + as.numeric(thetas[w, , ] %*% sampled[j - w, ])
+          }
+          resampled_X[j, ] <- pred + sampled[j, ]
         }
       }
 
-      res <- lingam_var(resampled_X,
-        lags = lags, criterion = NULL,
+      res <- lingam_varma(resampled_X,
+        order = order, criterion = NULL,
         measure = measure, reg_method = reg_method,
         lambda = lambda, init_method = init_method, prune = prune
       )
-      am <- res$adjacency_matrices
+      psis <- res$adjacency_matrices$psis
+      omegas <- res$adjacency_matrices$omegas
       causal_order <- res$causal_order
 
-      # joined adjacency cbind(B0, B1, ..., Bp): n_features x n_features*(1+lags)
-      am_joined <- do.call(cbind, lapply(seq_len(lags + 1L), function(k) am[k, , ]))
+      # joined matrix cbind(psi_0..psi_p, omega_1..omega_q):
+      # n_features x n_features*(1 + p + q)
+      am_joined <- joined_varma_matrix(psis, omegas)
 
-      # total effects over the time-expanded graph (square-padded joined matrix)
-      ncol_j <- ncol(am_joined)
-      am_sq <- matrix(0, nrow = ncol_j, ncol = ncol_j)
-      am_sq[seq_len(n_features), ] <- am_joined
+      # LiNGAM residuals of this fit, full length, for the total-effect core.
+      E_boot <- matrix(0, n_samples, n_features)
+      E_boot[(k0 + 1L):n_samples, ] <- res$residuals
+      ee_full <- E_boot %*% t(diag(n_features) - psis[1, , ])
 
-      te <- matrix(0, nrow = n_features, ncol = n_features * (lags + 1L))
+      # total effects by back-door regression (same as the Python reference);
+      # instantaneous block plus AR lags only.
+      te <- matrix(0, nrow = n_features, ncol = n_features * (1L + p_order))
       for (ci in seq_len(n_features)) {
         to <- rev(causal_order)[ci]
         # contemporaneous sources: those preceding `to` in the causal order
         n_earlier <- n_features - ci
         if (n_earlier >= 1L) {
           for (from in causal_order[seq_len(n_earlier)]) {
-            te[to, from] <- calculate_total_effect(am_sq, from, to)
+            te[to, from] <- varma_total_effect_core(
+              resampled_X, ee_full, am_joined, order, from, to, 0L
+            )
           }
         }
-        # lagged sources: all variables at each lag
-        for (lag in seq_len(lags)) {
+        # lagged sources: all variables at each AR lag
+        for (lag in seq_len(p_order)) {
           for (from in seq_len(n_features)) {
-            from_col <- from + n_features * lag
-            te[to, from_col] <- calculate_total_effect(am_sq, from_col, to)
+            te[to, from + n_features * lag] <- varma_total_effect_core(
+              resampled_X, ee_full, am_joined, order, from, to, lag
+            )
           }
         }
       }
@@ -186,8 +214,9 @@ lingam_var_bootstrap <- function(X,
 
   if (verbose) {
     message(sprintf(
-      "VAR-LiNGAM bootstrap: %d iterations, lag=%d, method=%s (%s)",
-      n_sampling, lags, reg_method, bootstrap_mode_string(parallel, n_cores)
+      "VARMA-LiNGAM bootstrap: %d iterations, order=(%d,%d), method=%s (%s)",
+      n_sampling, p_order, q_order, reg_method,
+      bootstrap_mode_string(parallel, n_cores)
     ))
     t_start <- proc.time()
   }
@@ -198,7 +227,7 @@ lingam_var_bootstrap <- function(X,
 
     # Make this package available on the workers (same approach as the Direct
     # LiNGAM bootstrap: attach when installed, otherwise export the namespace).
-    setup_cluster_worker(cl, lingam_var)
+    setup_cluster_worker(cl, lingam_varma)
 
     if (!is.null(seed)) parallel::clusterSetRNGStream(cl, seed)
     res_list <- parallel::parLapply(cl, seq_len(n_sampling), run_one)
@@ -219,7 +248,7 @@ lingam_var_bootstrap <- function(X,
 
   # Aggregate.
   adjacency_matrices <- vector("list", n_success)
-  total_effects <- array(0, dim = c(n_success, n_features, n_features * (lags + 1L)))
+  total_effects <- array(0, dim = c(n_success, n_features, n_features * (1L + p_order)))
   causal_orders <- matrix(0L, nrow = n_success, ncol = n_features)
   resampled_indices <- vector("list", n_success)
   for (i in seq_len(n_success)) {
@@ -231,89 +260,91 @@ lingam_var_bootstrap <- function(X,
 
   if (verbose) bootstrap_completion_message(t_start, n_success, n_sampling)
 
-  create_var_bootstrap_result(
-    adjacency_matrices, total_effects, lags, resampled_indices, causal_orders
+  create_varma_bootstrap_result(
+    adjacency_matrices, total_effects, order, resampled_indices, causal_orders
   )
 }
 
 
 # =============================================================================
-# VARBootstrapResult object
+# VARMABootstrapResult object
 # =============================================================================
 
-#' Create a VARBootstrapResult
+#' Create a VARMABootstrapResult
 #'
 #' @param adjacency_matrices list (length n_sampling); each element is a joined
-#'   adjacency matrix (n_features x n_features*(1 + lags))
-#' @param total_effects array (n_sampling x n_features x n_features*(1 + lags))
-#' @param lags lag order used
+#'   matrix `cbind(psi_0..psi_p, omega_1..omega_q)`
+#'   (n_features x n_features*(1 + p + q))
+#' @param total_effects array (n_sampling x n_features x n_features*(1 + p))
+#' @param order VARMA order c(p, q) used
 #' @param resampled_indices list of residual-index vectors (NULL allowed)
 #' @param causal_orders matrix (n_sampling x n_features) (NULL allowed)
-#' @return a VARBootstrapResult (list with class attribute)
+#' @return a VARMABootstrapResult (list with class attribute)
 #' @keywords internal
-create_var_bootstrap_result <- function(adjacency_matrices, total_effects, lags,
-                                        resampled_indices = NULL, causal_orders = NULL) {
+create_varma_bootstrap_result <- function(adjacency_matrices, total_effects, order,
+                                          resampled_indices = NULL, causal_orders = NULL) {
   obj <- list(
     adjacency_matrices = adjacency_matrices,
     total_effects      = total_effects,
-    lags               = lags,
+    order              = order,
     resampled_indices  = resampled_indices,
     causal_orders      = causal_orders
   )
-  class(obj) <- "VARBootstrapResult"
+  class(obj) <- "VARMABootstrapResult"
   obj
 }
 
 
-#' Print a VARBootstrapResult
+#' Print a VARMABootstrapResult
 #'
-#' @param x a VARBootstrapResult object
+#' @param x a VARMABootstrapResult object
 #' @param ... additional arguments (unused)
 #' @return The input object `x`, invisibly.
-#' @method print VARBootstrapResult
+#' @method print VARMABootstrapResult
 #' @export
 #' @examples
-#' s <- generate_varlingam_sample(n = 500, seed = 42)
-#' bs <- lingam_var_bootstrap(s$data,
-#'   n_sampling = 10L, lags = 1, criterion = NULL,
+#' s <- generate_varmalingam_sample(n = 300, seed = 42)
+#' bs <- lingam_varma_bootstrap(s$data,
+#'   n_sampling = 5L, order = c(1, 1), criterion = NULL,
 #'   reg_method = "ols", prune = FALSE, seed = 1, verbose = FALSE
 #' )
 #' print(bs)
-print.VARBootstrapResult <- function(x, ...) {
+print.VARMABootstrapResult <- function(x, ...) {
   n_sampling <- length(x$adjacency_matrices)
   n_features <- nrow(x$adjacency_matrices[[1]])
   cat(sprintf(
-    "VARBootstrapResult: %d samplings, %d features, lag order %d\n",
-    n_sampling, n_features, x$lags
+    "VARMABootstrapResult: %d samplings, %d features, order (%d, %d)\n",
+    n_sampling, n_features, x$order[1], x$order[2]
   ))
   invisible(x)
 }
 
 
 # =============================================================================
-# VARBootstrapResult methods
+# VARMABootstrapResult methods
 # =============================================================================
 
-#' Bootstrap probabilities for a VAR-LiNGAM model
+#' Bootstrap probabilities for a VARMA-LiNGAM model
 #'
-#' Returns, for each entry of the joined adjacency matrix, the fraction of
-#' bootstrap samples in which that edge exceeded `min_causal_effect`.
+#' Returns, for each entry of the joined matrix, the fraction of bootstrap
+#' samples in which that edge exceeded `min_causal_effect`.
 #'
-#' @param result a VARBootstrapResult object
+#' @param result a VARMABootstrapResult object
 #' @param min_causal_effect minimum |effect| threshold (NULL = 0)
-#' @return probability matrix (n_features x n_features*(1 + lags)). Columns
-#'   1..n_features are the instantaneous block; the next n_features are lag 1; etc.
+#' @return probability matrix (n_features x n_features*(1 + p + q)). Columns
+#'   1..n_features are the instantaneous block, the next p blocks are the AR
+#'   lags 1..p (psi), and the final q blocks are the MA terms 1..q (omega).
 #'   `P[i, j]` is the probability of the edge j -> i.
 #' @export
 #' @examples
-#' s <- generate_varlingam_sample(n = 500, seed = 42)
-#' bs <- lingam_var_bootstrap(s$data,
-#'   n_sampling = 10L, criterion = NULL,
+#' s <- generate_varmalingam_sample(n = 300, seed = 42)
+#' bs <- lingam_varma_bootstrap(s$data,
+#'   n_sampling = 5L, order = c(1, 1), criterion = NULL,
 #'   reg_method = "ols", prune = FALSE, seed = 1, verbose = FALSE
 #' )
-#' get_var_probabilities(bs)
-get_var_probabilities <- function(result, min_causal_effect = NULL) {
-  stopifnot(inherits(result, "VARBootstrapResult"))
+#' get_varma_probabilities(bs)
+get_varma_probabilities <- function(result, min_causal_effect = NULL) {
+  stopifnot(inherits(result, "VARMABootstrapResult"))
   if (is.null(min_causal_effect)) min_causal_effect <- 0.0
   if (min_causal_effect < 0) stop("min_causal_effect must be >= 0.", call. = FALSE)
 
@@ -328,34 +359,39 @@ get_var_probabilities <- function(result, min_causal_effect = NULL) {
 }
 
 
-#' Enumerate bootstrap paths between two variables in a VAR-LiNGAM model
+#' Enumerate bootstrap paths between two variables in a VARMA-LiNGAM model
 #'
 #' Builds the time-expanded graph for every bootstrap sample and enumerates all
 #' directed paths from the source (at `from_lag`) to the destination (at
 #' `to_lag`), reporting each path's bootstrap probability and median effect.
-#' Port of the Python reference `VARBootstrapResult.get_paths`.
+#' Port of the Python reference `VARMABootstrapResult.get_paths`.
 #'
 #' Node indices in the returned `path` are 1-based positions in the time-expanded
 #' graph: column j of block L (lag L) corresponds to index `n_features * L + j`.
 #'
-#' @param result a VARBootstrapResult object
+#' @param result a VARMABootstrapResult object
 #' @param from_index source variable (1-based)
 #' @param to_index destination variable (1-based)
-#' @param from_lag lag of the source (default 0)
+#' @param from_lag lag of the source (default 0); must not exceed the AR order p
 #' @param to_lag lag of the destination (default 0); must satisfy `to_lag <= from_lag`
 #' @param min_causal_effect minimum |effect| threshold (NULL = 0)
 #' @return a data frame (path, effect, probability), one row per distinct path
+#' @details
+#' Only the instantaneous and AR (psi) blocks enter the time-expanded graph;
+#' the MA (omega) blocks describe effects of past unobserved disturbances,
+#' which are not nodes of the variable graph (the Python reference does the
+#' same).
 #' @export
 #' @examples
-#' s <- generate_varlingam_sample(n = 500, seed = 42)
-#' bs <- lingam_var_bootstrap(s$data,
-#'   n_sampling = 10L, criterion = NULL,
+#' s <- generate_varmalingam_sample(n = 300, seed = 42)
+#' bs <- lingam_varma_bootstrap(s$data,
+#'   n_sampling = 5L, order = c(1, 1), criterion = NULL,
 #'   reg_method = "ols", prune = FALSE, seed = 1, verbose = FALSE
 #' )
-#' get_var_paths(bs, from_index = 1, to_index = 3)
-get_var_paths <- function(result, from_index, to_index,
-                          from_lag = 0, to_lag = 0, min_causal_effect = NULL) {
-  stopifnot(inherits(result, "VARBootstrapResult"))
+#' get_varma_paths(bs, from_index = 1, to_index = 3)
+get_varma_paths <- function(result, from_index, to_index,
+                            from_lag = 0, to_lag = 0, min_causal_effect = NULL) {
+  stopifnot(inherits(result, "VARMABootstrapResult"))
   if (is.null(min_causal_effect)) min_causal_effect <- 0.0
   if (min_causal_effect < 0) stop("min_causal_effect must be >= 0.", call. = FALSE)
 
@@ -370,91 +406,19 @@ get_var_paths <- function(result, from_index, to_index,
   }
 
   ams <- result$adjacency_matrices
-  n_sampling <- length(ams)
   nf <- nrow(ams[[1]])
-  n_lags <- ncol(ams[[1]]) %/% nf - 1L
-  # Lags beyond the fitted model would index past the time-expanded graph and
+  n_lags <- result$order[1]
+  # Lags beyond the AR order would index past the time-expanded graph and
   # surface as a bare "subscript out of bounds" error below.
   if (from_lag > n_lags || to_lag > n_lags) {
     stop(sprintf(
-      "from_lag and to_lag must not exceed the model's lag order (%d).", n_lags
+      "from_lag and to_lag must not exceed the model's AR order (%d).", n_lags
     ), call. = FALSE)
   }
 
+  # Keep only the instantaneous and AR (psi) blocks; drop the omega blocks.
+  psi_ams <- lapply(ams, function(am) am[, seq_len(nf * (1L + n_lags)), drop = FALSE])
   collect_time_expanded_paths(
-    ams, nf, n_lags, from_index, to_index, from_lag, to_lag, min_causal_effect
-  )
-}
-
-
-#' Enumerate and aggregate paths over time-expanded bootstrap graphs
-#'
-#' Shared core of [get_var_paths()] and [get_varma_paths()]: builds the
-#' time-expanded square graph for each bootstrap adjacency matrix, enumerates
-#' all directed paths from the source (at `from_lag`) to the destination (at
-#' `to_lag`), and aggregates each distinct path's bootstrap probability and
-#' median effect.
-#'
-#' @param ams list of joined lag matrices (n_features x n_features*(1 + n_lags));
-#'   block k + 1 holds the lag-k coefficients
-#' @param nf number of features
-#' @param n_lags number of lag blocks beyond the instantaneous one
-#' @param from_index source variable (1-based)
-#' @param to_index destination variable (1-based)
-#' @param from_lag lag of the source
-#' @param to_lag lag of the destination
-#' @param min_causal_effect minimum |effect| threshold
-#' @return a data frame (path, effect, probability), one row per distinct path
-#' @keywords internal
-collect_time_expanded_paths <- function(ams, nf, n_lags, from_index, to_index,
-                                        from_lag, to_lag, min_causal_effect) {
-  n_sampling <- length(ams)
-  paths_collector <- vector("list", n_sampling)
-  effects_collector <- vector("list", n_sampling)
-  for (s_idx in seq_along(ams)) {
-    am <- ams[[s_idx]]
-    dim_e <- nf * (1L + n_lags)
-    # Time-expanded square graph: block (i, j) for j >= i holds B_{j-i}, so an
-    # earlier-time node (larger lag block) points to a later-time node.
-    expansion_m <- matrix(0, nrow = dim_e, ncol = dim_e)
-    for (i in 0:n_lags) {
-      for (j in i:n_lags) {
-        row <- nf * i
-        col <- nf * j
-        lag <- col - row
-        expansion_m[(row + 1L):(row + nf), (col + 1L):(col + nf)] <-
-          am[, (lag + 1L):(lag + nf), drop = FALSE]
-      }
-    }
-    fr <- nf * from_lag + from_index
-    to <- nf * to_lag + to_index
-    res <- find_all_paths(expansion_m, fr, to, min_causal_effect)
-    if (length(res$paths) > 0) {
-      paths_collector[[s_idx]] <- vapply(res$paths, paste, "", collapse = "_")
-      effects_collector[[s_idx]] <- res$effects
-    }
-  }
-  paths_all <- unlist(paths_collector, use.names = FALSE)
-  effects_all <- unlist(effects_collector, use.names = FALSE)
-
-  if (length(paths_all) == 0) {
-    return(data.frame(path = character(0), effect = numeric(0), probability = numeric(0)))
-  }
-
-  tbl <- sort(table(paths_all), decreasing = TRUE)
-  path_strs <- names(tbl)
-  probs <- as.numeric(tbl) / n_sampling
-  effects_median <- vapply(
-    path_strs,
-    function(ps) stats::median(effects_all[paths_all == ps]),
-    numeric(1)
-  )
-  path_list <- lapply(path_strs, function(ps) as.integer(strsplit(ps, "_")[[1]]))
-
-  data.frame(
-    path        = I(path_list),
-    effect      = as.numeric(effects_median),
-    probability = probs,
-    row.names   = NULL
+    psi_ams, nf, n_lags, from_index, to_index, from_lag, to_lag, min_causal_effect
   )
 }

@@ -1,5 +1,30 @@
 # lingamr (development version)
 
+* Added VARMA-LiNGAM (Kawahara, Shimizu and Washio 2011), an R port of the
+  Python `VARMALiNGAM` class for time series causal discovery with
+  moving-average errors: `lingam_varma()`, `lingam_varma_bootstrap()`,
+  `get_varma_probabilities()`, `get_varma_paths()`,
+  `estimate_varma_total_effect()`, diagnostics
+  (`check_varma_stationarity()` with an MA invertibility check,
+  `test_varmalingam_residual_normality()` /
+  `test_varmalingam_residual_normality_all()`,
+  `plot_varmalingam_residual_qq()`), and `generate_varmalingam_sample()`.
+  The result is a new `VARMALiNGAMResult` class whose
+  `adjacency_matrices` holds the AR-side `psis` and MA-side `omegas`
+  arrays. Deliberate differences from the Python implementation:
+  (1) VARMA coefficients are estimated by the deterministic two-stage
+  Hannan-Rissanen procedure instead of statsmodels' state-space maximum
+  likelihood (`VARMAX`), so the `max_iter` parameter has no counterpart;
+  (2) the unpruned MA causal matrices use the full similarity transform
+  `omega = (I - B0) Theta (I - B0)^{-1}` (the Python implementation drops
+  the trailing inverse factor through a three-argument `np.dot` call);
+  (3) residual filtering initializes the first `max(p, q)` residuals with
+  zeros instead of standard-normal draws, making the fit deterministic;
+  (4) the lagged designs used by pruning and total-effect estimation are
+  restricted to rows where every regressor is observed instead of
+  wrapping rows around (`np.roll`), and the total-effect design fills the
+  extra `from_lag` blocks the Python implementation allocates but leaves
+  at zero.
 * Added `lingam_camuv()` and `generate_camuv_sample()`, an R port of CAM-UV
   (Causal Additive Models with Unobserved Variables; Maeda and Shimizu
   2021) for causal discovery on nonlinear additive models with unobserved

@@ -38,6 +38,18 @@ reference:
   - test_varlingam_residual_normality_all
   - plot_varlingam_residual_qq
 
+- title: VARMA-LiNGAM (time series with moving-average errors)
+  contents:
+  - lingam_varma
+  - lingam_varma_bootstrap
+  - get_varma_probabilities
+  - get_varma_paths
+  - estimate_varma_total_effect
+  - check_varma_stationarity
+  - test_varmalingam_residual_normality
+  - test_varmalingam_residual_normality_all
+  - plot_varmalingam_residual_qq
+
 - title: MultiGroup Direct LiNGAM
   desc: Joint estimation across multiple datasets sharing a causal order
   contents:

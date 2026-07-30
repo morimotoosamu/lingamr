@@ -264,3 +264,49 @@ test_that("generate_camuv_sample is reproducible with a seed and validates input
   expect_error(generate_camuv_sample(n = 1), "n must be")
   expect_error(generate_camuv_sample(n = 100, seed = "x"), "seed")
 })
+
+
+# ── generate_varmalingam_sample ───────────────────────────────────────────────
+
+test_that("generate_varmalingam_sample returns the documented structure", {
+  out <- generate_varmalingam_sample(n = 200, seed = 1)
+
+  expect_named(out, c(
+    "data", "true_B0", "true_phi1", "true_theta1", "true_psi1", "true_omega1"
+  ))
+  expect_s3_class(out$data, "data.frame")
+  expect_equal(dim(out$data), c(200L, 3L))
+  expect_equal(names(out$data), c("x0", "x1", "x2"))
+  expect_false(anyNA(out$data))
+
+  # known instantaneous structure x0 -> x1 -> x2
+  expect_equal(out$true_B0[2, 1], 0.6)
+  expect_equal(out$true_B0[3, 2], -0.5)
+  expect_equal(sum(out$true_B0 != 0), 2L)
+})
+
+test_that("generate_varmalingam_sample true matrices are internally consistent", {
+  out <- generate_varmalingam_sample(n = 50, seed = 1)
+  I3 <- diag(3)
+
+  expect_equal(out$true_psi1, (I3 - out$true_B0) %*% out$true_phi1)
+  expect_equal(
+    out$true_omega1,
+    (I3 - out$true_B0) %*% out$true_theta1 %*% solve(I3 - out$true_B0)
+  )
+
+  # DGP is stationary (AR eigenvalues inside unit circle) and invertible
+  # (MA eigenvalues inside unit circle)
+  expect_lt(max(Mod(eigen(out$true_phi1)$values)), 1)
+  expect_lt(max(Mod(eigen(out$true_theta1)$values)), 1)
+})
+
+test_that("generate_varmalingam_sample seed is reproducible", {
+  a <- generate_varmalingam_sample(n = 100, seed = 7)
+  b <- generate_varmalingam_sample(n = 100, seed = 7)
+  expect_equal(a, b)
+  expect_false(identical(
+    generate_varmalingam_sample(n = 100, seed = 1)$data,
+    generate_varmalingam_sample(n = 100, seed = 2)$data
+  ))
+})
