@@ -3,7 +3,7 @@ test_that("lingam_lim returns LiMResult with correct structure", {
   res <- lingam_lim(dat$data, is_continuous = dat$is_continuous)
 
   expect_s3_class(res, "LiMResult")
-  expect_named(res, c("adjacency_matrix", "causal_order", "is_continuous"))
+  expect_named(res, c("adjacency_matrix", "causal_order", "is_continuous", "is_poisson"))
   expect_true(is.matrix(res$adjacency_matrix))
   expect_equal(dim(res$adjacency_matrix), c(3L, 3L))
   expect_equal(colnames(res$adjacency_matrix), names(dat$data))
@@ -160,7 +160,7 @@ test_that("lim_bic_loss stays finite when a discrete component is quasi-separate
   W <- matrix(0, 2, 2)
   W[1, 2] <- 1 # x1 -> x2
 
-  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, FALSE))
+  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, FALSE), is_poisson = FALSE)
   expect_true(is.finite(loss))
 })
 
@@ -173,6 +173,168 @@ test_that("lim_bic_loss stays finite when a continuous component has a rank-defi
   W[1, 3] <- 1
   W[2, 3] <- 1 # x3's parents (x1, x2) are collinear
 
-  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, TRUE, TRUE))
+  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, TRUE, TRUE), is_poisson = FALSE)
   expect_true(is.finite(loss))
+})
+
+test_that("lingam_lim validates the is_poisson argument", {
+  dat <- generate_lim_sample(n = 100, seed = 1)
+
+  expect_error(
+    lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = "yes"),
+    "is_poisson"
+  )
+  expect_error(
+    lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = NA),
+    "is_poisson"
+  )
+  expect_error(
+    lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = c(TRUE, FALSE)),
+    "is_poisson"
+  )
+})
+
+test_that("count data requires is_poisson = TRUE, and invalid counts are rejected", {
+  dat <- generate_lim_sample(n = 200, seed = 1, is_poisson = TRUE)
+
+  # counts > 1 fail the default binary check
+  expect_error(
+    lingam_lim(dat$data, is_continuous = dat$is_continuous),
+    "binary \\(0/1\\)"
+  )
+  neg <- dat$data
+  neg$x2[1] <- -1
+  expect_error(
+    lingam_lim(neg, is_continuous = dat$is_continuous, is_poisson = TRUE),
+    "non-negative integer counts"
+  )
+  frac <- dat$data
+  frac$x2[1] <- 1.5
+  expect_error(
+    lingam_lim(frac, is_continuous = dat$is_continuous, is_poisson = TRUE),
+    "non-negative integer counts"
+  )
+  # Inf would make abs(uj - round(uj)) NaN; must still hit the clean
+  # validation error, not "missing value where TRUE/FALSE needed"
+  inf <- dat$data
+  inf$x2[1] <- Inf
+  expect_error(
+    lingam_lim(inf, is_continuous = dat$is_continuous, is_poisson = TRUE),
+    "non-negative integer counts"
+  )
+})
+
+test_that("binary data is accepted with is_poisson = TRUE (0/1 is a valid count)", {
+  dat <- generate_lim_sample(n = 200, seed = 1)
+  res <- lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = TRUE)
+
+  expect_s3_class(res, "LiMResult")
+  expect_true(res$is_poisson)
+})
+
+test_that("lingam_lim recovers the correct edge direction for Poisson count data", {
+  dat <- generate_lim_sample(n = 2000, seed = 1, is_poisson = TRUE)
+  res <- lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = TRUE)
+
+  B <- res$adjacency_matrix
+  expect_true(B["x2", "x1"] != 0)
+  expect_lt(abs(B["x1", "x2"]), 1e-6)
+  expect_true(B["x3", "x2"] != 0)
+  expect_lt(abs(B["x2", "x3"]), 1e-6)
+})
+
+test_that("lingam_lim with is_poisson = TRUE is reproducible given the same seed", {
+  dat <- generate_lim_sample(n = 300, seed = 1, is_poisson = TRUE)
+
+  set.seed(42)
+  r1 <- lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = TRUE)
+  set.seed(42)
+  r2 <- lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = TRUE)
+
+  expect_equal(r1, r2)
+})
+
+test_that("an explicit is_poisson = FALSE matches the default behavior", {
+  dat <- generate_lim_sample(n = 300, seed = 1)
+
+  set.seed(42)
+  r1 <- lingam_lim(dat$data, is_continuous = dat$is_continuous)
+  set.seed(42)
+  r2 <- lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = FALSE)
+
+  expect_equal(r1, r2)
+})
+
+test_that("lim_bic_loss scores a parentless count variable with the closed-form Poisson MLE", {
+  set.seed(24)
+  n <- 60
+  x1 <- rnorm(n)
+  x2 <- rpois(n, 2)
+  X <- cbind(x1 = x1, x2 = x2)
+  W <- matrix(0, 2, 2) # no edges
+
+  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, FALSE), is_poisson = TRUE)
+
+  # reconstruct the expected score by hand: BIC penalty + super-Gaussian
+  # continuous term + intercept-only Poisson log-likelihood
+  penalty <- log(n) / 2 * (0 + 2)
+  ll_x1 <- lim_likelihood_i(X, i = 1, b_full = c(0, 0), b0 = mean(x1))
+  ll_x2 <- sum(dpois(x2, mean(x2), log = TRUE))
+  expect_equal(loss, -(-penalty + ll_x1 + ll_x2))
+})
+
+test_that("lim_bic_loss stays finite for an all-zero count column", {
+  set.seed(25)
+  n <- 40
+  X <- cbind(x1 = rnorm(n), x2 = rep(0, n))
+  W <- matrix(0, 2, 2)
+
+  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, FALSE), is_poisson = TRUE)
+  expect_true(is.finite(loss))
+})
+
+test_that("Poisson and Bernoulli scoring differ on the same data", {
+  set.seed(26)
+  n <- 100
+  x1 <- rnorm(n)
+  x2 <- rbinom(n, 1, plogis(x1))
+  X <- cbind(x1 = x1, x2 = x2)
+  W <- matrix(0, 2, 2)
+  W[1, 2] <- 1 # x1 -> x2
+
+  loss_b <- lim_bic_loss(W, X, is_continuous = c(TRUE, FALSE), is_poisson = FALSE)
+  loss_p <- lim_bic_loss(W, X, is_continuous = c(TRUE, FALSE), is_poisson = TRUE)
+  expect_false(isTRUE(all.equal(loss_b, loss_p)))
+})
+
+test_that("lim_bic_loss stays finite for a Poisson fit with a rank-deficient parent design", {
+  set.seed(27)
+  n <- 40
+  x1 <- rnorm(n)
+  X <- cbind(x1 = x1, x2 = x1, x3 = rpois(n, 2)) # x2 is a duplicate of x1
+  W <- matrix(0, 3, 3)
+  W[1, 3] <- 1
+  W[2, 3] <- 1 # x3's parents (x1, x2) are collinear
+
+  loss <- lim_bic_loss(W, X, is_continuous = c(TRUE, TRUE, FALSE), is_poisson = TRUE)
+  expect_true(is.finite(loss))
+})
+
+test_that("print.LiMResult labels count variables as 'discrete (count)'", {
+  dat <- generate_lim_sample(n = 200, seed = 1, is_poisson = TRUE)
+  res <- lingam_lim(dat$data, is_continuous = dat$is_continuous, is_poisson = TRUE)
+  expect_output(print(res), "discrete \\(count\\)")
+
+  dat_b <- generate_lim_sample(n = 200, seed = 1)
+  res_b <- lingam_lim(dat_b$data, is_continuous = dat_b$is_continuous)
+  out <- capture.output(print(res_b))
+  expect_false(any(grepl("discrete (count)", out, fixed = TRUE)))
+  expect_true(any(grepl("discrete", out)))
+})
+
+test_that("print.LiMResult works for objects without an is_poisson field", {
+  dat <- generate_lim_sample(n = 200, seed = 1)
+  res <- lingam_lim(dat$data, is_continuous = dat$is_continuous)
+  res$is_poisson <- NULL # simulate an object saved by an older package version
+  expect_output(print(res), "discrete")
 })

@@ -210,8 +210,11 @@ lim_likelihood_i <- function(X, i, b_full, b0) {
 #' BIC-penalized DAG score (sign-flipped, i.e. a "loss") used during the local
 #' search phase. `W` is interpreted as a 0/1 skeleton in the i -> j
 #' orientation (parents of j are the nonzero rows of column j).
+#' With `is_poisson = TRUE`, discrete columns are scored as Poisson counts
+#' instead of Bernoulli variables (see the Details of [lingam_lim()] for the
+#' documented deviations from the Python source).
 #' @keywords internal
-lim_bic_loss <- function(W, X, is_continuous) {
+lim_bic_loss <- function(W, X, is_continuous, is_poisson) {
   n <- nrow(X)
   d <- ncol(X)
   n_edges <- sum(W != 0)
@@ -224,12 +227,24 @@ lim_bic_loss <- function(W, X, is_continuous) {
 
     if (!is_continuous[i]) {
       if (length(parents_i) == 0) {
-        tab <- table(xi)
-        counts <- as.numeric(tab)
-        total_score <- total_score + sum(counts * (log(counts) - log(sum(counts))))
+        if (is_poisson) {
+          # intercept-only Poisson MLE (lambda = mean), in closed form. The
+          # Python source reuses the Bernoulli frequency-table code here, but
+          # that multinomial likelihood lacks the -log(y!) terms and is not on
+          # the same scale as the Poisson glm logLik used for the with-parents
+          # case, which would bias every parents-vs-no-parents BIC comparison.
+          ll <- sum(stats::dpois(xi, mean(xi), log = TRUE))
+          if (!is.finite(ll)) ll <- -1e10
+          total_score <- total_score + ll
+        } else {
+          tab <- table(xi)
+          counts <- as.numeric(tab)
+          total_score <- total_score + sum(counts * (log(counts) - log(sum(counts))))
+        }
       } else {
+        fam <- if (is_poisson) stats::poisson() else stats::binomial()
         df <- data.frame(y = xi, X[, parents_i, drop = FALSE])
-        fit <- suppressWarnings(stats::glm(y ~ ., data = df, family = stats::binomial()))
+        fit <- suppressWarnings(stats::glm(y ~ ., data = df, family = fam))
         ll <- as.numeric(stats::logLik(fit))
         # quasi-separation (or a non-converged fit) can drive the logLik to
         # +-Inf/NaN; treat such a candidate as maximally bad rather than
@@ -264,8 +279,8 @@ lim_bic_loss <- function(W, X, is_continuous) {
 #' Local search phase: direction reversal, pruning, and edge addition
 #' (Python source lines 324-397). Returns W in the i -> j orientation.
 #' @keywords internal
-lim_local_search <- function(W_est, X, con, is_continuous, d, h_tol) {
-  aa <- lim_bic_loss(W_est, X, is_continuous)
+lim_local_search <- function(W_est, X, con, is_continuous, is_poisson, d, h_tol) {
+  aa <- lim_bic_loss(W_est, X, is_continuous, is_poisson)
   nz <- which(W_est != 0, arr.ind = TRUE)
   n_edges <- nrow(nz)
 
@@ -292,7 +307,7 @@ lim_local_search <- function(W_est, X, con, is_continuous, d, h_tol) {
           W_tmp[nz[k, 2], nz[k, 1]] <- 1
         }
       }
-      lss <- lim_bic_loss(W_tmp, X, is_continuous)
+      lss <- lim_bic_loss(W_tmp, X, is_continuous, is_poisson)
       if (lss < aa && lim_h(W_tmp, d)$h < h_tol) {
         W_min_lss <- W_tmp
         aa <- lss
@@ -307,7 +322,7 @@ lim_local_search <- function(W_est, X, con, is_continuous, d, h_tol) {
     for (k in seq_len(nrow(I_delete))) {
       W_tmp <- W0
       W_tmp[I_delete[k, 1], I_delete[k, 2]] <- 0
-      lss <- lim_bic_loss(W_tmp, X, is_continuous)
+      lss <- lim_bic_loss(W_tmp, X, is_continuous, is_poisson)
       if (lss < aa && lim_h(W_tmp, d)$h < h_tol) {
         W_min_lss <- W_tmp
         aa <- lss
@@ -318,7 +333,7 @@ lim_local_search <- function(W_est, X, con, is_continuous, d, h_tol) {
       for (k in seq_len(nrow(nz))) {
         W_tmp <- W0b
         W_tmp[nz[k, 1], nz[k, 2]] <- 0
-        lss <- lim_bic_loss(W_tmp, X, is_continuous)
+        lss <- lim_bic_loss(W_tmp, X, is_continuous, is_poisson)
         if (lss < aa && lim_h(W_tmp, d)$h < h_tol) {
           W_min_lss <- W_tmp
           aa <- lss
@@ -335,7 +350,7 @@ lim_local_search <- function(W_est, X, con, is_continuous, d, h_tol) {
     for (k in seq_len(nrow(I_add))) {
       W_tmp <- W0
       W_tmp[I_add[k, 1], I_add[k, 2]] <- 1
-      lss <- lim_bic_loss(W_tmp, X, is_continuous)
+      lss <- lim_bic_loss(W_tmp, X, is_continuous, is_poisson)
       if (lss < aa && lim_h(W_tmp, d)$h < h_tol) {
         W_min_lss <- W_tmp
         aa <- lss
@@ -348,7 +363,7 @@ lim_local_search <- function(W_est, X, con, is_continuous, d, h_tol) {
       for (k in seq_len(nrow(I_add2))) {
         W_tmp <- W0b
         W_tmp[I_add2[k, 1], I_add2[k, 2]] <- 1
-        lss <- lim_bic_loss(W_tmp, X, is_continuous)
+        lss <- lim_bic_loss(W_tmp, X, is_continuous, is_poisson)
         if (lss < aa && lim_h(W_tmp, d)$h < h_tol) {
           W_min_lss <- W_tmp
           aa <- lss
@@ -394,14 +409,16 @@ lim_topological_order <- function(B) {
 #' LiM: LiNGAM for Mixed Data
 #'
 #' Estimates a causal structure from data containing a mixture of continuous
-#' and binary (0/1) discrete variables, following Zeng et al. (2022). The
-#' method combines a NOTEARS-style continuous optimization (global phase)
-#' with a combinatorial local search over edge directions, pruning, and
-#' edge addition.
+#' and discrete variables, following Zeng et al. (2022). The method combines
+#' a NOTEARS-style continuous optimization (global phase) with a
+#' combinatorial local search over edge directions, pruning, and edge
+#' addition. Discrete variables are binary (0/1) by default; set
+#' `is_poisson = TRUE` to treat them as Poisson-distributed counts instead.
 #'
 #' @param X Numeric matrix (n_samples x n_features) or data frame
 #' @param is_continuous Logical vector of length `ncol(X)`. `TRUE` marks a
-#'   continuous variable, `FALSE` marks a discrete (binary 0/1) variable.
+#'   continuous variable, `FALSE` marks a discrete variable (binary 0/1 by
+#'   default; non-negative integer counts when `is_poisson = TRUE`).
 #' @param lambda1 L1 penalty parameter (default: 0.1)
 #' @param max_iter Maximum number of dual ascent (outer loop) steps (default: 150)
 #' @param h_tol Tolerance for the acyclicity constraint h(W) (default: 1e-8)
@@ -410,6 +427,11 @@ lim_topological_order <- function(B) {
 #'   the global optimization phase (default: 0.1)
 #' @param only_global If `TRUE`, skip the combinatorial local search phase and
 #'   return the thresholded global-optimization result directly (default: FALSE)
+#' @param is_poisson If `TRUE`, all discrete variables (`is_continuous =
+#'   FALSE`) are treated as Poisson-distributed counts (non-negative
+#'   integers) rather than binary variables, and the local search phase
+#'   scores them with Poisson regression log-likelihoods (default: FALSE).
+#'   See Details.
 #' @return A `LiMResult` object (list) containing the following elements:
 #' * `adjacency_matrix`: adjacency matrix B (n_features x n_features).
 #'   **Convention: `B[i, j]` is the causal coefficient from variable j to
@@ -419,11 +441,32 @@ lim_topological_order <- function(B) {
 #'   indices), derived from `adjacency_matrix` via a topological sort. `NA`
 #'   (with a warning) if the estimated matrix is not acyclic.
 #' * `is_continuous`: the input `is_continuous` vector, stored for reference.
+#' * `is_poisson`: the input `is_poisson` flag, stored for reference.
 #'
 #' @details
-#' Only binary (0/1) discrete variables are supported; count/Poisson-type
-#' discrete variables (the Python source's `loss_type = "poisson"` path) are
-#' not implemented.
+#' By default, discrete variables must be binary (0/1). With
+#' `is_poisson = TRUE`, discrete variables are instead treated as
+#' Poisson-distributed counts: the local search phase scores each discrete
+#' variable with a Poisson regression log-likelihood (an unregularized
+#' `glm(family = poisson())` fit on all parents, with an intercept), or with
+#' the closed-form intercept-only Poisson maximum likelihood when the
+#' variable has no parents. The global optimization phase is unchanged in
+#' both modes and keeps the logistic surrogate loss for discrete columns;
+#' this matches the behavior of the Python implementation's
+#' `fit(is_poisson=True)`, whose `loss_type = "poisson"` option (a
+#' whole-matrix Poisson loss that cannot be combined with mixed data) is
+#' intentionally not ported. Consequently, with `only_global = TRUE` the
+#' local search is skipped and `is_poisson` only affects input validation.
+#'
+#' The Poisson scoring deliberately deviates from the Python implementation,
+#' which fits a separate univariate regression per parent (accumulating only
+#' the last parent's likelihood due to a loop bug), ignores the fitted
+#' intercept, uses scikit-learn's `PoissonRegressor` with its default L2
+#' regularization, and scores parentless count variables with the Bernoulli
+#' frequency-table code (a multinomial likelihood on a different scale).
+#' This implementation uses the full multivariate maximum-likelihood fit
+#' instead; numeric results will therefore not match the Python
+#' implementation.
 #'
 #' The Python implementation's `adjacency_matrix_` uses the opposite
 #' convention (`W[i, j]` = i -> j). This R implementation transposes the
@@ -462,7 +505,8 @@ lingam_lim <- function(X,
                         h_tol = 1e-8,
                         rho_max = 1e16,
                         w_threshold = 0.1,
-                        only_global = FALSE) {
+                        only_global = FALSE,
+                        is_poisson = FALSE) {
   col_names <- if (is.data.frame(X)) names(X) else colnames(X)
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
@@ -478,15 +522,33 @@ lingam_lim <- function(X,
   if (length(is_continuous) != d) {
     stop("is_continuous must have length equal to ncol(X).", call. = FALSE)
   }
+  if (!is.logical(is_poisson) || length(is_poisson) != 1 || is.na(is_poisson)) {
+    stop("is_poisson must be a single logical value (TRUE or FALSE).", call. = FALSE)
+  }
   discrete_cols <- which(!is_continuous)
   for (j in discrete_cols) {
     uj <- unique(X[, j])
-    # allow floating-point noise (e.g. 1 - 1e-15) around the two valid levels
-    if (!all(abs(uj - round(uj)) < 1e-8 & round(uj) %in% c(0, 1))) {
-      stop(sprintf(
-        "Discrete columns (is_continuous = FALSE) must be binary (0/1); column %d is not.", j
-      ), call. = FALSE)
+    # allow floating-point noise (e.g. 1 - 1e-15) around the valid integer levels
+    if (is_poisson) {
+      # is.finite() guards against Inf, whose abs(uj - round(uj)) is NaN and
+      # would turn the all() below into NA instead of a clean rejection
+      if (!all(is.finite(uj) & abs(uj - round(uj)) < 1e-8 & round(uj) >= 0)) {
+        stop(sprintf(
+          "Discrete columns (is_continuous = FALSE) must be non-negative integer counts when is_poisson = TRUE; column %d is not.", j
+        ), call. = FALSE)
+      }
+    } else {
+      if (!all(abs(uj - round(uj)) < 1e-8 & round(uj) %in% c(0, 1))) {
+        stop(sprintf(
+          "Discrete columns (is_continuous = FALSE) must be binary (0/1); column %d is not.", j
+        ), call. = FALSE)
+      }
     }
+  }
+  if (is_poisson && length(discrete_cols) > 0) {
+    # dpois() returns -Inf for non-integer x, so snap the tolerated
+    # floating-point noise to exact integers before scoring
+    X[, discrete_cols] <- round(X[, discrete_cols])
   }
 
   if (!is.numeric(lambda1) || length(lambda1) != 1 || lambda1 < 0) {
@@ -516,7 +578,7 @@ lingam_lim <- function(X,
   W_min_lss <- if (only_global) {
     W_est
   } else {
-    lim_local_search(W_est, X, con, is_continuous, d, h_tol)
+    lim_local_search(W_est, X, con, is_continuous, is_poisson, d, h_tol)
   }
 
   B <- t(W_min_lss)
@@ -528,7 +590,8 @@ lingam_lim <- function(X,
   result <- list(
     adjacency_matrix = B,
     causal_order = causal_order,
-    is_continuous = is_continuous
+    is_continuous = is_continuous,
+    is_poisson = is_poisson
   )
   class(result) <- "LiMResult"
   result
@@ -557,7 +620,9 @@ print.LiMResult <- function(x, digits = 3, ...) {
   } else {
     paste0("x", x$causal_order - 1L)
   }
-  var_types <- ifelse(x$is_continuous, "continuous", "discrete")
+  # isTRUE() keeps objects created before the is_poisson field existed printable
+  discrete_label <- if (isTRUE(x$is_poisson)) "discrete (count)" else "discrete"
+  var_types <- ifelse(x$is_continuous, "continuous", discrete_label)
 
   cat("LiM Result\n")
   cat(sprintf("  Variables : %d\n", n))

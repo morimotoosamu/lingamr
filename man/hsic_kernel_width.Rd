@@ -7,14 +7,15 @@
 hsic_kernel_width(x)
 }
 \arguments{
-\item{x}{numeric vector}
+\item{x}{numeric vector or matrix (n x d)}
 }
 \value{
 kernel width (scalar)
 }
 \description{
-Uses only the first 100 points (not a random subsample) to keep the
+Uses only the first 100 rows (not a random subsample) to keep the
 O(n^2) pairwise-distance computation cheap, matching the upstream
-implementation exactly.
+implementation exactly. Multivariate input is measured by the squared
+Euclidean distance between rows, as in the upstream \code{get_kernel_width()}.
 }
 \keyword{internal}

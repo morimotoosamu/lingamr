@@ -12,14 +12,16 @@ lingam_lim(
   h_tol = 1e-08,
   rho_max = 1e+16,
   w_threshold = 0.1,
-  only_global = FALSE
+  only_global = FALSE,
+  is_poisson = FALSE
 )
 }
 \arguments{
 \item{X}{Numeric matrix (n_samples x n_features) or data frame}
 
 \item{is_continuous}{Logical vector of length \code{ncol(X)}. \code{TRUE} marks a
-continuous variable, \code{FALSE} marks a discrete (binary 0/1) variable.}
+continuous variable, \code{FALSE} marks a discrete variable (binary 0/1 by
+default; non-negative integer counts when \code{is_poisson = TRUE}).}
 
 \item{lambda1}{L1 penalty parameter (default: 0.1)}
 
@@ -34,6 +36,11 @@ the global optimization phase (default: 0.1)}
 
 \item{only_global}{If \code{TRUE}, skip the combinatorial local search phase and
 return the thresholded global-optimization result directly (default: FALSE)}
+
+\item{is_poisson}{If \code{TRUE}, all discrete variables (\code{is_continuous = FALSE}) are treated as Poisson-distributed counts (non-negative
+integers) rather than binary variables, and the local search phase
+scores them with Poisson regression log-likelihoods (default: FALSE).
+See Details.}
 }
 \value{
 A \code{LiMResult} object (list) containing the following elements:
@@ -46,19 +53,41 @@ Zero elements indicate no causal relationship.
 indices), derived from \code{adjacency_matrix} via a topological sort. \code{NA}
 (with a warning) if the estimated matrix is not acyclic.
 \item \code{is_continuous}: the input \code{is_continuous} vector, stored for reference.
+\item \code{is_poisson}: the input \code{is_poisson} flag, stored for reference.
 }
 }
 \description{
 Estimates a causal structure from data containing a mixture of continuous
-and binary (0/1) discrete variables, following Zeng et al. (2022). The
-method combines a NOTEARS-style continuous optimization (global phase)
-with a combinatorial local search over edge directions, pruning, and
-edge addition.
+and discrete variables, following Zeng et al. (2022). The method combines
+a NOTEARS-style continuous optimization (global phase) with a
+combinatorial local search over edge directions, pruning, and edge
+addition. Discrete variables are binary (0/1) by default; set
+\code{is_poisson = TRUE} to treat them as Poisson-distributed counts instead.
 }
 \details{
-Only binary (0/1) discrete variables are supported; count/Poisson-type
-discrete variables (the Python source's \code{loss_type = "poisson"} path) are
-not implemented.
+By default, discrete variables must be binary (0/1). With
+\code{is_poisson = TRUE}, discrete variables are instead treated as
+Poisson-distributed counts: the local search phase scores each discrete
+variable with a Poisson regression log-likelihood (an unregularized
+\code{glm(family = poisson())} fit on all parents, with an intercept), or with
+the closed-form intercept-only Poisson maximum likelihood when the
+variable has no parents. The global optimization phase is unchanged in
+both modes and keeps the logistic surrogate loss for discrete columns;
+this matches the behavior of the Python implementation's
+\code{fit(is_poisson=True)}, whose \code{loss_type = "poisson"} option (a
+whole-matrix Poisson loss that cannot be combined with mixed data) is
+intentionally not ported. Consequently, with \code{only_global = TRUE} the
+local search is skipped and \code{is_poisson} only affects input validation.
+
+The Poisson scoring deliberately deviates from the Python implementation,
+which fits a separate univariate regression per parent (accumulating only
+the last parent's likelihood due to a loop bug), ignores the fitted
+intercept, uses scikit-learn's \code{PoissonRegressor} with its default L2
+regularization, and scores parentless count variables with the Bernoulli
+frequency-table code (a multinomial likelihood on a different scale).
+This implementation uses the full multivariate maximum-likelihood fit
+instead; numeric results will therefore not match the Python
+implementation.
 
 The Python implementation's \code{adjacency_matrix_} uses the opposite
 convention (\code{W[i, j]} = i -> j). This R implementation transposes the

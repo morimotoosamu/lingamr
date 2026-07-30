@@ -1079,7 +1079,7 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 ## 混合データのためのLiNGAM（LiM）
 
 Direct LiNGAMはすべての変数が連続であることを仮定する。`lingam_lim()` はこの仮定を
-緩和し、Zeng et al. (2022) に従って、連続変数と二値（0/1）離散変数が混在するデータ
+緩和し、Zeng et al. (2022) に従って、連続変数と離散変数が混在するデータ
 から因果構造を推定する。NOTEARS流の連続最適化（「global」フェーズ）と、エッジの
 方向・枝刈り・エッジ追加に関する組合せ的な局所探索（「local」フェーズ）を組み合わせ
 たものである。
@@ -1094,7 +1094,7 @@ head(lim_dat$data)
 lim_dat$is_continuous
 ```
 
-`lingam_lim()` には、各列が連続（`TRUE`）か二値離散（`FALSE`）かを示す論理ベクトル
+`lingam_lim()` には、各列が連続（`TRUE`）か離散（`FALSE`）かを示す論理ベクトル
 `is_continuous` が必要である。最適化はランダムな初期点から始まるため、再現性を持たせる
 には `set.seed()` が必要である。
 
@@ -1111,8 +1111,11 @@ print(lim_result)
 colnames(lim_dat$data)[lim_result$causal_order]
 ```
 
-対応している離散変数は二値（0/1）のみである。localフェーズのエッジ重みの規約や、
-Python実装との数値的な違いの詳細は `?lingam_lim` を参照のこと。
+離散変数は既定では二値（0/1）である。`is_poisson = TRUE` を指定するとポアソン分布に
+従うカウント変数として扱われる（localフェーズがポアソン回帰の対数尤度でスコアリング
+する）。`generate_lim_sample(is_poisson = TRUE)` で対応するカウントデータの例を生成
+できる。localフェーズのエッジ重みの規約や、Python実装との数値的な違いの詳細は
+`?lingam_lim` を参照のこと。
 
 
 ## MultiGroup Direct LiNGAM

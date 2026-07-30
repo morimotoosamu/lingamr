@@ -1,3 +1,37 @@
+# lingamr (development version)
+
+* Added `lingam_resit()`, `lingam_resit_bootstrap()`, and
+  `generate_resit_sample()`, an R port of RESIT (Regression with Subsequent
+  Independence Test; Peters et al. 2014) for causal discovery on nonlinear
+  additive noise models. The regressor is pluggable: the default `"gam"`
+  fits smoothing-spline GAMs via the suggested package mgcv, and any
+  function `function(X, y)` returning fitted values can be supplied
+  instead. The result is a new `ResitResult` class whose adjacency matrix
+  holds 0/1 edge indicators (RESIT estimates no coefficients), with
+  matching `print()` / `tidy()` / `glance()` / `autoplot()` methods.
+  Unlike the Python implementation, the bootstrap stores no all-zero
+  total-effects array (`total_effects` is `NULL`); total effects are
+  undefined for nonlinear models.
+* `hsic_test_gamma()` (internal) now accepts matrix arguments, combining
+  the columns into a single multivariate Gaussian kernel as in the Python
+  implementation; univariate callers are unchanged (bit-identical results).
+* Fixed `setup_cluster_worker()` (internal, shared by all `*_bootstrap()`
+  functions) to fall back to exporting the development namespace when the
+  installed copy of the package is stale, instead of silently mixing old
+  and new code on the workers.
+* `lingam_lim()` gains an `is_poisson` argument for Poisson-type count
+  discrete variables. With `is_poisson = TRUE`, discrete columns
+  (`is_continuous = FALSE`) are validated as non-negative integer counts and
+  the local search phase scores them with Poisson regression log-likelihoods
+  (unregularized multivariate `glm(family = poisson())` with an intercept;
+  closed-form intercept-only Poisson MLE for parentless variables). This is
+  an intent-faithful port of the Python implementation's
+  `fit(is_poisson=True)`: the global optimization phase keeps the logistic
+  surrogate loss, and several upstream scoring bugs are deliberately not
+  reproduced (see the Details section of `?lingam_lim`).
+  `generate_lim_sample()` gains a matching `is_poisson` argument, and
+  `LiMResult` objects now carry an `is_poisson` field.
+
 # lingamr 0.1.2
 
 * Wrapped long-running bootstrap examples in `\donttest{}` to avoid CRAN

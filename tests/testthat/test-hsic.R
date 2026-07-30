@@ -140,3 +140,87 @@ test_that("incomplete_cholesky_fcorr reconstructs the Gaussian Gram matrix reaso
   expect_lte(ncol(G), n)
   expect_lt(mean(abs(K_true - K_approx)), 0.05)
 })
+
+# --- Multivariate (matrix) input, added with the RESIT port ------------------
+
+test_that("hsic_test_gamma on a one-column matrix is identical to the vector call", {
+  set.seed(12)
+  n <- 150
+  x <- rnorm(n)
+  y <- 0.5 * x + rnorm(n)
+
+  expect_identical(
+    hsic_test_gamma(x, y),
+    hsic_test_gamma(matrix(x, ncol = 1), matrix(y, ncol = 1))
+  )
+})
+
+test_that("hsic_test_gamma accepts a multivariate second argument (independent case)", {
+  set.seed(13)
+  n <- 200
+  X <- matrix(rnorm(n * 3), n, 3)
+  y <- rnorm(n)
+
+  res <- hsic_test_gamma(y, X)
+  expect_true(is.finite(res$stat))
+  expect_gt(res$p, 0.1)
+})
+
+test_that("hsic_test_gamma detects dependence on a multivariate argument", {
+  set.seed(14)
+  n <- 200
+  X <- matrix(rnorm(n * 3), n, 3)
+  y <- rowSums(X) + rnorm(n, sd = 0.05)
+
+  res <- hsic_test_gamma(y, X)
+  expect_lt(res$p, 1e-4)
+})
+
+test_that("hsic_test_gamma errors on matrices with mismatched row counts", {
+  set.seed(15)
+  expect_error(
+    hsic_test_gamma(matrix(rnorm(20), 10, 2), matrix(rnorm(18), 9, 2)),
+    "same length"
+  )
+})
+
+test_that("hsic_test_gamma errors on matrix input with NA or too few rows", {
+  set.seed(16)
+  X <- matrix(rnorm(20), 10, 2)
+  Xna <- X
+  Xna[3, 1] <- NA
+  expect_error(hsic_test_gamma(Xna, rnorm(10)), "NA/NaN")
+  expect_error(
+    hsic_test_gamma(matrix(rnorm(10), 5, 2), rnorm(5)),
+    "at least"
+  )
+})
+
+test_that("hsic_test_gamma treats an all-constant matrix as trivially independent", {
+  set.seed(17)
+  n <- 50
+  X <- matrix(1, n, 3)
+  y <- rnorm(n)
+
+  res <- hsic_test_gamma(X, y)
+  expect_equal(res$stat, 0)
+  expect_equal(res$p, 1)
+
+  # a single constant column among informative ones is NOT degenerate
+  X2 <- cbind(rnorm(n), rep(1, n))
+  res2 <- hsic_test_gamma(X2, y)
+  expect_true(is.finite(res2$p))
+})
+
+test_that("hsic_kernel_width and hsic_gram_matrix work on matrix input", {
+  set.seed(18)
+  X <- matrix(rnorm(300), 100, 3)
+  width <- hsic_kernel_width(X)
+  expect_true(is.finite(width) && width > 0)
+
+  gm <- hsic_gram_matrix(X, width)
+  expect_equal(dim(gm$K), c(100L, 100L))
+  expect_equal(gm$K, t(gm$K))
+  expect_true(all(diag(gm$K) == 1))
+  expect_lt(max(abs(rowSums(gm$Kc))), 1e-8)
+})

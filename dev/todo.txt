@@ -1,8 +1,9 @@
-# 済み
-* 関数名を揃える、接頭辞を揃える
-direct_lingam() -> lingam_direct()
-bootstrap_lingam() -> lingam_bootstrap()
-plot_adjacency_diagrammer() -> plot_adjacency()
+# 未実装
+ICALiNGAM
+CAMUV
+VARMALiNGAM
 
-# まだ
-英語化
+各アルゴリズムのチュートリアルとサンプルをvignettesとして移植
+チュートリアル https://lingam.readthedocs.io/en/latest/
+サンプル https://github.com/cdt15/lingam/blob/master/examples
+

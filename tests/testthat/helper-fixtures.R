@@ -38,6 +38,7 @@ sample6_800_s42  <- memo(function() generate_lingam_sample_6(n = 800, seed = 42)
 sample6_2000_s42 <- memo(function() generate_lingam_sample_6(n = 2000, seed = 42))
 
 rcd_sample_300    <- memo(function() generate_rcd_sample(n = 300, seed = 42))
+resit_sample_300  <- memo(function() generate_resit_sample(n = 300, seed = 1))
 parce_sample_500  <- memo(function() generate_parce_sample(n = 500, seed = 42))
 parce_sample_1000 <- memo(function() generate_parce_sample(n = 1000, seed = 42))
 mg_sample_300     <- memo(function() generate_multi_group_sample(n = c(300, 300), seed = 1))
@@ -64,6 +65,8 @@ fit_direct_500  <- memo(function() lingam_direct(sample6_500_s42()$data, reg_met
 fit_direct_2000 <- memo(function() lingam_direct(sample6_2000_s42()$data, reg_method = "ols"))
 
 fit_rcd_300    <- memo(function() lingam_rcd(rcd_sample_300()$data))
+# mgcv 依存: このフィクスチャを使うテストは先に skip_if_not_installed("mgcv")
+fit_resit_300  <- memo(function() lingam_resit(resit_sample_300()$data))
 fit_parce_500  <- memo(function() lingam_parce(parce_sample_500()$data, reg_method = "ols"))
 fit_parce_1000 <- memo(function() lingam_parce(parce_sample_1000()$data, reg_method = "ols"))
 fit_mg_300     <- memo(function() lingam_multi_group(mg_sample_300()$data_list, reg_method = "ols"))
@@ -124,6 +127,16 @@ fake_rcd_result <- function(ancestors_list,
   structure(
     list(adjacency_matrix = adjacency_matrix, ancestors_list = ancestors_list),
     class = "RCDResult"
+  )
+}
+
+fake_resit_result <- function() {
+  B <- matrix(0, 3, 3, dimnames = list(paste0("x", 0:2), paste0("x", 0:2)))
+  B["x1", "x0"] <- 1
+  B["x2", "x1"] <- 1
+  structure(
+    list(adjacency_matrix = B, causal_order = 1:3, regressor = "gam"),
+    class = "ResitResult"
   )
 }
 

@@ -383,3 +383,59 @@ glance.MultiGroupLingamResult <- function(x, ...) {
     causal_order = paste(var_names[x$causal_order], collapse = " -> ")
   )
 }
+
+
+#' Convert a ResitResult to a tidy data.frame
+#'
+#' Converts the estimated 0/1 adjacency matrix into a long-format data.frame
+#' with one edge per row, like [tidy.LingamResult()]. Because RESIT is a
+#' nonlinear method, `estimate` is always 1 (an edge indicator, not a
+#' coefficient).
+#'
+#' @param x The return value of [lingam_resit()] (a `ResitResult` object)
+#' @param threshold Kept for interface consistency with the other `tidy()`
+#'   methods (default: 0); with 0/1 entries any value in `[0, 1)` returns
+#'   all edges
+#' @param ... Unused
+#' @return data.frame(from, to, estimate)
+#' @export
+#' @examples
+#' \donttest{
+#' if (requireNamespace("mgcv", quietly = TRUE)) {
+#'   nonlinear <- generate_resit_sample(n = 300, seed = 1)
+#'   model <- lingam_resit(nonlinear$data)
+#'   tidy(model)
+#' }
+#' }
+tidy.ResitResult <- function(x, threshold = 0, ...) {
+  adjacency_edges(x$adjacency_matrix, threshold)
+}
+
+
+#' Get a one-row summary of a ResitResult
+#'
+#' Like [glance.LingamResult()], with an additional `regressor` column giving
+#' the regressor label used for the internal nonlinear regressions.
+#'
+#' @param x The return value of [lingam_resit()] (a `ResitResult` object)
+#' @param ... Unused
+#' @return A one-row data.frame(n_variables, n_edges, regressor, causal_order)
+#' @export
+#' @examples
+#' \donttest{
+#' if (requireNamespace("mgcv", quietly = TRUE)) {
+#'   nonlinear <- generate_resit_sample(n = 300, seed = 1)
+#'   model <- lingam_resit(nonlinear$data)
+#'   glance(model)
+#' }
+#' }
+glance.ResitResult <- function(x, ...) {
+  B <- x$adjacency_matrix
+  var_names <- get_var_names(B)
+  data.frame(
+    n_variables  = ncol(B),
+    n_edges      = sum(abs(B) > 0),
+    regressor    = x$regressor,
+    causal_order = paste(var_names[x$causal_order], collapse = " -> ")
+  )
+}

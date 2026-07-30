@@ -331,3 +331,38 @@ autoplot.MultiGroupLingamResult <- function(object, group = 1,
   ) +
     ggplot2::labs(subtitle = group_label)
 }
+
+
+#' Plot the causal graph of a ResitResult with ggplot2
+#'
+#' Draws the estimated causal structure as a ggplot2-based directed graph,
+#' like [autoplot.LingamResult()]. Because RESIT returns 0/1 edge indicators
+#' rather than coefficients, edge labels are hidden by default
+#' (`label_edges = FALSE`); a constant "1" on every edge carries no
+#' information.
+#'
+#' @param object Return value of [lingam_resit()] (a `ResitResult` object)
+#' @param label_edges Whether to display edge labels (default: FALSE, since
+#'   every edge would be labeled "1")
+#' @inheritParams autoplot.LingamResult
+#' @return A ggplot object
+#' @exportS3Method ggplot2::autoplot
+#' @examples
+#' \donttest{
+#' if (requireNamespace("ggplot2", quietly = TRUE) &&
+#'     requireNamespace("igraph", quietly = TRUE) &&
+#'     requireNamespace("mgcv", quietly = TRUE)) {
+#'   library(ggplot2)
+#'   nonlinear <- generate_resit_sample(n = 300, seed = 1)
+#'   model <- lingam_resit(nonlinear$data)
+#'   autoplot(model)
+#' }
+#' }
+autoplot.ResitResult <- function(object, threshold = 0,
+                                 node_size = 16, node_color = "lightblue",
+                                 label_edges = FALSE, label_pos = 0.35, ...) {
+  autoplot_causal_graph(object$adjacency_matrix,
+    threshold = threshold, node_size = node_size, node_color = node_color,
+    label_edges = label_edges, label_pos = label_pos
+  )
+}

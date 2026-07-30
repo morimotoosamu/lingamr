@@ -45,6 +45,7 @@ ICA
 ICAの
 ImputationBootstrapResult
 JMRA
+Janzing
 Jarque
 Kahn's
 Kikuchi
@@ -83,6 +84,7 @@ Maeda
 Matsui
 Minv
 Moneta
+Mooij
 MultiBench
 MultiGroup
 MultiGroupBootstrapResult
@@ -94,6 +96,7 @@ Neurocomputing
 OLSとRidgeはすべてのエッジに
 Okuse
 PMLR
+PSOCK
 Parce
 ParceLiNGAM
 ParceLiNGAM's
@@ -115,11 +118,13 @@ RL
 RMSEA
 RMSEAは
 RMarkdown
+ResitResult
 Ridgeは
 Rosseel
 SEルール
 Scalability
 Scheinberg
+Schoelkopf
 Schur
 Sparsification
 StandardScaler
@@ -146,6 +151,7 @@ acyclicity
 aic
 al
 antisymmetry
+argmin
 arrowless
 bic
 broomとの
@@ -198,8 +204,10 @@ lightblue
 lightyellow
 lillie
 lingam
+localフェーズがポアソン
 localフェーズのエッジ
 logdets
+mgcv
 mis
 moduli
 multicollinearity
@@ -211,8 +219,10 @@ ols
 orthonormalized
 overfit
 parce
+parentless
 pearson
 plaintext
+pluggable
 pre
 precomputation
 pwling
@@ -227,6 +237,7 @@ rootに
 rootの
 rootはx
 rootを
+rowSums
 scalability
 scikit
 sd
@@ -238,6 +249,7 @@ sparsify
 spearman
 statsmodels
 sugiyama
+tcrossprod
 tidiers
 tseries
 uncentered
@@ -276,6 +288,7 @@ xj
 うと
 うには
 うべき
+うカウント
 え
 えない
 えないため
@@ -465,11 +478,13 @@ xj
 するため
 するためにすべての
 すると
+するとポアソン
 するには
 するのではなく
 するものである
 するエッジであることを
 するエントリは
+するカウントデータの
 するデータ
 するドメイン
 するパス
@@ -552,6 +567,7 @@ xj
 でも
 でインストール
 でエッジリストに
+でスコアリング
 でスパース
 でブートストラップの
 と

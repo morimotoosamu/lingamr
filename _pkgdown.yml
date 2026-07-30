@@ -61,6 +61,11 @@ reference:
   - estimate_total_effect_rcd
   - get_error_independence_p_values_rcd
 
+- title: RESIT (nonlinear additive noise models)
+  contents:
+  - lingam_resit
+  - lingam_resit_bootstrap
+
 - title: LiM (mixed continuous and discrete data)
   contents:
   - lingam_lim

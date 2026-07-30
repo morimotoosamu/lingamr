@@ -11,25 +11,64 @@
 # Portions of this work:
 #   Copyright (c) 2026 O.Morimoto
 #
-# Shared by lingam_parce.r (BottomUpParceLiNGAM) and potentially future
-# HSIC-based ports (e.g. RCD).
+# Shared by lingam_parce.r (BottomUpParceLiNGAM), lingam_rcd.r (RCD) --
+# both univariate callers -- and lingam_resit.r (RESIT), which uses the
+# multivariate (matrix) path.
 # =============================================================================
+
+
+#' Normalize HSIC input to an (n, d) numeric matrix
+#'
+#' Vectors become one-column matrices so that all downstream computations
+#' can work row-wise, matching the upstream `X.reshape(-1, 1)` behavior.
+#'
+#' @param x numeric vector or matrix
+#' @return numeric matrix (n x d)
+#' @keywords internal
+as_hsic_matrix <- function(x) {
+  if (is.matrix(x)) x else matrix(as.numeric(x), ncol = 1L)
+}
+
+
+#' Pairwise squared Euclidean distances between rows
+#'
+#' The single-column case keeps the original `outer()` formulation so that
+#' existing univariate callers (Parce / RCD) get bit-identical results; the
+#' multivariate case uses the rowSums/tcrossprod expansion, which is only
+#' reached by matrix inputs (new with the RESIT port).
+#'
+#' @param X numeric matrix (n x d)
+#' @return n x n matrix of squared distances
+#' @keywords internal
+hsic_sqdist <- function(X) {
+  if (ncol(X) == 1L) {
+    x <- X[, 1L]
+    return(outer(x, x, function(a, b) (a - b)^2))
+  }
+  sq <- rowSums(X^2)
+  # x^2 + y^2 - 2xy can deviate slightly from the true distance through
+  # floating-point cancellation: clamp negatives and pin the self-distance
+  # diagonal to exactly 0 (so Gram diagonals are exactly 1).
+  D <- pmax(outer(sq, sq, "+") - 2 * tcrossprod(X), 0)
+  diag(D) <- 0
+  D
+}
 
 
 #' Median-heuristic kernel width for HSIC
 #'
-#' Uses only the first 100 points (not a random subsample) to keep the
+#' Uses only the first 100 rows (not a random subsample) to keep the
 #' O(n^2) pairwise-distance computation cheap, matching the upstream
-#' implementation exactly.
+#' implementation exactly. Multivariate input is measured by the squared
+#' Euclidean distance between rows, as in the upstream `get_kernel_width()`.
 #'
-#' @param x numeric vector
+#' @param x numeric vector or matrix (n x d)
 #' @return kernel width (scalar)
 #' @keywords internal
 hsic_kernel_width <- function(x) {
-  n <- length(x)
-  m <- min(n, 100L)
-  xs <- x[seq_len(m)]
-  D <- outer(xs, xs, function(a, b) (a - b)^2)
+  X <- as_hsic_matrix(x)
+  m <- min(nrow(X), 100L)
+  D <- hsic_sqdist(X[seq_len(m), , drop = FALSE])
   d <- D[upper.tri(D)]
   d <- d[d > 0]
   if (length(d) == 0) {
@@ -41,13 +80,18 @@ hsic_kernel_width <- function(x) {
 
 #' Gaussian Gram matrix and its double-centered version
 #'
-#' @param x numeric vector
+#' Multivariate input is combined into a single Gaussian kernel over the
+#' row-wise squared Euclidean distances (upstream behavior), not treated
+#' column by column.
+#'
+#' @param x numeric vector or matrix (n x d)
 #' @param width kernel width from [hsic_kernel_width()]
 #' @return list(K = Gram matrix, Kc = centered Gram matrix)
 #' @keywords internal
 hsic_gram_matrix <- function(x, width) {
-  n <- length(x)
-  H <- outer(x, x, function(a, b) (a - b)^2)
+  X <- as_hsic_matrix(x)
+  n <- nrow(X)
+  H <- hsic_sqdist(X)
   K <- exp(-H / (2 * width^2))
   row_sums <- rowSums(K)
   col_sums <- colSums(K)
@@ -63,23 +107,37 @@ hsic_gram_matrix <- function(x, width) {
 #' because it forms the full n x n Gram matrices; not recommended for n in
 #' the thousands.
 #'
+#' Either argument may be a matrix (n x d); its columns are combined into a
+#' single Gaussian kernel over row-wise Euclidean distances, exactly as in
+#' the upstream multivariate implementation (used by RESIT, which tests a
+#' residual against the joint distribution of several predictors). The
+#' variables are not standardized beforehand (upstream behavior), so with
+#' wildly different column scales the largest-scale column dominates the
+#' distance.
+#'
 #' The gamma-approximation variance estimator is only defined for n >= 6
 #' (its closed form divides by `(n-1)(n-2)(n-3)`); below that this errors
 #' instead of silently returning a NaN p-value that would otherwise
 #' propagate into `NA`-valued rejection decisions in callers. A constant
-#' input (zero variance) carries no dependence information, so it is
-#' treated as trivially independent (`p = 1`) rather than routed through
-#' the degenerate kernel-width / centered-Gram-matrix computation.
+#' input (zero variance in every column) carries no dependence information,
+#' so it is treated as trivially independent (`p = 1`) rather than routed
+#' through the degenerate kernel-width / centered-Gram-matrix computation.
 #'
-#' @param X numeric vector
-#' @param Y numeric vector (same length as X)
+#' @param X numeric vector or matrix (n x d)
+#' @param Y numeric vector or matrix with the same number of rows as X
 #' @return list(stat = HSIC test statistic, p = gamma-approximated p-value)
 #' @keywords internal
 hsic_test_gamma <- function(X, Y) {
-  if (length(X) != length(Y)) {
-    stop("hsic_test_gamma(): X and Y must have the same length.", call. = FALSE)
+  X <- as_hsic_matrix(X)
+  Y <- as_hsic_matrix(Y)
+  if (nrow(X) != nrow(Y)) {
+    stop(
+      "hsic_test_gamma(): X and Y must have the same length ",
+      "(number of observations).",
+      call. = FALSE
+    )
   }
-  n <- length(X)
+  n <- nrow(X)
   if (n < 6) {
     stop(
       "hsic_test_gamma(): the gamma-approximation test requires at least ",
@@ -90,7 +148,7 @@ hsic_test_gamma <- function(X, Y) {
   if (anyNA(X) || anyNA(Y)) {
     stop("hsic_test_gamma(): X and Y must not contain NA/NaN values.", call. = FALSE)
   }
-  if (stats::sd(X) == 0 || stats::sd(Y) == 0) {
+  if (all(apply(X, 2, stats::sd) == 0) || all(apply(Y, 2, stats::sd) == 0)) {
     return(list(stat = 0, p = 1))
   }
 

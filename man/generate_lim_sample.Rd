@@ -4,32 +4,39 @@
 \alias{generate_lim_sample}
 \title{Generate sample data for LiM (3 mixed variables)}
 \usage{
-generate_lim_sample(n = 1000L, seed = NULL)
+generate_lim_sample(n = 1000L, seed = NULL, is_poisson = FALSE)
 }
 \arguments{
 \item{n}{number of samples (default: 1000)}
 
 \item{seed}{random seed. If \code{NULL} (default), no seed is set and results
 are not reproducible across calls.}
+
+\item{is_poisson}{if \code{TRUE}, generate the discrete variable \code{x2} as
+Poisson-distributed counts instead of binary 0/1 values (default: FALSE)}
 }
 \value{
-A list with three elements:
+A list with four elements:
 \itemize{
 \item \code{data}: data frame with columns \code{x1}, \code{x2}, \code{x3}.
 \item \code{adjacency_matrix}: 3x3 true adjacency matrix, following the lingamr
 convention (\code{m[to, from]}, i.e. \code{adjacency_matrix["x2", "x1"]} is the
-coefficient of the x1 -> x2 edge).
+coefficient of the x1 -> x2 edge). The x1 -> x2 coefficient is on the
+linear-predictor scale (logit for binary, log for Poisson).
 \item \code{is_continuous}: logical vector \code{c(TRUE, FALSE, TRUE)} marking which
 columns of \code{data} are continuous.
+\item \code{is_poisson}: the input \code{is_poisson} flag, stored for reference.
 }
 }
 \description{
 Generates a small dataset with a known causal chain of continuous and
-binary (0/1) discrete variables:
+discrete variables:
 \code{x1 (continuous) -> x2 (discrete) -> x3 (continuous)}.
 Continuous variables use Laplace-distributed noise (non-Gaussian, as
-required by LiNGAM-family methods); the discrete variable is drawn from a
-Bernoulli distribution whose logit is a linear function of its parent.
+required by LiNGAM-family methods). By default the discrete variable is
+drawn from a Bernoulli distribution whose logit is a linear function of
+its parent; with \code{is_poisson = TRUE} it is instead drawn from a Poisson
+distribution whose log-mean is a linear function of its parent.
 }
 \examples{
 dat <- generate_lim_sample(n = 500, seed = 1)

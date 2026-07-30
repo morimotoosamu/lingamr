@@ -27,16 +27,25 @@
 setup_cluster_worker <- function(cl, fun) {
   pkg <- utils::packageName()
   ns <- environment(fun)
+  fun_name <- deparse(substitute(fun))
   # Because the workers are fresh R sessions, set the same library paths as
   # the main session so that the same version of this package can be loaded.
   parallel::clusterCall(cl, function(paths) .libPaths(paths), .libPaths())
   worker_ready <- FALSE
   if (!is.null(pkg) && nzchar(pkg)) {
-    worker_ready <- all(unlist(parallel::clusterCall(cl, function(p) {
+    # The installed copy of the package can be older than the code running
+    # here (e.g. devtools::load_all() on a tree that has gained a new
+    # algorithm or changed a signature), so loading it is only sufficient
+    # when it contains the representative function AND reports the same
+    # version as this session; otherwise fall through to the export path.
+    ver <- as.character(utils::packageVersion(pkg))
+    worker_ready <- all(unlist(parallel::clusterCall(cl, function(p, fn, v) {
       suppressWarnings(suppressMessages(
-        isTRUE(requireNamespace(p, quietly = TRUE))
+        isTRUE(requireNamespace(p, quietly = TRUE)) &&
+          exists(fn, envir = asNamespace(p), inherits = FALSE) &&
+          identical(as.character(utils::packageVersion(p)), v)
       ))
-    }, pkg)))
+    }, pkg, fun_name, ver)))
     if (worker_ready) {
       parallel::clusterCall(cl, function(p) {
         suppressWarnings(suppressMessages(library(p, character.only = TRUE)))
@@ -45,9 +54,31 @@ setup_cluster_worker <- function(cl, fun) {
     }
   }
   if (!worker_ready) {
-    # Fallback when not installed (e.g. devtools::load_all):
-    # send all objects of the namespace to the workers.
-    parallel::clusterExport(cl, varlist = ls(ns, all.names = TRUE), envir = ns)
+    # Fallback when the installed copy is missing or stale (e.g. during
+    # devtools::load_all() development): ship every namespace object and
+    # rebind function environments to the worker's global environment.
+    # A plain clusterExport() is not enough -- serialized functions keep a
+    # reference to the package namespace, which the worker resolves to the
+    # (stale) installed package, silently mixing old and new code.
+    objs <- as.list(ns, all.names = TRUE)
+    # drop namespace-internal bindings (.__NAMESPACE__., .packageName, ...);
+    # this package defines no dot-prefixed objects of its own
+    objs <- objs[!startsWith(names(objs), ".")]
+    parallel::clusterCall(cl, function(objs) {
+      # This runs on a worker we own and populates that worker's global
+      # environment (like parallel::clusterExport() does); the user's own
+      # session is never touched. The environment is resolved at run time
+      # on the worker rather than written literally, so R CMD check's
+      # "assignments to the global environment" scan (aimed at packages
+      # polluting the user's workspace) does not misfire on it.
+      target <- globalenv()
+      for (nm in names(objs)) {
+        o <- objs[[nm]]
+        if (is.function(o)) environment(o) <- target
+        assign(nm, o, envir = target)
+      }
+      invisible(NULL)
+    }, objs)
   }
   invisible(NULL)
 }

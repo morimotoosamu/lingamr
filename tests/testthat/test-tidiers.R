@@ -150,3 +150,22 @@ test_that("tidy.ImputationBootstrapResult collapses imputations", {
   expect_s3_class(td, "data.frame")
   expect_true(all(c("from", "to", "count", "proportion") %in% names(td)))
 })
+
+test_that("tidy/glance for ResitResult work", {
+  fake <- fake_resit_result()
+
+  td <- tidy(fake)
+  expect_named(td, c("from", "to", "estimate"))
+  expect_equal(nrow(td), 2L)
+  expect_true(all(td$estimate == 1))
+
+  g <- glance(fake)
+  expect_equal(
+    names(g),
+    c("n_variables", "n_edges", "regressor", "causal_order")
+  )
+  expect_equal(g$n_variables, 3L)
+  expect_equal(g$n_edges, 2L)
+  expect_equal(g$regressor, "gam")
+  expect_equal(g$causal_order, "x0 -> x1 -> x2")
+})

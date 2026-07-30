@@ -163,3 +163,67 @@ test_that("generate_lingam_large_sample input validation", {
   expect_error(generate_lingam_large_sample(noise_dist = "invalid"),
                "noise_dist")
 })
+
+
+# ── generate_lim_sample (Poisson mode) ────────────────────────────────────────
+
+test_that("generate_lim_sample generates Poisson counts when is_poisson = TRUE", {
+  dat <- generate_lim_sample(n = 500, seed = 1, is_poisson = TRUE)
+
+  expect_named(dat, c("data", "adjacency_matrix", "is_continuous", "is_poisson"))
+  x2 <- dat$data$x2
+  expect_true(all(x2 >= 0))
+  expect_true(all(x2 == round(x2)))
+  expect_gt(max(x2), 1) # actual counts, not binary
+  expect_true(dat$is_poisson)
+  expect_equal(dat$is_continuous, c(TRUE, FALSE, TRUE))
+})
+
+test_that("generate_lim_sample defaults to binary and records is_poisson = FALSE", {
+  dat <- generate_lim_sample(n = 200, seed = 1)
+
+  expect_false(dat$is_poisson)
+  expect_true(all(dat$data$x2 %in% c(0, 1)))
+})
+
+test_that("generate_lim_sample Poisson mode is reproducible and validated", {
+  a <- generate_lim_sample(n = 200, seed = 7, is_poisson = TRUE)
+  b <- generate_lim_sample(n = 200, seed = 7, is_poisson = TRUE)
+  expect_equal(a, b)
+
+  expect_error(generate_lim_sample(n = 100, is_poisson = "yes"), "is_poisson")
+  expect_error(generate_lim_sample(n = 100, is_poisson = NA), "is_poisson")
+})
+
+
+# ── generate_resit_sample ─────────────────────────────────────────────────────
+
+test_that("generate_resit_sample returns the documented structure", {
+  dat <- generate_resit_sample(n = 100, seed = 1)
+
+  expect_named(dat, c("data", "adjacency_matrix", "causal_order"))
+  expect_s3_class(dat$data, "data.frame")
+  expect_equal(dim(dat$data), c(100L, 4L))
+  expect_equal(names(dat$data), paste0("x", 0:3))
+
+  B <- dat$adjacency_matrix
+  expect_equal(dim(B), c(4L, 4L))
+  expect_true(all(B %in% c(0, 1)))
+  # true edges, m[to, from] convention
+  expect_equal(B["x1", "x0"], 1)
+  expect_equal(B["x2", "x0"], 1)
+  expect_equal(B["x2", "x1"], 1)
+  expect_equal(B["x3", "x2"], 1)
+  expect_equal(sum(B), 4)
+
+  expect_equal(dat$causal_order, 1:4)
+})
+
+test_that("generate_resit_sample is reproducible with a seed and validates inputs", {
+  a <- generate_resit_sample(n = 150, seed = 7)
+  b <- generate_resit_sample(n = 150, seed = 7)
+  expect_equal(a, b)
+
+  expect_error(generate_resit_sample(n = 1), "n must be")
+  expect_error(generate_resit_sample(n = 100, seed = "x"), "seed")
+})

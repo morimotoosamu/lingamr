@@ -1120,7 +1120,7 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 
 Direct LiNGAM assumes every variable is continuous. `lingam_lim()` relaxes
 this assumption and estimates a causal structure from data containing a
-mixture of continuous and binary (0/1) discrete variables, following
+mixture of continuous and discrete variables, following
 Zeng et al. (2022). It combines a NOTEARS-style continuous optimization
 (the "global" phase) with a combinatorial local search over edge
 directions, pruning, and edge addition (the "local" phase).
@@ -1137,7 +1137,7 @@ lim_dat$is_continuous
 ```
 
 `lingam_lim()` requires `is_continuous`, a logical vector marking which
-columns are continuous (`TRUE`) versus binary discrete (`FALSE`).
+columns are continuous (`TRUE`) versus discrete (`FALSE`).
 Because the optimization starts from a random initial point,
 reproducibility requires `set.seed()`.
 
@@ -1154,9 +1154,12 @@ lists the estimated topological order as 1-based indices.
 colnames(lim_dat$data)[lim_result$causal_order]
 ```
 
-Only binary (0/1) discrete variables are supported; see `?lingam_lim` for
-details on the local phase's edge-weight convention and its numeric
-differences from the Python implementation.
+Discrete variables are binary (0/1) by default; setting `is_poisson = TRUE`
+treats them as Poisson-distributed counts instead (the local search phase
+then scores them with Poisson regression log-likelihoods).
+`generate_lim_sample(is_poisson = TRUE)` generates a matching count-data
+example. See `?lingam_lim` for details on the local phase's edge-weight
+convention and its numeric differences from the Python implementation.
 
 
 ## Multi-Group Direct LiNGAM

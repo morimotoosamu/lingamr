@@ -7,7 +7,7 @@
 hsic_gram_matrix(x, width)
 }
 \arguments{
-\item{x}{numeric vector}
+\item{x}{numeric vector or matrix (n x d)}
 
 \item{width}{kernel width from \code{\link[=hsic_kernel_width]{hsic_kernel_width()}}}
 }
@@ -15,6 +15,8 @@ hsic_gram_matrix(x, width)
 list(K = Gram matrix, Kc = centered Gram matrix)
 }
 \description{
-Gaussian Gram matrix and its double-centered version
+Multivariate input is combined into a single Gaussian kernel over the
+row-wise squared Euclidean distances (upstream behavior), not treated
+column by column.
 }
 \keyword{internal}

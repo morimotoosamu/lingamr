@@ -80,3 +80,13 @@ test_that("autoplot.MultiGroupLingamResult plots the selected group", {
   expect_s3_class(pl, "ggplot")
   expect_identical(pl$labels$subtitle, "g2")
 })
+
+test_that("autoplot.ResitResult returns a ggplot object", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("igraph")
+
+  res <- fake_resit_result()
+
+  expect_s3_class(ggplot2::autoplot(res), "ggplot")
+  expect_s3_class(ggplot2::autoplot(res, label_edges = TRUE), "ggplot")
+})

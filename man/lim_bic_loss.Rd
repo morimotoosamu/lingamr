@@ -4,13 +4,19 @@
 \alias{lim_bic_loss}
 \title{BIC-penalized DAG score (sign-flipped, i.e. a "loss") used during the local
 search phase. \code{W} is interpreted as a 0/1 skeleton in the i -> j
-orientation (parents of j are the nonzero rows of column j).}
+orientation (parents of j are the nonzero rows of column j).
+With \code{is_poisson = TRUE}, discrete columns are scored as Poisson counts
+instead of Bernoulli variables (see the Details of \code{\link[=lingam_lim]{lingam_lim()}} for the
+documented deviations from the Python source).}
 \usage{
-lim_bic_loss(W, X, is_continuous)
+lim_bic_loss(W, X, is_continuous, is_poisson)
 }
 \description{
 BIC-penalized DAG score (sign-flipped, i.e. a "loss") used during the local
 search phase. \code{W} is interpreted as a 0/1 skeleton in the i -> j
 orientation (parents of j are the nonzero rows of column j).
+With \code{is_poisson = TRUE}, discrete columns are scored as Poisson counts
+instead of Bernoulli variables (see the Details of \code{\link[=lingam_lim]{lingam_lim()}} for the
+documented deviations from the Python source).
 }
 \keyword{internal}

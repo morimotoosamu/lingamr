@@ -1,0 +1,413 @@
+<title>lingamr 実装優先順位 評議会レポート</title>
+<style>
+  :root {
+    --paper: #f5f6f2;
+    --surface: #ffffff;
+    --ink: #1a1f1c;
+    --ink-soft: #454f49;
+    --muted: #6e7873;
+    --line: #dde0d6;
+    --accent: #2b6f5c;
+    --accent-soft: #e4efe9;
+    --warn: #a8721f;
+    --warn-soft: #f5ead4;
+    --font-serif: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+    --font-sans: "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141815;
+      --surface: #1b211d;
+      --ink: #e9ece7;
+      --ink-soft: #c2c9c2;
+      --muted: #8b968f;
+      --line: #2c342e;
+      --accent: #6cbfa2;
+      --accent-soft: #1f2e28;
+      --warn: #d9ad64;
+      --warn-soft: #2e2517;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141815;
+    --surface: #1b211d;
+    --ink: #e9ece7;
+    --ink-soft: #c2c9c2;
+    --muted: #8b968f;
+    --line: #2c342e;
+    --accent: #6cbfa2;
+    --accent-soft: #1f2e28;
+    --warn: #d9ad64;
+    --warn-soft: #2e2517;
+  }
+  :root[data-theme="light"] {
+    --paper: #f5f6f2;
+    --surface: #ffffff;
+    --ink: #1a1f1c;
+    --ink-soft: #454f49;
+    --muted: #6e7873;
+    --line: #dde0d6;
+    --accent: #2b6f5c;
+    --accent-soft: #e4efe9;
+    --warn: #a8721f;
+    --warn-soft: #f5ead4;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  header.hero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2.5rem;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .graph-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .graph-mark svg { display: block; }
+  h1 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1.7rem, 4vw, 2.35rem);
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+  .hero-meta dt { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.06em; }
+  .hero-meta dd { margin: 0.1rem 0 0; font-weight: 500; }
+  .hero-meta > div { display: flex; flex-direction: column; }
+
+  h2.section-title {
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 3rem 0 1.1rem;
+    padding-top: 0.2rem;
+  }
+  h2.section-title small {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+
+  /* --- Recommendation ranking --- */
+  .rank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .rank-item {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 1rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.95rem 1.2rem;
+  }
+  .rank-item.top1 { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .rank-num {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    line-height: 1.4;
+  }
+  .rank-body b { font-size: 1.02rem; }
+  .rank-body p { margin: 0.25rem 0 0; color: var(--ink-soft); font-size: 0.93rem; }
+  .rank-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--warn);
+    background: var(--warn-soft);
+    border-radius: 5px;
+    padding: 0.1rem 0.45rem;
+    margin-left: 0.5rem;
+  }
+
+  .not-recommended {
+    margin-top: 1.3rem;
+    padding: 0.9rem 1.2rem;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .not-recommended b { color: var(--ink-soft); }
+
+  /* --- first step callout --- */
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 1.3rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .callout .label {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .callout p { margin: 0; color: var(--ink); }
+
+  /* --- agree / clash / blindspot cards --- */
+  .stack { display: flex; flex-direction: column; gap: 0.9rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 0.94rem;
+  }
+  .card p { margin: 0; color: var(--ink-soft); }
+  .clash-card { border-left: 3px solid var(--warn); }
+  .agree-card { border-left: 3px solid var(--accent); }
+  .blindspot-card { border-left: 3px solid var(--muted); }
+
+  /* --- collapsible transcript --- */
+  details.advisor {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 0.6rem;
+    overflow: hidden;
+  }
+  details.advisor summary {
+    cursor: pointer;
+    padding: 0.85rem 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+  }
+  details.advisor summary::-webkit-details-marker { display: none; }
+  details.advisor summary .chev { color: var(--muted); font-size: 0.85rem; transition: transform 0.15s ease; }
+  details.advisor[open] summary .chev { transform: rotate(90deg); }
+  details.advisor .body {
+    padding: 0 1.2rem 1.1rem;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    border-top: 1px solid var(--line);
+    padding-top: 0.9rem;
+    white-space: pre-line;
+  }
+  .advisor-lens { font-size: 0.78rem; color: var(--muted); font-weight: 400; }
+
+  table.map-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin: 0.6rem 0 1.4rem;
+  }
+  table.map-table th, table.map-table td {
+    text-align: left;
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+  }
+  table.map-table th { color: var(--muted); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">
+      <span class="graph-mark">
+        <svg width="46" height="14" viewBox="0 0 46 14"><circle cx="4" cy="7" r="3.2" fill="var(--accent)"/><line x1="7" y1="7" x2="20" y2="7" stroke="var(--accent)" stroke-width="1.4"/><circle cx="23" cy="7" r="3.2" fill="var(--accent)"/><line x1="26" y1="7" x2="39" y2="7" stroke="var(--accent)" stroke-width="1.4"/><circle cx="42" cy="7" r="3.2" fill="var(--accent)"/></svg>
+      </span>
+      LLM Council &middot; Implementation Roadmap
+    </div>
+    <h1>lingamr 未実装アルゴリズム<br>実装優先順位 評議会レポート</h1>
+    <dl class="hero-meta">
+      <div><dt>対象</dt><dd>未実装15手法(基本モデル系・時系列系・非線形/潜在変数系・マルチグループ系・欠損データ系)</dd></div>
+      <div><dt>参照</dt><dd>Python lingam v1.13.0 / lingamr 実装済み7手法</dd></div>
+      <div><dt>体制</dt><dd>アドバイザー5名 &rarr; 相互レビュー5件 &rarr; 議長統合</dd></div>
+      <div><dt>日付</dt><dd>2026-07-30</dd></div>
+    </dl>
+  </header>
+
+  <section>
+    <h2 class="section-title"><small>The Recommendation</small>議長が提示する優先順位</h2>
+    <ol class="rank-list">
+      <li class="rank-item top1">
+        <span class="rank-num">0</span>
+        <div class="rank-body">
+          <b>LiM の Poisson 型離散変数対応</b><span class="rank-tag">15手法の枠外・最優先</span>
+          <p>既存7手法のうち1つが未完成のまま新規15手法に着手するのは順序が転倒している。全アドバイザーが見落とした「安い勝ち筋」。</p>
+        </div>
+      </li>
+      <li class="rank-item top1">
+        <span class="rank-num">1</span>
+        <div class="rank-body">
+          <b>RESIT</b>
+          <p>非線形因果探索の入口。MultiGroupRESIT・LongitudinalRESITの前提になるレバレッジ資産。ただし「HSIC基盤の流用で軽い」という楽観は退けられた — GAM/非線形回帰エンジンの検証コストを別途見積もった上で着手する。</p>
+        </div>
+      </li>
+      <li class="rank-item">
+        <span class="rank-num">2</span>
+        <div class="rank-body">
+          <b>ICALiNGAM</b>
+          <p>最も基本的な手法が抜けている「網羅性の穴」。fastICA依存のみで工数最小。RESITと並行、または直後の着手で穴を早期に解消する。</p>
+        </div>
+      </li>
+      <li class="rank-item">
+        <span class="rank-num">3</span>
+        <div class="rank-body">
+          <b>CAMUV</b>
+          <p>RESITと同じHSIC基盤で並走可能。潜在共通原因への対応は医療・マーケティング需要と直結。</p>
+        </div>
+      </li>
+      <li class="rank-item">
+        <span class="rank-num">4</span>
+        <div class="rank-body">
+          <b>VARMALiNGAM</b>
+          <p>VARLiNGAM資産の直接延長。工数対効果が高く、時系列需要も厚い。</p>
+        </div>
+      </li>
+    </ol>
+    <div class="not-recommended">
+      <b>実装不要枠として明示的に見送り:</b> mLiNGAM(bootstrap_with_imputation()と重複)／ABICLiNGAM(reticulate依存がCRAN軽量性という差別化軸を破壊)／LEWIS・MDLiNA(需要不透明)。「縦断因果推定に特化する」という戦略提案は依存関係の裏付けが弱く、単独の方針としては不採用。
+    </div>
+
+    <div class="callout">
+      <div class="label">The One Thing to Do First</div>
+      <p>15手法のどれにも着手する前に、(1) LiMのPoisson対応を仕上げ、(2) Python版lingamの各手法についてGitHub star・issue数・引用数を1時間程度で実際に調べる。5人の助言全員が需要判断を印象論で行っており、これがロードマップ全体の信頼性を損なっている最大の欠陥。データを見てからRESIT着手の是非を最終確定する。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><small>Where the Council Agrees</small>一致点</h2>
+    <div class="stack">
+      <div class="card agree-card"><p>RESITを上位に置くことに5人中4人(A/B/D/E、Cも実質同格)が一致。理由も共通 — HSIC独立性検定の資産(RCD/Parce由来)が使え、MultiGroupRESIT・LongitudinalRESITの前提になる「レバレッジ資産」論。</p></div>
+      <div class="card agree-card"><p>mLiNGAMは全員一致で最下位級。bootstrap_with_imputation()と目的が重複し、新規実装の差別化効果がないという評価に異論なし。</p></div>
+      <div class="card agree-card"><p>ABICLiNGAM・LEWISは軒並み最下位圏。深層学習依存・微分最適化基盤・引用実績の乏しさが理由。「実装しないこと自体が差別化戦略」という指摘を他の回答も暗黙に支持している。</p></div>
+      <div class="card agree-card"><p>CAMUVはRESITと並走できる、というRCD/Parce基盤の転用可能性についても異論がない。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><small>Where the Council Clashes</small>対立点</h2>
+    <div class="stack">
+      <div class="card clash-card"><p><b>ICALiNGAMの順位が真っ二つ。</b>「最も基本的な手法が抜けているのはCRANパッケージとして致命的」として1位に置く意見と、「工数最速回収」と評価しながら4位・1位に分かれて置く意見が対立。特に4位案は工数対効果最速と言いながら順位を落とす論理的矛盾をピアレビューで指摘されており、未解決のまま。</p></div>
+      <div class="card clash-card"><p><b>RESITの「軽さ」の評価が対立。</b>4人は既存HSIC基盤流用を根拠に「レバレッジ大・軽い」と評価するが、1人だけが「RESITの核心は加法ノイズモデルの非線形回帰(GAM)であり、HSICが使えるのは独立性検定部分のみ。mgcv::gamの実装・検証工数は別途必要で工数は中〜重」と技術的に反論。複数のピアレビューがこの反論を支持しており、信頼度が高い。</p></div>
+      <div class="card clash-card"><p><b>「RESIT&rarr;LongitudinalLiNGAM」という連鎖の主張は根拠薄弱。</b>LongitudinalLiNGAMは線形VAR系の縦断拡張であり、RESIT(非線形加法ノイズモデル)の基盤が転用できる理由が説明されていない。複数のピアレビューが同じ点を指摘しており、この依存関係論は棄却してよい。</p></div>
+      <div class="card clash-card"><p><b>「差別化」を判断軸に使うべきかどうかも対立。</b>Rエコシステムでの先行を重視する意見と、「差別化ではなく工数×需要で決めるべき」と真っ向から否定する意見が分かれた。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><small>Blind Spots the Council Caught</small>盲点</h2>
+    <div class="stack">
+      <div class="card blindspot-card"><p><b>LiMのPoisson型離散変数未対応という「安い勝ち筋」に5人とも触れていない。</b>既存7手法のうち1つが未完成なのに、15の新規手法着手を検討する前にこの穴を塞ぐ方が低コストで完成度も上がる。今回のピアレビューが唯一指摘した、最も重い見落とし。</p></div>
+      <div class="card blindspot-card"><p>単独作者の継続可能性(燃え尽きリスク)への言及が薄く、工数を「2-3週」「3-4週」と軽く積み上げているが、それが積み重なったときの持続可能性は誰も検証していない。</p></div>
+      <div class="card blindspot-card"><p>CRAN上の保守負荷(mgcv・fastICA等の依存追加によるcheck負担、依存パッケージの終了リスク)は誰も定量的に触れていない。</p></div>
+      <div class="card blindspot-card"><p>全回答が「HSIC/fcorr基盤の再利用可能性」ばかりを語り、シミュレーション検証・数値安定性確認・Python版との出力突合というテスト工数を過小評価している。単独作者の実工数はコーディングよりデバッグ・検証に割かれるという構造的な事実が全員から抜けている。</p></div>
+      <div class="card blindspot-card"><p>Python版lingamでの各手法のGitHub star・issue・citation数など、需要を裏付ける一次データが誰からも提示されていない。需要論はすべて印象論。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><small>Full Transcript</small>アドバイザー全文(匿名化解除)</h2>
+    <table class="map-table">
+      <tr><th>匿名ラベル</th><th>アドバイザー</th><th>要旨(1位案)</th></tr>
+      <tr><td>A</td><td>The Expansionist</td><td>RESIT &rarr; CAMUV &rarr; MultiGroupRESIT &rarr; ICALiNGAM &rarr; VARMALiNGAM</td></tr>
+      <tr><td>B</td><td>The Contrarian</td><td>RESIT &rarr; CAMUV &rarr; ICALiNGAM &rarr; GroupDirectLiNGAM &rarr; MultiGroupRESIT</td></tr>
+      <tr><td>C</td><td>The Outsider</td><td>RESIT &rarr; LongitudinalLiNGAM &rarr; MultiGroupRESIT &rarr; VARMALiNGAM</td></tr>
+      <tr><td>D</td><td>The First Principles Thinker</td><td>ICALiNGAM &rarr; RESIT &rarr; CAMUV &rarr; VARMALiNGAM</td></tr>
+      <tr><td>E</td><td>The Executor</td><td>ICALiNGAM &rarr; RESIT &rarr; GroupDirectLiNGAM &rarr; VARMALiNGAM &rarr; MultiGroupRCD</td></tr>
+    </table>
+
+    <details class="advisor">
+      <summary>The Expansionist(応答A)<span class="chev">&#8250;</span></summary>
+      <div class="body">RESITを最優先とし、非線形加法ノイズモデルという「非線形因果探索」枠の入口かつMultiGroupRESIT・LongitudinalRESITの土台と位置づけ。CAMUVはRESITと並走可能、潜在共通原因への対処はマーケティング・医療データの実務ニーズに直撃。MultiGroupRESITはRESIT完成後は増分コスト小、MultiGroupDirectLiNGAMの設計パターンを転用できる。ICALiNGAMは実装が軽い割にCRANでの「網羅性」の見栄えが強く工数対効果で最速リターン。VARMALiNGAMはVARLiNGAM資産の直接延長。ABICLiNGAM(Torch的自動微分基盤がR側にない)とmLiNGAM(bootstrap_with_imputation()で代替済み)は最後回し。「RESIT一本で後続3手法の実装コストが激減する構造」に全力集中すべきと結論。</div>
+    </details>
+    <details class="advisor">
+      <summary>The Contrarian(応答B)<span class="chev">&#8250;</span></summary>
+      <div class="body">1位RESIT、2位CAMUV、3位ICALiNGAM、4位GroupDirectLiNGAM、5位MultiGroupRESIT。ただし「RESIT基盤再利用は軽い」という前提を自ら疑い、核心は加法ノイズモデルの回帰残差でありmgcv::gamの実装・検証工数を過小評価しがちと指摘、工数は中〜重と見積もる。ICALiNGAMを軽視するのは誤りで、最も基本的な手法が抜けているのはCRANパッケージとして網羅性の欠如という致命傷になると主張。「差別化」を判断軸にするのは楽観的すぎ、素直に工数最小×需要最大で決めるべきとし、ABICLiNGAM・LEWIS・MDLiNAは最下位が妥当と結論。</div>
+    </details>
+    <details class="advisor">
+      <summary>The First Principles Thinker(応答D)<span class="chev">&#8250;</span></summary>
+      <div class="body">「15手法を難易度×需要でスコアリングして並べる」という発想そのものを罠と指摘し、「1手法の実装が次に何を可能にするか」という連鎖の起点になり得るかを唯一の指標とする。第1位はICALiNGAM — 実装ではなく欠落の異常性が問題であり、DirectLiNGAM以下7手法を実装しながら原型が無いのは教科書の第1章を書かずに応用編だけ出版しているに等しいと指摘。第2位RESITはMultiGroupRESIT・LongitudinalRESITの前提となる本当の分岐点。第3位CAMUV、第4位VARMALiNGAM。mLiNGAMとABICLiNGAMは明確に後回し — 特にABICLiNGAMは「軽量・CRAN準拠」という差別化軸を破壊するため、深層学習に手を出さないこと自体が差別化戦略であり、実装しないという判断が最上位の意思決定であるべきと結論。</div>
+    </details>
+    <details class="advisor">
+      <summary>The Outsider(応答C)<span class="chev">&#8250;</span></summary>
+      <div class="body">最優先はRESIT&rarr;LongitudinalLiNGAM&rarr;MultiGroupRESITという「ハブ・アンド・スポーク戦略」。Rには縦断データの因果推定を実装した信頼できるツールがなく(lavaanの潜在増殖度は限界、bnlearnは構造仮定が強い)、これが差別化点になると主張。次点はVARMALiNGAM(低投資で経済時系列・金融の実用価値が向上)。ICALiNGAM・MultiGroupRCDは検討段階、GroupDirectLiNGAM・ABICLiNGAM・LEWIS・MDLiNA・LiNAは後回し。結論として「縦断因果推定のRにおける唯一の信頼できる選択肢」に特化する方が15手法全制覇より現実的で持続可能と主張(ただしこの依存関係論は複数のピアレビューで根拠薄弱と指摘されている)。</div>
+    </details>
+    <details class="advisor">
+      <summary>The Executor(応答E)<span class="chev">&#8250;</span></summary>
+      <div class="body">1位ICALiNGAM(最基本、既存DirectLiNGAMと独立性測度を完全共有、工数1-2週)。2位RESIT(非線形への唯一の橋、工数3-4週)。3位GroupDirectLiNGAM(既実装MultiGroupDirectLiNGAMの親概念、工数2-3週)。4位VARMALiNGAM(工数3-4週)。5位MultiGroupRCD。避けるべきはmLiNGAM・CAMUV・LiNA・MDLiNA(複雑度高い割にニッチ)・Longitudinal系(需要限定的)。現実的な2ヶ月ロードマップとしてICALiNGAM&rarr;RESIT&rarr;GroupDirectLiNGAMで「基本・非線形・マルチグループ」の軸足を固め、その後ユースケースで判断すべきと結論。</div>
+    </details>
+
+    <h2 class="section-title" style="margin-top:2.2rem"><small>Peer Review Highlights</small>相互レビュー(5件)からの抜粋</h2>
+    <details class="advisor">
+      <summary>共通して支持された評価<span class="chev">&#8250;</span></summary>
+      <div class="body">RESIT一択集中の論理(HSIC/RCD基盤流用&rarr;MultiGroupRESIT/LongitudinalRESIT連鎖)を最も具体的に語った回答(A)への評価が複数のレビューで一致した一方、その前提(基盤流用で軽い)を技術的に破壊した回答(B: GAM/非線形回帰エンジンの工数を別立てすべき)への支持も複数のレビューで一致。ICALiNGAMの「原論文の第1章が抜けている」という比喩(D)も高評価を得た。Cの「RESIT&rarr;LongitudinalLiNGAM」の依存関係論、および「Rにない」という差別化主張は代替パッケージ(CausalImpact, tsDyn, networkDynamic等)との比較検証を欠くとして複数のレビューから根拠薄弱と指摘された。</div>
+    </details>
+    <details class="advisor">
+      <summary>レビュー全体からの共通指摘<span class="chev">&#8250;</span></summary>
+      <div class="body">LiMのPoisson型離散変数未対応という「安い勝ち筋」への言及なし。単独作者の燃え尽き/継続性リスクの検討不足。CRAN上のメンテナンス負荷(依存パッケージ追加によるcheck負担、依存パッケージの終了リスク)への定量的言及なし。シミュレーション検証・数値安定性確認・Python版との出力突合というテスト工数の過小評価。Python版lingamの各手法のGitHub star/issue/citation数などの需要の一次データが全回答とも欠如し、印象論に留まっている。</div>
+    </details>
+  </section>
+
+  <footer>
+    生成: LLM Council(5アドバイザー + 5ピアレビュー + 議長統合、Workflow実行) &middot; 2026-07-30 &middot; 完全な議事録は <code>dev/council-transcript-20260730-132512.md</code>
+  </footer>
+</div>
