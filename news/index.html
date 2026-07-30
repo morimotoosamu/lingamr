@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,15 @@
       <small>Source: <a href="https://github.com/morimotoosamu/lingamr/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="lingamr-development-version">lingamr (development version)<a class="anchor" aria-label="anchor" href="#lingamr-development-version"></a></h2>
+<ul><li>Added <code><a href="../reference/lingam_resit.html">lingam_resit()</a></code>, <code><a href="../reference/lingam_resit_bootstrap.html">lingam_resit_bootstrap()</a></code>, and <code><a href="../reference/generate_resit_sample.html">generate_resit_sample()</a></code>, an R port of RESIT (Regression with Subsequent Independence Test; Peters et al. 2014) for causal discovery on nonlinear additive noise models. The regressor is pluggable: the default <code>"gam"</code> fits smoothing-spline GAMs via the suggested package mgcv, and any function <code>function(X, y)</code> returning fitted values can be supplied instead. The result is a new <code>ResitResult</code> class whose adjacency matrix holds 0/1 edge indicators (RESIT estimates no coefficients), with matching <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> / <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> / <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> / <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> methods. Unlike the Python implementation, the bootstrap stores no all-zero total-effects array (<code>total_effects</code> is <code>NULL</code>); total effects are undefined for nonlinear models.</li>
+<li>
+<code><a href="../reference/hsic_test_gamma.html">hsic_test_gamma()</a></code> (internal) now accepts matrix arguments, combining the columns into a single multivariate Gaussian kernel as in the Python implementation; univariate callers are unchanged (bit-identical results).</li>
+<li>Fixed <code><a href="../reference/setup_cluster_worker.html">setup_cluster_worker()</a></code> (internal, shared by all <code>*_bootstrap()</code> functions) to fall back to exporting the development namespace when the installed copy of the package is stale, instead of silently mixing old and new code on the workers.</li>
+<li>
+<code><a href="../reference/lingam_lim.html">lingam_lim()</a></code> gains an <code>is_poisson</code> argument for Poisson-type count discrete variables. With <code>is_poisson = TRUE</code>, discrete columns (<code>is_continuous = FALSE</code>) are validated as non-negative integer counts and the local search phase scores them with Poisson regression log-likelihoods (unregularized multivariate <code>glm(family = poisson())</code> with an intercept; closed-form intercept-only Poisson MLE for parentless variables). This is an intent-faithful port of the Python implementation’s <code>fit(is_poisson=True)</code>: the global optimization phase keeps the logistic surrogate loss, and several upstream scoring bugs are deliberately not reproduced (see the Details section of <code><a href="../reference/lingam_lim.html">?lingam_lim</a></code>). <code><a href="../reference/generate_lim_sample.html">generate_lim_sample()</a></code> gains a matching <code>is_poisson</code> argument, and <code>LiMResult</code> objects now carry an <code>is_poisson</code> field.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.2" id="lingamr-012">lingamr 0.1.2<a class="anchor" aria-label="anchor" href="#lingamr-012"></a></h2><p class="text-muted">CRAN release: 2026-07-17</p>
 <ul><li>Wrapped long-running bootstrap examples in <code>\donttest{}</code> to avoid CRAN NOTE for elapsed time &gt; 10s (<code>lingam_parce_bootstrap</code>, <code>lingam_rcd_bootstrap</code>).</li>

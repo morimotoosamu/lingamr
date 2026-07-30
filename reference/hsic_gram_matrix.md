@@ -1,6 +1,8 @@
 # Gaussian Gram matrix and its double-centered version
 
-Gaussian Gram matrix and its double-centered version
+Multivariate input is combined into a single Gaussian kernel over the
+row-wise squared Euclidean distances (upstream behavior), not treated
+column by column.
 
 ## Usage
 
@@ -12,7 +14,7 @@ hsic_gram_matrix(x, width)
 
 - x:
 
-  numeric vector
+  numeric vector or matrix (n x d)
 
 - width:
 

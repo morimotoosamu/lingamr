@@ -1,10 +1,11 @@
 # LiM: LiNGAM for Mixed Data
 
 Estimates a causal structure from data containing a mixture of
-continuous and binary (0/1) discrete variables, following Zeng et al.
-(2022). The method combines a NOTEARS-style continuous optimization
-(global phase) with a combinatorial local search over edge directions,
-pruning, and edge addition.
+continuous and discrete variables, following Zeng et al. (2022). The
+method combines a NOTEARS-style continuous optimization (global phase)
+with a combinatorial local search over edge directions, pruning, and
+edge addition. Discrete variables are binary (0/1) by default; set
+`is_poisson = TRUE` to treat them as Poisson-distributed counts instead.
 
 ## Usage
 
@@ -17,7 +18,8 @@ lingam_lim(
   h_tol = 1e-08,
   rho_max = 1e+16,
   w_threshold = 0.1,
-  only_global = FALSE
+  only_global = FALSE,
+  is_poisson = FALSE
 )
 ```
 
@@ -30,7 +32,8 @@ lingam_lim(
 - is_continuous:
 
   Logical vector of length `ncol(X)`. `TRUE` marks a continuous
-  variable, `FALSE` marks a discrete (binary 0/1) variable.
+  variable, `FALSE` marks a discrete variable (binary 0/1 by default;
+  non-negative integer counts when `is_poisson = TRUE`).
 
 - lambda1:
 
@@ -58,6 +61,13 @@ lingam_lim(
   If `TRUE`, skip the combinatorial local search phase and return the
   thresholded global-optimization result directly (default: FALSE)
 
+- is_poisson:
+
+  If `TRUE`, all discrete variables (`is_continuous = FALSE`) are
+  treated as Poisson-distributed counts (non-negative integers) rather
+  than binary variables, and the local search phase scores them with
+  Poisson regression log-likelihoods (default: FALSE). See Details.
+
 ## Value
 
 A `LiMResult` object (list) containing the following elements:
@@ -75,11 +85,33 @@ A `LiMResult` object (list) containing the following elements:
 - `is_continuous`: the input `is_continuous` vector, stored for
   reference.
 
+- `is_poisson`: the input `is_poisson` flag, stored for reference.
+
 ## Details
 
-Only binary (0/1) discrete variables are supported; count/Poisson-type
-discrete variables (the Python source's `loss_type = "poisson"` path)
-are not implemented.
+By default, discrete variables must be binary (0/1). With
+`is_poisson = TRUE`, discrete variables are instead treated as
+Poisson-distributed counts: the local search phase scores each discrete
+variable with a Poisson regression log-likelihood (an unregularized
+`glm(family = poisson())` fit on all parents, with an intercept), or
+with the closed-form intercept-only Poisson maximum likelihood when the
+variable has no parents. The global optimization phase is unchanged in
+both modes and keeps the logistic surrogate loss for discrete columns;
+this matches the behavior of the Python implementation's
+`fit(is_poisson=True)`, whose `loss_type = "poisson"` option (a
+whole-matrix Poisson loss that cannot be combined with mixed data) is
+intentionally not ported. Consequently, with `only_global = TRUE` the
+local search is skipped and `is_poisson` only affects input validation.
+
+The Poisson scoring deliberately deviates from the Python
+implementation, which fits a separate univariate regression per parent
+(accumulating only the last parent's likelihood due to a loop bug),
+ignores the fitted intercept, uses scikit-learn's `PoissonRegressor`
+with its default L2 regularization, and scores parentless count
+variables with the Bernoulli frequency-table code (a multinomial
+likelihood on a different scale). This implementation uses the full
+multivariate maximum-likelihood fit instead; numeric results will
+therefore not match the Python implementation.
 
 The Python implementation's `adjacency_matrix_` uses the opposite
 convention (`W[i, j]` = i -\> j). This R implementation transposes the

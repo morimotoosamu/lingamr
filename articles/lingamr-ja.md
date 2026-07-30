@@ -692,7 +692,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.5 seconds.
+#> Completed in 3.4 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -1110,7 +1110,7 @@ cat(sprintf(
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
 #> p = 10 : 0.03 sec
-#> p = 15 : 0.05 sec
+#> p = 15 : 0.06 sec
 #> theoretical factor 3.4x vs. observed 2.1x
 ```
 
@@ -1127,7 +1127,7 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 sec   0.05 sec
+#> Direct LiNGAM :  0.03 sec   0.06 sec
 #> ICA-LiNGAM    :  0.02 sec   0.03 sec
 ```
 
@@ -1386,7 +1386,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.5 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
@@ -1695,7 +1695,7 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 Direct
 LiNGAMはすべての変数が連続であることを仮定する。[`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
 はこの仮定を 緩和し、Zeng et al. (2022)
-に従って、連続変数と二値（0/1）離散変数が混在するデータ
+に従って、連続変数と離散変数が混在するデータ
 から因果構造を推定する。NOTEARS流の連続最適化（「global」フェーズ）と、エッジの
 方向・枝刈り・エッジ追加に関する組合せ的な局所探索（「local」フェーズ）を組み合わせ
 たものである。
@@ -1721,7 +1721,7 @@ lim_dat$is_continuous
 ```
 
 [`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
-には、各列が連続（`TRUE`）か二値離散（`FALSE`）かを示す論理ベクトル
+には、各列が連続（`TRUE`）か離散（`FALSE`）かを示す論理ベクトル
 `is_continuous`
 が必要である。最適化はランダムな初期点から始まるため、再現性を持たせる
 には [`set.seed()`](https://rdrr.io/r/base/Random.html) が必要である。
@@ -1753,8 +1753,12 @@ colnames(lim_dat$data)[lim_result$causal_order]
 #> [1] "x1" "x2" "x3"
 ```
 
-対応している離散変数は二値（0/1）のみである。localフェーズのエッジ重みの規約や、
-Python実装との数値的な違いの詳細は
+離散変数は既定では二値（0/1）である。`is_poisson = TRUE`
+を指定するとポアソン分布に
+従うカウント変数として扱われる（localフェーズがポアソン回帰の対数尤度でスコアリング
+する）。`generate_lim_sample(is_poisson = TRUE)`
+で対応するカウントデータの例を生成
+できる。localフェーズのエッジ重みの規約や、Python実装との数値的な違いの詳細は
 [`?lingam_lim`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
 を参照のこと。
 
@@ -2198,10 +2202,10 @@ evaluate_model_fit(fit_result, sample6$data)
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
-#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
-#>         AIC       BIC   LogLik
-#> 1 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
+#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
+#>   RMSEA       AIC       BIC   LogLik
+#> 1     0 -4264.864 -4166.708 2152.432
 ```
 
 ## LiNGAMが使えない場合

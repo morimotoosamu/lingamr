@@ -11,7 +11,7 @@ the thousands."><meta property="og:image" content="https://morimotoosamu.github.
 
     <a class="navbar-brand me-2" href="../index.html">lingamr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,11 +57,11 @@ the thousands.</p>
 
 
 <dl><dt id="arg-x">X<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>numeric vector</p></dd>
+<dd><p>numeric vector or matrix (n x d)</p></dd>
 
 
 <dt id="arg-y">Y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>numeric vector (same length as X)</p></dd>
+<dd><p>numeric vector or matrix with the same number of rows as X</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -70,13 +70,20 @@ the thousands.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The gamma-approximation variance estimator is only defined for n &gt;= 6
+    <p>Either argument may be a matrix (n x d); its columns are combined into a
+single Gaussian kernel over row-wise Euclidean distances, exactly as in
+the upstream multivariate implementation (used by RESIT, which tests a
+residual against the joint distribution of several predictors). The
+variables are not standardized beforehand (upstream behavior), so with
+wildly different column scales the largest-scale column dominates the
+distance.</p>
+<p>The gamma-approximation variance estimator is only defined for n &gt;= 6
 (its closed form divides by <code>(n-1)(n-2)(n-3)</code>); below that this errors
 instead of silently returning a NaN p-value that would otherwise
 propagate into <code>NA</code>-valued rejection decisions in callers. A constant
-input (zero variance) carries no dependence information, so it is
-treated as trivially independent (<code>p = 1</code>) rather than routed through
-the degenerate kernel-width / centered-Gram-matrix computation.</p>
+input (zero variance in every column) carries no dependence information,
+so it is treated as trivially independent (<code>p = 1</code>) rather than routed
+through the degenerate kernel-width / centered-Gram-matrix computation.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

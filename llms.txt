@@ -272,6 +272,13 @@ Causal discovery with latent confounder detection
 - [`get_error_independence_p_values_rcd()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values_rcd.md)
   : Compute p-values for the independence of RCD residuals (HSIC-based)
 
+## RESIT (nonlinear additive noise models)
+
+- [`lingam_resit()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit.md)
+  : RESIT causal discovery for nonlinear additive noise models
+- [`lingam_resit_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit_bootstrap.md)
+  : Bootstrap for RESIT
+
 ## LiM (mixed continuous and discrete data)
 
 - [`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
@@ -318,6 +325,9 @@ Causal discovery with latent confounder detection
   BottomUpParceLiNGAM)
 - [`generate_rcd_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_rcd_sample.md)
   : Generate sample data with a latent confounder (for RCD)
+- [`generate_resit_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_resit_sample.md)
+  : Generate sample data from a nonlinear additive noise model (for
+  RESIT)
 - [`generate_varlingam_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_varlingam_sample.md)
   : Generate sample data from a VAR-LiNGAM model
 
@@ -339,6 +349,8 @@ Causal discovery with latent confounder detection
   : Convert a ParceLingamResult to a tidy data.frame
 - [`tidy(`*`<RCDResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.RCDResult.md)
   : Convert an RCDResult to a tidy data.frame
+- [`tidy(`*`<ResitResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.ResitResult.md)
+  : Convert a ResitResult to a tidy data.frame
 - [`glance(`*`<LiMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.LiMResult.md)
   : Get a one-row summary of a LiMResult
 - [`glance(`*`<LingamResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.LingamResult.md)
@@ -349,6 +361,8 @@ Causal discovery with latent confounder detection
   : Get a one-row summary of a ParceLingamResult
 - [`glance(`*`<RCDResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.RCDResult.md)
   : Get a one-row summary of an RCDResult
+- [`glance(`*`<ResitResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.ResitResult.md)
+  : Get a one-row summary of a ResitResult
 - [`autoplot(`*`<LiMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.LiMResult.md)
   : Plot the causal graph of a LiMResult with ggplot2
 - [`autoplot(`*`<LingamResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.LingamResult.md)
@@ -359,6 +373,8 @@ Causal discovery with latent confounder detection
   : Plot the causal graph of a ParceLingamResult with ggplot2
 - [`autoplot(`*`<RCDResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.RCDResult.md)
   : Plot the causal graph of an RCDResult with ggplot2
+- [`autoplot(`*`<ResitResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.ResitResult.md)
+  : Plot the causal graph of a ResitResult with ggplot2
 
 ## Print methods
 
@@ -378,6 +394,8 @@ Causal discovery with latent confounder detection
   : Print method for ParceLingamResult
 - [`print(`*`<RCDResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.RCDResult.md)
   : Print method for RCDResult
+- [`print(`*`<ResitResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.ResitResult.md)
+  : Print method for ResitResult
 - [`print(`*`<VARBootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.VARBootstrapResult.md)
   : Print a VARBootstrapResult
 - [`print(`*`<VARLiNGAMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.VARLiNGAMResult.md)

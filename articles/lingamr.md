@@ -1021,7 +1021,7 @@ t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data
 
 cat(sprintf("Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n",
             t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
-#> Direct LiNGAM : 0.01 sec
+#> Direct LiNGAM : 0.02 sec
 #> ICA-LiNGAM    : 0.02 sec
 ```
 
@@ -1145,8 +1145,8 @@ cat(sprintf(
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
 #> p = 10 : 0.03 sec
-#> p = 15 : 0.05 sec
-#> theoretical factor 3.4x vs. observed 2.0x
+#> p = 15 : 0.06 sec
+#> theoretical factor 3.4x vs. observed 2.1x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -1162,8 +1162,8 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 sec   0.05 sec
-#> ICA-LiNGAM    :  0.02 sec   0.03 sec
+#> Direct LiNGAM :  0.03 sec   0.06 sec
+#> ICA-LiNGAM    :  0.01 sec   0.03 sec
 ```
 
 The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
@@ -1435,7 +1435,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.4 seconds.
+#> Completed in 1.5 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
@@ -1746,10 +1746,10 @@ get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
 Direct LiNGAM assumes every variable is continuous.
 [`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
 relaxes this assumption and estimates a causal structure from data
-containing a mixture of continuous and binary (0/1) discrete variables,
-following Zeng et al. (2022). It combines a NOTEARS-style continuous
-optimization (the “global” phase) with a combinatorial local search over
-edge directions, pruning, and edge addition (the “local” phase).
+containing a mixture of continuous and discrete variables, following
+Zeng et al. (2022). It combines a NOTEARS-style continuous optimization
+(the “global” phase) with a combinatorial local search over edge
+directions, pruning, and edge addition (the “local” phase).
 
 [`generate_lim_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lim_sample.md)
 generates a small dataset with a known causal chain of continuous and
@@ -1774,9 +1774,9 @@ lim_dat$is_continuous
 
 [`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
 requires `is_continuous`, a logical vector marking which columns are
-continuous (`TRUE`) versus binary discrete (`FALSE`). Because the
-optimization starts from a random initial point, reproducibility
-requires [`set.seed()`](https://rdrr.io/r/base/Random.html).
+continuous (`TRUE`) versus discrete (`FALSE`). Because the optimization
+starts from a random initial point, reproducibility requires
+[`set.seed()`](https://rdrr.io/r/base/Random.html).
 
 ``` r
 
@@ -1806,7 +1806,11 @@ colnames(lim_dat$data)[lim_result$causal_order]
 #> [1] "x1" "x2" "x3"
 ```
 
-Only binary (0/1) discrete variables are supported; see
+Discrete variables are binary (0/1) by default; setting
+`is_poisson = TRUE` treats them as Poisson-distributed counts instead
+(the local search phase then scores them with Poisson regression
+log-likelihoods). `generate_lim_sample(is_poisson = TRUE)` generates a
+matching count-data example. See
 [`?lingam_lim`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
 for details on the local phase’s edge-weight convention and its numeric
 differences from the Python implementation.
@@ -2258,10 +2262,10 @@ and its fit measures are visibly worse (lower CFI, higher RMSEA):
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
-#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
-#>         AIC       BIC   LogLik
-#> 1 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
+#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
+#>   RMSEA       AIC       BIC   LogLik
+#> 1     0 -4264.864 -4166.708 2152.432
 ```
 
 ## When LiNGAM Cannot Be Used

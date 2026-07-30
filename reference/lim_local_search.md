@@ -6,5 +6,5 @@ Local search phase: direction reversal, pruning, and edge addition
 ## Usage
 
 ``` r
-lim_local_search(W_est, X, con, is_continuous, d, h_tol)
+lim_local_search(W_est, X, con, is_continuous, is_poisson, d, h_tol)
 ```

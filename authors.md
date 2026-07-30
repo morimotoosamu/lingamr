@@ -20,13 +20,14 @@ Source:
 [`inst/CITATION`](https://github.com/morimotoosamu/lingamr/blob/main/inst/CITATION)
 
 Morimoto O (2026). *lingamr: LiNGAM Algorithms for Causal Discovery*. R
-package version 0.1.2, <https://CRAN.R-project.org/package=lingamr>.
+package version 0.1.2.9000,
+<https://CRAN.R-project.org/package=lingamr>.
 
     @Manual{,
       title = {{lingamr}: LiNGAM Algorithms for Causal Discovery},
       author = {Osamu Morimoto},
       year = {2026},
-      note = {R package version 0.1.2},
+      note = {R package version 0.1.2.9000},
       url = {https://CRAN.R-project.org/package=lingamr},
     }
 
