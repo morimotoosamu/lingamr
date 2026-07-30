@@ -1,6 +1,5 @@
 test_that("tidy.LingamResult returns long data.frame of edges", {
-  dat <- generate_lingam_sample_6(n = 500, seed = 42)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  res <- fit_direct_500()
   td  <- tidy(res)
 
   expect_s3_class(td, "data.frame")
@@ -13,8 +12,7 @@ test_that("tidy.LingamResult returns long data.frame of edges", {
 })
 
 test_that("tidy.LingamResult threshold filters edges", {
-  dat <- generate_lingam_sample_6(n = 500, seed = 42)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  res <- fit_direct_500()
 
   td_all  <- tidy(res, threshold = 0)
   td_high <- tidy(res, threshold = 100)  # exclude all edges
@@ -25,11 +23,8 @@ test_that("tidy.LingamResult threshold filters edges", {
 
 test_that("tidy.LingamResult from/to follow j -> i convention", {
   # pass the true structure directly to confirm the convention: B["x0","x3"] = 3 is x3 -> x0
-  dat  <- generate_lingam_sample_6(n = 100, seed = 1)
-  fake <- structure(
-    list(adjacency_matrix = dat$true_adjacency, causal_order = 1:6),
-    class = "LingamResult"
-  )
+  dat  <- sample6_100()
+  fake <- fake_lingam_result(dat$true_adjacency)
   td <- tidy(fake)
 
   edge <- td[td$from == "x3" & td$to == "x0", ]
@@ -38,11 +33,8 @@ test_that("tidy.LingamResult from/to follow j -> i convention", {
 })
 
 test_that("tidy.LingamResult returns 0-row data.frame for empty graph", {
-  fake <- structure(
-    list(adjacency_matrix = matrix(0, 3, 3,
-           dimnames = list(c("a", "b", "c"), c("a", "b", "c"))),
-         causal_order = 1:3),
-    class = "LingamResult"
+  fake <- fake_lingam_result(
+    matrix(0, 3, 3, dimnames = list(c("a", "b", "c"), c("a", "b", "c")))
   )
   td <- tidy(fake)
 
@@ -51,8 +43,7 @@ test_that("tidy.LingamResult returns 0-row data.frame for empty graph", {
 })
 
 test_that("glance.LingamResult returns one-row summary", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  res <- fit_direct_300()
   g   <- glance(res)
 
   expect_s3_class(g, "data.frame")
@@ -62,8 +53,7 @@ test_that("glance.LingamResult returns one-row summary", {
 })
 
 test_that("tidy.BootstrapResult returns direction counts", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 15L, reg_method = "ols", seed = 42L)
+  bs  <- bs_direct_300_15()
   td  <- tidy(bs)
 
   expect_s3_class(td, "data.frame")
@@ -71,15 +61,7 @@ test_that("tidy.BootstrapResult returns direction counts", {
 })
 
 test_that("tidy/glance for ParceLingamResult keep NA entries", {
-  B <- matrix(0, 3, 3, dimnames = list(c("a", "b", "c"), c("a", "b", "c")))
-  B["b", "a"] <- 1.5
-  B["a", "c"] <- NA
-  B["c", "a"] <- NA
-  fake <- structure(
-    list(adjacency_matrix = B, causal_order = list(2L, c(1L, 3L)),
-         p_values = matrix(0, 3, 3), independence = "hsic"),
-    class = "ParceLingamResult"
-  )
+  fake <- fake_parce_result()
 
   td <- tidy(fake)
   expect_named(td, c("from", "to", "estimate"))
@@ -98,10 +80,9 @@ test_that("tidy/glance for RCDResult count confounded pairs", {
   B["c", "b"] <- -0.8
   B["a", "b"] <- NA
   B["b", "a"] <- NA
-  fake <- structure(
-    list(adjacency_matrix = B,
-         ancestors_list = list(integer(0), integer(0), 2L)),
-    class = "RCDResult"
+  fake <- fake_rcd_result(
+    ancestors_list = list(integer(0), integer(0), 2L),
+    adjacency_matrix = B
   )
 
   td <- tidy(fake)
@@ -115,13 +96,7 @@ test_that("tidy/glance for RCDResult count confounded pairs", {
 })
 
 test_that("tidy/glance for LiMResult work", {
-  B <- matrix(0, 3, 3, dimnames = list(paste0("x", 1:3), paste0("x", 1:3)))
-  B["x2", "x1"] <- 1.2
-  fake <- structure(
-    list(adjacency_matrix = B, causal_order = 1:3,
-         is_continuous = c(TRUE, FALSE, TRUE)),
-    class = "LiMResult"
-  )
+  fake <- fake_lim_result()
 
   td <- tidy(fake)
   expect_named(td, c("from", "to", "estimate"))
@@ -166,10 +141,8 @@ test_that("tidy.MultiGroupBootstrapResult adds a group column", {
 test_that("tidy.ImputationBootstrapResult collapses imputations", {
   skip_if_not_installed("mice")
 
-  set.seed(1)
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)$data
-  dat$x5[sample.int(nrow(dat), 20)] <- NA
-  bs <- bootstrap_with_imputation(dat,
+  d <- make_missing_sample6(n = 200)
+  bs <- bootstrap_with_imputation(d$X,
     n_sampling = 5L, n_repeats = 2L, seed = 42, verbose = FALSE
   )
 

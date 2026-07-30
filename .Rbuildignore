@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
+^README\.ja\.md$
 ^data-raw$
 ^\.positai$
 ^\.claude$

@@ -16,8 +16,7 @@ make_var_result <- function(B0, B1) {
 }
 
 test_that("check_var_stationarity flags a stationary fitted model", {
-  s <- generate_varlingam_sample(n = 1000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_1000()
   st <- check_var_stationarity(m)
 
   expect_s3_class(st, "var_stationarity")
@@ -46,8 +45,7 @@ test_that("check_var_stationarity validates its input", {
 
 test_that("test_varlingam_residual_normality rejects normality for uniform errors", {
   # generate_varlingam_sample uses uniform (non-Gaussian) errors
-  s <- generate_varlingam_sample(n = 1500, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_1500()
 
   nt <- test_varlingam_residual_normality(m, method = "shapiro", on = "innovations")
   expect_s3_class(nt, "lingam_normality_test")
@@ -60,7 +58,7 @@ test_that("test_varlingam_residual_normality rejects normality for uniform error
 
 test_that("test_varlingam_residual_normality supports both targets", {
   s <- generate_varlingam_sample(n = 1000, seed = 1)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_default(s$data)
 
   innov <- test_varlingam_residual_normality(m, on = "innovations")
   varr <- test_varlingam_residual_normality(m, on = "var")
@@ -77,8 +75,7 @@ test_that("test_varlingam_residual_normality validates its input", {
 test_that("test_varlingam_residual_normality_all builds a multi-method table", {
   skip_if_not_installed("nortest")
   skip_if_not_installed("tseries")
-  s <- generate_varlingam_sample(n = 1500, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_1500()
 
   tbl <- test_varlingam_residual_normality_all(m, methods = c("shapiro", "ad", "lillie", "jb"))
   expect_s3_class(tbl, "data.frame")
@@ -97,7 +94,7 @@ test_that("test_varlingam_residual_normality_all validates input", {
 test_that("plot_varlingam_residual_qq returns a ggplot object", {
   skip_if_not_installed("ggplot2")
   s <- generate_varlingam_sample(n = 500, seed = 1)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_default(s$data)
 
   p_innov <- plot_varlingam_residual_qq(m, on = "innovations")
   p_var <- plot_varlingam_residual_qq(m, on = "var")

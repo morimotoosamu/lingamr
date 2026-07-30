@@ -1,5 +1,5 @@
 test_that("lingam_high_dim returns LingamResult with correct structure", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   res <- lingam_high_dim(dat$data)
 
   expect_s3_class(res, "LingamResult")
@@ -12,7 +12,7 @@ test_that("lingam_high_dim returns LingamResult with correct structure", {
 })
 
 test_that("lingam_high_dim errors on invalid inputs", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
 
   expect_error(lingam_high_dim(matrix(letters[1:4], nrow = 2)), "numeric matrix")
   expect_error(
@@ -80,7 +80,7 @@ test_that("lingam_high_dim is deterministic for the n > p route", {
 })
 
 test_that("estimate_adj_mat = FALSE returns an NA adjacency matrix but the same causal order", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   res_full <- lingam_high_dim(dat$data)
   res_order_only <- lingam_high_dim(dat$data, estimate_adj_mat = FALSE)
 
@@ -136,7 +136,7 @@ test_that("calc_taus minimizes over every conditioning subset, not just the firs
 })
 
 test_that("glmnet absence errors on the n <= p route but not the causal-order-only route", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
   wide <- generate_lingam_large_sample(p = 20, n = 15, seed = 1)
 
   local_mocked_bindings(

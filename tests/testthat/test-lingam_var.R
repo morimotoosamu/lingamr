@@ -1,6 +1,6 @@
 test_that("lingam_var returns VARLiNGAMResult with correct structure", {
   s <- generate_varlingam_sample(n = 500, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_default(s$data)
 
   expect_s3_class(m, "VARLiNGAMResult")
   expect_named(m, c("adjacency_matrices", "causal_order", "residuals", "lags"))
@@ -10,8 +10,7 @@ test_that("lingam_var returns VARLiNGAMResult with correct structure", {
 })
 
 test_that("lingam_var recovers the instantaneous structure (x0 -> x1 -> x2)", {
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_2000()
   B0 <- m$adjacency_matrices[1, , ]
 
   # x1 <- x0 is positive (true 0.6), x2 <- x1 is negative (true -0.5)
@@ -21,8 +20,7 @@ test_that("lingam_var recovers the instantaneous structure (x0 -> x1 -> x2)", {
 })
 
 test_that("lingam_var lag-1 matrix recovers the true M1", {
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_2000()
   B1 <- m$adjacency_matrices[2, , ]
 
   # diagonal of B1 should be close to the true M1 diagonal (0.4, 0.3, 0.5)
@@ -30,14 +28,14 @@ test_that("lingam_var lag-1 matrix recovers the true M1", {
 })
 
 test_that("lingam_var selects the lag order by BIC", {
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
+  s <- vars_2000_s42()
   m <- lingam_var(s$data, lags = 5, reg_method = "ols", criterion = "bic", prune = FALSE)
 
   expect_equal(m$lags, 1L)  # true lag order is 1
 })
 
 test_that("lingam_var supports aic / hqic / fpe lag selection", {
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
+  s <- vars_2000_s42()
   # All criteria should recover the true lag order (1) on this lag-1 model.
   for (crit in c("aic", "hqic", "fpe")) {
     m <- lingam_var(s$data, lags = 5, reg_method = "ols", criterion = crit, prune = FALSE)
@@ -49,7 +47,7 @@ test_that("select_var_lag compares candidates on a common sample", {
   # On a common sample the residual covariance of each candidate is computed
   # over t = max_lag + 1 .. n, so the selected lag is invariant to max_lag
   # as long as the true lag (1) stays within range.
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
+  s <- vars_2000_s42()
   X <- as.matrix(s$data)
   expect_equal(select_var_lag(X, max_lag = 3, criterion = "bic"), 1L)
   expect_equal(select_var_lag(X, max_lag = 8, criterion = "bic"), 1L)
@@ -81,7 +79,7 @@ test_that("lingam_var errors on invalid inputs", {
 
 test_that("print.VARLiNGAMResult runs without error", {
   s <- generate_varlingam_sample(n = 300, seed = 1)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_default(s$data)
 
   expect_output(print(m), "VAR-LiNGAM Result")
   expect_output(print(m), "Lag order")
@@ -108,7 +106,7 @@ test_that("lingam_var validates the prune argument", {
 
 test_that("prune = TRUE recovers the structure and shrinks weak edges", {
   skip_if_not_installed("glmnet")
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
+  s <- vars_2000_s42()
   m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = TRUE)
   B0 <- m$adjacency_matrices[1, , ]
   B1 <- m$adjacency_matrices[2, , ]

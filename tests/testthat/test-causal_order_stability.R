@@ -1,7 +1,5 @@
 test_that("BootstrapResult stores causal_orders", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 15L, seed = 42L,
-                                 reg_method = "ols")
+  bs  <- bs_direct_300_15()
 
   expect_false(is.null(bs$causal_orders))
   expect_equal(dim(bs$causal_orders), c(15L, 6L))
@@ -10,7 +8,7 @@ test_that("BootstrapResult stores causal_orders", {
 })
 
 test_that("get_causal_order_stability returns expected structure", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 20L, seed = 42L,
                                  reg_method = "ols")
   st  <- get_causal_order_stability(bs)
@@ -38,9 +36,7 @@ test_that("get_causal_order_stability: x3 is most upstream", {
 })
 
 test_that("precedence_matrix P[i,j] + P[j,i] == 1 for i != j", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 15L, seed = 42L,
-                                 reg_method = "ols")
+  bs  <- bs_direct_300_15()
   st  <- get_causal_order_stability(bs)
   P   <- st$precedence_matrix
 
@@ -52,26 +48,20 @@ test_that("precedence_matrix P[i,j] + P[j,i] == 1 for i != j", {
 })
 
 test_that("get_causal_order_stability errors on legacy result without causal_orders", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, seed = 1L,
-                                 reg_method = "ols")
-  bs$causal_orders <- NULL  # Simulate a result from an older version
+  bs  <- bs_direct_200_10()
+  bs$causal_orders <- NULL  # Simulate a result from an older version (local copy only)
 
   expect_error(get_causal_order_stability(bs), "causal order")
 })
 
 test_that("get_causal_order_stability validates labels length", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, seed = 1L,
-                                 reg_method = "ols")
+  bs  <- bs_direct_200_10()
 
   expect_error(get_causal_order_stability(bs, labels = c("a", "b")))
 })
 
 test_that("print.causal_order_stability runs", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, seed = 1L,
-                                 reg_method = "ols")
+  bs  <- bs_direct_200_10()
   st  <- get_causal_order_stability(bs)
 
   expect_output(print(st), "Causal Order Stability")

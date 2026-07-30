@@ -1,6 +1,6 @@
 test_that("summary_lingam returns lingam_summary with expected structure", {
-  dat <- generate_lingam_sample_6(n = 500, seed = 42)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_500_s42()
+  res <- fit_direct_500()
   s   <- summary_lingam(dat$data, res)
 
   expect_s3_class(s, "lingam_summary")
@@ -26,8 +26,8 @@ test_that("summary_lingam detects non-Gaussianity for uniform noise", {
 })
 
 test_that("print.lingam_summary runs and shows both assumptions", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_300()
+  res <- fit_direct_300()
   s   <- summary_lingam(dat$data, res)
 
   expect_output(print(s), "Direct LiNGAM Model Summary")
@@ -36,22 +36,22 @@ test_that("print.lingam_summary runs and shows both assumptions", {
 })
 
 test_that("summary_lingam errors on invalid lingam_result", {
-  dat  <- generate_lingam_sample_6(n = 200, seed = 1)
+  dat  <- sample6_200()
   fake <- list(adjacency_matrix = matrix(0, 6, 6), causal_order = 1:6)
 
   expect_error(summary_lingam(dat$data, fake), "must be the return value of lingam_direct")
 })
 
 test_that("summary_lingam errors when X dimensions mismatch", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_200()
+  res <- fit_direct_200()
 
   expect_error(summary_lingam(dat$data[, 1:4], res), "variables but lingam_result")
 })
 
 test_that("summary_lingam validates alpha and method arguments", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_200()
+  res <- fit_direct_200()
 
   expect_error(summary_lingam(dat$data, res, alpha = 0), "alpha must be")
   expect_error(summary_lingam(dat$data, res, alpha = 1.5), "alpha must be")

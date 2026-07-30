@@ -4,7 +4,7 @@
 
 test_that("estimate_var_total_effect recovers direct and indirect effects", {
   s <- generate_varlingam_sample(n = 3000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_default(s$data)
 
   # direct contemporaneous effects
   expect_equal(estimate_var_total_effect(s$data, m, 1, 2), 0.6, tolerance = 0.1)
@@ -14,8 +14,8 @@ test_that("estimate_var_total_effect recovers direct and indirect effects", {
 })
 
 test_that("estimate_var_total_effect accepts variable names", {
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  s <- vars_2000_s42()
+  m <- fit_var_2000()
 
   by_idx <- estimate_var_total_effect(s$data, m, 1, 2)
   by_name <- estimate_var_total_effect(s$data, m, "x0", "x1")
@@ -23,8 +23,8 @@ test_that("estimate_var_total_effect accepts variable names", {
 })
 
 test_that("estimate_var_total_effect warns on reversed causal order", {
-  s <- generate_varlingam_sample(n = 1000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  s <- vars_1000_s42()
+  m <- fit_var_1000()
 
   # from = x2, to = x0 contemporaneously is against the causal order
   expect_warning(estimate_var_total_effect(s$data, m, 3, 1), "[Cc]ausal order")
@@ -32,7 +32,7 @@ test_that("estimate_var_total_effect warns on reversed causal order", {
 
 test_that("estimate_var_total_effect validates inputs", {
   s <- generate_varlingam_sample(n = 500, seed = 1)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_default(s$data)
 
   expect_error(estimate_var_total_effect(s$data, list(), 1, 2), "VARLiNGAMResult")
   expect_error(estimate_var_total_effect(s$data, m, 1, 2, from_lag = -1), "from_lag")
@@ -40,8 +40,7 @@ test_that("estimate_var_total_effect validates inputs", {
 })
 
 test_that("var_total_effect_graph matches the path product", {
-  s <- generate_varlingam_sample(n = 2000, seed = 42)
-  m <- lingam_var(s$data, lags = 1, reg_method = "ols", criterion = NULL, prune = FALSE)
+  m <- fit_var_2000()
 
   # joined adjacency cbind(B0, B1); graph-based x0 -> x2 = product over x0->x1->x2
   am <- m$adjacency_matrices

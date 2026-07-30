@@ -1,5 +1,5 @@
 test_that("residual-based diagnostics validate lingam_result", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
 
   expect_error(
     get_error_independence_p_values(dat$data, "not a result"),
@@ -12,7 +12,7 @@ test_that("residual-based diagnostics validate lingam_result", {
 })
 
 test_that("residual-based diagnostics validate dimension mismatch", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
   res <- lingam_direct(dat$data, reg_method = "ols")
 
   expect_error(
@@ -26,15 +26,15 @@ test_that("residual-based diagnostics validate dimension mismatch", {
 })
 
 test_that("get_error_independence_p_values validates method", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
   res <- lingam_direct(dat$data, reg_method = "ols")
 
   expect_error(get_error_independence_p_values(dat$data, res, method = "bad"))
 })
 
 test_that("get_error_independence_p_values returns a valid symmetric p-value matrix", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_300()
+  res <- fit_direct_300()
 
   p <- get_error_independence_p_values(dat$data, res)
   expect_true(is.matrix(p))
@@ -56,8 +56,8 @@ test_that("test_residual_normality detects non-Gaussianity for uniform noise", {
 
 test_that("plot_residual_qq returns a ggplot object", {
   skip_if_not_installed("ggplot2")
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_300()
+  res <- fit_direct_300()
 
   p <- plot_residual_qq(dat$data, res)
   expect_s3_class(p, "ggplot")

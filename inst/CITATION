@@ -1,0 +1,50 @@
+citHeader("To cite lingamr in publications use:")
+
+bibentry(
+  bibtype = "Manual",
+  title   = "{lingamr}: LiNGAM Algorithms for Causal Discovery",
+  author  = person("Osamu", "Morimoto"),
+  year    = "2026",
+  note    = sprintf("R package version %s", meta$Version),
+  url     = "https://CRAN.R-project.org/package=lingamr"
+)
+
+bibentry(
+  bibtype = "Article",
+  header  = "For the DirectLiNGAM algorithm please also cite:",
+  title   = "{DirectLiNGAM}: A Direct Method for Learning a Linear Non-Gaussian Structural Equation Model",
+  author  = c(
+    person("Shohei", "Shimizu"),
+    person("Takanori", "Inazumi"),
+    person("Yasuhiro", "Sogawa"),
+    person("Aapo", "Hyvärinen"),
+    person("Yoshinobu", "Kawahara"),
+    person("Takashi", "Washio"),
+    person("Patrik O.", "Hoyer"),
+    person("Kenneth", "Bollen")
+  ),
+  journal = "Journal of Machine Learning Research",
+  year    = "2011",
+  volume  = "12",
+  pages   = "1225--1248",
+  url     = "https://www.jmlr.org/papers/v12/shimizu11a.html"
+)
+
+bibentry(
+  bibtype = "Article",
+  header  = "This package is based on the Python lingam package:",
+  title   = "Python package for causal discovery based on {LiNGAM}",
+  author  = c(
+    person("Takashi", "Ikeuchi"),
+    person("Mayumi", "Ide"),
+    person("Yan", "Zeng"),
+    person("Takashi Nicholas", "Maeda"),
+    person("Shohei", "Shimizu")
+  ),
+  journal = "Journal of Machine Learning Research",
+  year    = "2023",
+  volume  = "24",
+  number  = "14",
+  pages   = "1--8",
+  url     = "https://www.jmlr.org/papers/v24/21-0321.html"
+)

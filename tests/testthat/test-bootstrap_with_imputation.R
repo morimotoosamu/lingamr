@@ -1,15 +1,8 @@
-make_missing_data <- function(n = 300, seed = 1, na_frac = 0.1) {
-  sample6 <- generate_lingam_sample_6(n = n, seed = seed)
-  X <- sample6$data
-  set.seed(seed)
-  na_idx <- sample.int(n, size = round(na_frac * n))
-  X$x5[na_idx] <- NA
-  list(X = X, na_idx = na_idx)
-}
+# NA 入りデータの生成は helper-fixtures.R の make_missing_sample6() に共通化した。
 
 test_that("bootstrap_with_imputation returns ImputationBootstrapResult with expected structure", {
   skip_if_not_installed("mice")
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   res <- bootstrap_with_imputation(d$X, n_sampling = 5L, n_repeats = 3L, seed = 42, verbose = FALSE)
 
@@ -27,7 +20,7 @@ test_that("bootstrap_with_imputation returns ImputationBootstrapResult with expe
 
 test_that("imputation_results is non-NA exactly at the bootstrap sample's missing positions", {
   skip_if_not_installed("mice")
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   res <- bootstrap_with_imputation(d$X, n_sampling = 4L, n_repeats = 2L, seed = 1, verbose = FALSE)
 
@@ -45,7 +38,7 @@ test_that("imputation_results is non-NA exactly at the bootstrap sample's missin
 
 test_that("bootstrap_with_imputation is reproducible with the same seed", {
   skip_if_not_installed("mice")
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   res1 <- bootstrap_with_imputation(d$X, n_sampling = 4L, n_repeats = 2L, seed = 123, verbose = FALSE)
   res2 <- bootstrap_with_imputation(d$X, n_sampling = 4L, n_repeats = 2L, seed = 123, verbose = FALSE)
@@ -56,7 +49,7 @@ test_that("bootstrap_with_imputation is reproducible with the same seed", {
 })
 
 test_that("bootstrap_with_imputation warns when X has no missing values", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)$data
+  dat <- sample6_100()$data
 
   expect_warning(
     bootstrap_with_imputation(dat,
@@ -75,7 +68,7 @@ test_that("bootstrap_with_imputation warns when X has no missing values", {
 })
 
 test_that("custom imputer works, and an invalid one raises a clear error", {
-  d <- make_missing_data()
+  d <- make_missing_sample6()
   p <- ncol(d$X)
 
   mean_impute <- function(X_boot) {
@@ -124,7 +117,7 @@ test_that("custom imputer works, and an invalid one raises a clear error", {
 
 test_that("custom cd_fit works, and an invalid one raises a clear error", {
   skip_if_not_installed("mice")
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   custom_cd_fit <- function(X_list) {
     res <- lingam_multi_group(X_list, reg_method = "ols")
@@ -151,7 +144,7 @@ test_that("custom cd_fit works, and an invalid one raises a clear error", {
 
 test_that("as_bootstrap_result converts to a usable BootstrapResult", {
   skip_if_not_installed("mice")
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   res <- bootstrap_with_imputation(d$X, n_sampling = 4L, n_repeats = 3L, seed = 7, verbose = FALSE)
   bs <- as_bootstrap_result(res, aggregate = "median")
@@ -167,7 +160,7 @@ test_that("as_bootstrap_result converts to a usable BootstrapResult", {
 })
 
 test_that("bootstrap_with_imputation validates its arguments", {
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   expect_error(bootstrap_with_imputation(d$X, n_sampling = 0L), "n_sampling must be a positive integer")
   expect_error(bootstrap_with_imputation(d$X, n_sampling = 2L, n_repeats = 0L), "n_repeats must be a positive integer")
@@ -179,7 +172,7 @@ test_that("bootstrap_with_imputation validates its arguments", {
 
 test_that("print.ImputationBootstrapResult reports the expected header", {
   skip_if_not_installed("mice")
-  d <- make_missing_data()
+  d <- make_missing_sample6()
 
   res <- bootstrap_with_imputation(d$X, n_sampling = 2L, n_repeats = 2L, seed = 1, verbose = FALSE)
   expect_output(print(res), "ImputationBootstrapResult")

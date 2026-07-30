@@ -1,6 +1,5 @@
 test_that("lingam_multi_group returns MultiGroupLingamResult with expected structure", {
-  mg <- generate_multi_group_sample(n = c(300, 300), seed = 1)
-  res <- lingam_multi_group(mg$data_list, reg_method = "ols")
+  res <- fit_mg_300()
 
   expect_s3_class(res, "MultiGroupLingamResult")
   expect_named(res, c("adjacency_matrices", "causal_order"))
@@ -13,7 +12,7 @@ test_that("lingam_multi_group returns MultiGroupLingamResult with expected struc
 })
 
 test_that("lingam_multi_group validates X_list", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)$data
+  dat <- sample6_100()$data
 
   expect_error(lingam_multi_group(dat), "X_list must be a list")
   expect_error(lingam_multi_group(list(dat)), "at least two items")
@@ -62,8 +61,8 @@ test_that("lingam_multi_group recovers the true structure", {
 })
 
 test_that("get_group_result extracts a usable LingamResult", {
-  mg <- generate_multi_group_sample(n = c(300, 300), seed = 1)
-  res <- lingam_multi_group(mg$data_list, reg_method = "ols")
+  mg <- mg_sample_300()
+  res <- fit_mg_300()
 
   g1 <- get_group_result(res, 1)
   expect_s3_class(g1, "LingamResult")
@@ -80,7 +79,7 @@ test_that("get_group_result extracts a usable LingamResult", {
 })
 
 test_that("lingam_multi_group works with prior knowledge", {
-  mg <- generate_multi_group_sample(n = c(300, 300), seed = 1)
+  mg <- mg_sample_300()
   pk <- make_prior_knowledge(6, exogenous_variables = 4) # x3 (1-based index 4) is exogenous
 
   res <- lingam_multi_group(mg$data_list, prior_knowledge = pk, reg_method = "ols")
@@ -96,7 +95,7 @@ test_that("print.MultiGroupLingamResult reports the expected header", {
 })
 
 test_that("lingam_multi_group_bootstrap returns MultiGroupBootstrapResult", {
-  mg <- generate_multi_group_sample(n = c(300, 300), seed = 1)
+  mg <- mg_sample_300()
   bs <- lingam_multi_group_bootstrap(mg$data_list,
     n_sampling = 10L, reg_method = "ols", seed = 42L, verbose = FALSE
   )
@@ -127,7 +126,7 @@ test_that("lingam_multi_group_bootstrap is reproducible with the same seed", {
 })
 
 test_that("lingam_multi_group_bootstrap compute_total_effects = FALSE skips total effects", {
-  mg <- generate_multi_group_sample(n = c(300, 300), seed = 1)
+  mg <- mg_sample_300()
 
   bs <- lingam_multi_group_bootstrap(mg$data_list,
     n_sampling = 5L, reg_method = "ols", seed = 1L, verbose = FALSE,

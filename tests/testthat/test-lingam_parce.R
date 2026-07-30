@@ -1,6 +1,6 @@
 test_that("lingam_parce returns ParceLingamResult with correct structure", {
-  dat <- generate_parce_sample(n = 500, seed = 42)
-  res <- lingam_parce(dat$data, reg_method = "ols")
+  dat <- parce_sample_500()
+  res <- fit_parce_500()
 
   expect_s3_class(res, "ParceLingamResult")
   expect_named(res, c("adjacency_matrix", "causal_order", "p_values", "independence"))
@@ -34,8 +34,8 @@ test_that("lingam_parce validates its inputs", {
 })
 
 test_that("lingam_parce detects the latent confounder as an unresolved block", {
-  dat <- generate_parce_sample(n = 1000, seed = 42)
-  res <- lingam_parce(dat$data, reg_method = "ols")
+  dat <- parce_sample_1000()
+  res <- fit_parce_1000()
 
   block <- res$causal_order[[1]]
   expect_gt(length(block), 1L)
@@ -56,7 +56,7 @@ test_that("lingam_parce detects the latent confounder as an unresolved block", {
 })
 
 test_that("alpha = 0 disables rejection and returns a full causal order", {
-  dat <- generate_parce_sample(n = 500, seed = 42)
+  dat <- parce_sample_500()
   res <- lingam_parce(dat$data, alpha = 0, reg_method = "ols")
 
   expect_true(all(vapply(res$causal_order, length, integer(1)) == 1L))
@@ -81,7 +81,7 @@ test_that("lingam_parce with unconfounded data returns no block and a plausible 
 })
 
 test_that("independence = 'fcorr' returns a valid ParceLingamResult", {
-  dat <- generate_parce_sample(n = 500, seed = 42)
+  dat <- parce_sample_500()
   res <- lingam_parce(dat$data, independence = "fcorr", reg_method = "ols")
 
   expect_s3_class(res, "ParceLingamResult")
@@ -90,8 +90,8 @@ test_that("independence = 'fcorr' returns a valid ParceLingamResult", {
 })
 
 test_that("estimate_total_effect_parce warns and returns NA for a confounded variable", {
-  dat <- generate_parce_sample(n = 1000, seed = 42)
-  res <- lingam_parce(dat$data, reg_method = "ols")
+  dat <- parce_sample_1000()
+  res <- fit_parce_1000()
 
   x2 <- dat$confounded_pair[1]
   expect_warning(
@@ -108,8 +108,8 @@ test_that("estimate_total_effect_parce warns and returns NA for a confounded var
 })
 
 test_that("estimate_total_effect_parce works with method = 'ols'", {
-  dat <- generate_parce_sample(n = 1000, seed = 42)
-  res <- lingam_parce(dat$data, reg_method = "ols")
+  dat <- parce_sample_1000()
+  res <- fit_parce_1000()
 
   eff <- estimate_total_effect_parce(dat$data, res,
                                      from_index = 1L, to_index = 6L,
@@ -118,8 +118,8 @@ test_that("estimate_total_effect_parce works with method = 'ols'", {
 })
 
 test_that("get_error_independence_p_values_parce returns NA for confounded pairs and valid p-values elsewhere", {
-  dat <- generate_parce_sample(n = 1000, seed = 42)
-  res <- lingam_parce(dat$data, reg_method = "ols")
+  dat <- parce_sample_1000()
+  res <- fit_parce_1000()
 
   pvals <- get_error_independence_p_values_parce(dat$data, res)
   expect_equal(dim(pvals), c(6L, 6L))
@@ -133,8 +133,7 @@ test_that("get_error_independence_p_values_parce returns NA for confounded pairs
 })
 
 test_that("print.ParceLingamResult runs without error and shows blocks", {
-  dat <- generate_parce_sample(n = 500, seed = 42)
-  res <- lingam_parce(dat$data, reg_method = "ols")
+  res <- fit_parce_500()
 
   expect_output(print(res), "Bottom-Up ParceLiNGAM")
   expect_output(print(res), "\\(")
@@ -149,7 +148,7 @@ test_that("lingam_parce with prior_knowledge runs without error", {
 })
 
 test_that("lingam_parce_bootstrap returns a usable BootstrapResult", {
-  dat <- generate_parce_sample(n = 500, seed = 42)
+  dat <- parce_sample_500()
 
   bs <- lingam_parce_bootstrap(dat$data,
     n_sampling = 8L, reg_method = "ols", seed = 42, verbose = FALSE

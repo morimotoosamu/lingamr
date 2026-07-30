@@ -1,5 +1,5 @@
 test_that("lingam_direct_bootstrap validates inputs before running", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
 
   expect_error(lingam_direct_bootstrap(dat$data, n_sampling = 5L, measure = "bad"))
   expect_error(lingam_direct_bootstrap(dat$data, n_sampling = 5L, reg_method = "bad"))
@@ -20,7 +20,7 @@ test_that("lingam_direct_bootstrap validates inputs before running", {
 })
 
 test_that("compute_total_effects = FALSE skips total effects but keeps edge stability intact", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
 
   bs <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, reg_method = "ols",
                                  seed = 1, compute_total_effects = FALSE)
@@ -37,7 +37,7 @@ test_that("compute_total_effects = FALSE skips total effects but keeps edge stab
 
 test_that("lingam_direct_bootstrap passes init_method through", {
   skip_if_not_installed("glmnet")
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
 
   bs <- lingam_direct_bootstrap(dat$data,
     n_sampling = 2L, seed = 42L, verbose = FALSE,
@@ -47,7 +47,7 @@ test_that("lingam_direct_bootstrap passes init_method through", {
 })
 
 test_that("lingam_direct_bootstrap returns BootstrapResult", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, reg_method = "ols", seed = 42L)
 
   expect_s3_class(bs, "BootstrapResult")
@@ -76,8 +76,7 @@ test_that("lingam_direct_bootstrap with different seeds gives different results"
 })
 
 test_that("get_causal_direction_counts returns data.frame with expected columns", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 15L, reg_method = "ols", seed = 42L)
+  bs  <- bs_direct_300_15()
   dc  <- get_causal_direction_counts(bs)
 
   expect_s3_class(dc, "data.frame")
@@ -91,8 +90,7 @@ test_that("get_causal_direction_counts returns data.frame with expected columns"
 })
 
 test_that("get_causal_direction_counts with split_by_causal_effect_sign adds sign column", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 15L, reg_method = "ols", seed = 42L)
+  bs  <- bs_direct_300_15()
   dc  <- get_causal_direction_counts(bs, split_by_causal_effect_sign = TRUE)
 
   expect_true("sign" %in% names(dc))
@@ -100,8 +98,7 @@ test_that("get_causal_direction_counts with split_by_causal_effect_sign adds sig
 })
 
 test_that("get_adjacency_matrix_summary returns correctly shaped matrix", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 15L, reg_method = "ols", seed = 42L)
+  bs  <- bs_direct_300_15()
   B   <- get_adjacency_matrix_summary(bs)
 
   expect_true(is.matrix(B))
@@ -116,7 +113,7 @@ test_that("parallel bootstrap is reproducible with same seed and same n_cores", 
   skip_on_cran()
   skip_if_not(parallel::detectCores() >= 2L, "requires >= 2 cores")
 
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
 
   bs1 <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, reg_method = "ols", seed = 77L,
                                   parallel = TRUE, n_cores = 2L)
@@ -130,7 +127,7 @@ test_that("parallel bootstrap with different seeds gives different results", {
   skip_on_cran()
   skip_if_not(parallel::detectCores() >= 2L, "requires >= 2 cores")
 
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
 
   bs1 <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, reg_method = "ols", seed = 10L,
                                   parallel = TRUE, n_cores = 2L)
@@ -147,7 +144,7 @@ test_that("parallel and sequential results differ (L'Ecuyer vs set.seed)", {
   skip_on_cran()
   skip_if_not(parallel::detectCores() >= 2L, "requires >= 2 cores")
 
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
 
   bs_seq <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, reg_method = "ols", seed = 42L,
                                     parallel = FALSE)
@@ -161,7 +158,7 @@ test_that("parallel bootstrap returns same structure as sequential", {
   skip_on_cran()
   skip_if_not(parallel::detectCores() >= 2L, "requires >= 2 cores")
 
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
 
   bs_seq <- lingam_direct_bootstrap(dat$data, n_sampling = 8L, reg_method = "ols", seed = 1L,
                                     parallel = FALSE)
@@ -179,8 +176,7 @@ test_that("parallel bootstrap returns same structure as sequential", {
 # =============================================================================
 
 test_that("get_probabilities has the right shape and detects the true edges", {
-  dat <- generate_lingam_sample_6(n = 800, seed = 42)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 20L, reg_method = "ols", seed = 1)
+  bs  <- bs_direct_800_20()
 
   p <- get_probabilities(bs, min_causal_effect = 0.3)
   expect_equal(dim(p), c(6L, 6L))
@@ -193,8 +189,7 @@ test_that("get_probabilities has the right shape and detects the true edges", {
 })
 
 test_that("get_paths finds the indirect path x3 -> x0 -> x1", {
-  dat <- generate_lingam_sample_6(n = 800, seed = 42)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 20L, reg_method = "ols", seed = 1)
+  bs  <- bs_direct_800_20()
 
   paths <- get_paths(bs, from_index = 4, to_index = 2)
   expect_s3_class(paths, "data.frame")
@@ -206,8 +201,7 @@ test_that("get_paths finds the indirect path x3 -> x0 -> x1", {
 })
 
 test_that("get_total_causal_effects reports the known strong edges", {
-  dat <- generate_lingam_sample_6(n = 800, seed = 42)
-  bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 20L, reg_method = "ols", seed = 1)
+  bs  <- bs_direct_800_20()
 
   te <- get_total_causal_effects(bs, min_causal_effect = 0.3)
   expect_s3_class(te, "data.frame")
@@ -221,7 +215,7 @@ test_that("get_total_causal_effects reports the known strong edges", {
 
 test_that("plot_bootstrap_probabilities returns a grViz object", {
   skip_if_not_installed("DiagrammeR")
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 10L, reg_method = "ols", seed = 1)
 
   g <- plot_bootstrap_probabilities(bs)
@@ -229,7 +223,7 @@ test_that("plot_bootstrap_probabilities returns a grViz object", {
 })
 
 test_that("get_directed_acyclic_graph_counts returns dag/count lists that sum to n_sampling", {
-  dat <- generate_lingam_sample_6(n = 500, seed = 42)
+  dat <- sample6_500_s42()
   bs  <- lingam_direct_bootstrap(dat$data, n_sampling = 20L, reg_method = "ols", seed = 1)
 
   res <- get_directed_acyclic_graph_counts(bs)

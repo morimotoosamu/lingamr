@@ -118,7 +118,7 @@ estimate_adjacency_matrix <- function(X,
 #' user-chosen regression method" (adjacency estimation, total effects,
 #' Parce/RCD variants). Callers are expected to have validated `method`,
 #' `lambda`, and `init_method` already; no validation happens here so that
-#' error behaviour stays with the caller.
+#' error behavior stays with the caller.
 #'
 #' @param y response variable (numeric vector)
 #' @param Xp predictor matrix

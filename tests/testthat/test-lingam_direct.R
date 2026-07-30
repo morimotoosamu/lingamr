@@ -1,6 +1,6 @@
 test_that("lingam_direct returns LingamResult with correct structure", {
-  dat <- generate_lingam_sample_6(n = 500, seed = 42)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_500_s42()
+  res <- fit_direct_500()
 
   expect_s3_class(res, "LingamResult")
   expect_named(res, c("adjacency_matrix", "causal_order"))
@@ -13,22 +13,22 @@ test_that("lingam_direct returns LingamResult with correct structure", {
 
 test_that("lingam_direct identifies x3 as root (first in causal order)", {
   # x3 is an exogenous variable with no parents, so it should be first in the causal order
-  dat <- generate_lingam_sample_6(n = 2000, seed = 42)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_2000_s42()
+  res <- fit_direct_2000()
 
   expect_equal(res$causal_order[1], which(names(dat$data) == "x3"))
 })
 
 test_that("lingam_direct accepts data.frame and preserves colnames", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  dat <- sample6_300()
+  res <- fit_direct_300()
 
   expect_equal(colnames(res$adjacency_matrix), names(dat$data))
   expect_equal(rownames(res$adjacency_matrix), names(dat$data))
 })
 
 test_that("lingam_direct accepts matrix input", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   mat <- as.matrix(dat$data)
   res <- lingam_direct(mat, reg_method = "ols")
 
@@ -36,7 +36,7 @@ test_that("lingam_direct accepts matrix input", {
 })
 
 test_that("lingam_direct errors on invalid inputs", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
 
   expect_error(lingam_direct(dat$data, measure = "bad_measure"), "should be one of")
   expect_error(lingam_direct(dat$data, reg_method = "bad_method"), "should be one of")
@@ -67,7 +67,7 @@ test_that("lingam_direct rejects constant and perfectly collinear columns", {
 })
 
 test_that("lingam_direct rejects prior knowledge values outside {-1, 0, 1}", {
-  dat <- generate_lingam_sample_6(n = 100, seed = 1)
+  dat <- sample6_100()
   pk <- matrix(-1, 6, 6)
   pk[1, 2] <- 0.5
   expect_error(
@@ -93,8 +93,7 @@ test_that("single-predictor edges are pruned for independent variables", {
 })
 
 test_that("print.LingamResult runs without error", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
-  res <- lingam_direct(dat$data, reg_method = "ols")
+  res <- fit_direct_200()
 
   expect_output(print(res), "Direct LiNGAM Result")
   expect_output(print(res), "Causal order")
@@ -102,7 +101,7 @@ test_that("print.LingamResult runs without error", {
 })
 
 test_that("lingam_direct with prior_knowledge runs without error", {
-  dat <- generate_lingam_sample_6(n = 300, seed = 1)
+  dat <- sample6_300()
   pk <- make_prior_knowledge(6,
     exogenous_variables = 4,
     labels = names(dat$data)
@@ -115,7 +114,7 @@ test_that("lingam_direct with prior_knowledge runs without error", {
 test_that("soft prior knowledge with -1 (unknown) entries runs without error", {
   # regression test: -1 becomes NA during preprocessing, and
   # if (sum(...) == 0) inside search_candidate() returned NA and crashed
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
+  dat <- sample6_200()
   pk <- matrix(-1L, 6, 6)
   pk[2, 1] <- 1L
 
@@ -235,7 +234,7 @@ test_that("search_causal_order_kernel uses the low-rank path above n = 1000 and 
 })
 
 test_that("reg_method = 'ols' does not require glmnet", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
+  dat <- sample6_200()
 
   # simulate an environment where glmnet is not available
   local_mocked_bindings(
@@ -266,7 +265,7 @@ test_that("reg_method = 'ridge' returns a valid LingamResult", {
 })
 
 test_that("reg_method = 'ridge' with lambda = 'oracle' errors", {
-  dat <- generate_lingam_sample_6(n = 200, seed = 1)
+  dat <- sample6_200()
 
   expect_error(
     lingam_direct(dat$data, reg_method = "ridge", lambda = "oracle"),

@@ -1,6 +1,6 @@
 test_that("lingam_rcd returns RCDResult with correct structure", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  dat <- rcd_sample_300()
+  res <- fit_rcd_300()
 
   expect_s3_class(res, "RCDResult")
   expect_named(res, c("adjacency_matrix", "ancestors_list"))
@@ -13,7 +13,7 @@ test_that("lingam_rcd returns RCDResult with correct structure", {
 })
 
 test_that("lingam_rcd validates its inputs", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
+  dat <- rcd_sample_300()
 
   expect_error(lingam_rcd(matrix(letters[1:4], nrow = 2)), "numeric matrix")
   expect_error(lingam_rcd(dat$data[1:2, ]), "at least 3 observations")
@@ -27,8 +27,8 @@ test_that("lingam_rcd validates its inputs", {
 })
 
 test_that("lingam_rcd recovers the true ancestor sets", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  dat <- rcd_sample_300()
+  res <- fit_rcd_300()
 
   for (i in seq_along(dat$ancestors_list)) {
     expect_true(all(dat$ancestors_list[[i]] %in% res$ancestors_list[[i]]))
@@ -41,8 +41,8 @@ test_that("lingam_rcd recovers the true ancestor sets", {
 })
 
 test_that("lingam_rcd detects the confounded pair as NA and recovers true edges", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  dat <- rcd_sample_300()
+  res <- fit_rcd_300()
 
   x2 <- dat$confounded_pair[1]
   x4 <- dat$confounded_pair[2]
@@ -64,7 +64,7 @@ test_that("lingam_rcd detects the confounded pair as NA and recovers true edges"
 
 test_that("MLHSICR = TRUE runs without error and returns valid structure", {
   skip_on_cran()
-  dat <- generate_rcd_sample(n = 300, seed = 42)
+  dat <- rcd_sample_300()
   res <- lingam_rcd(dat$data, MLHSICR = TRUE, max_explanatory_num = 2L)
 
   expect_s3_class(res, "RCDResult")
@@ -73,7 +73,7 @@ test_that("MLHSICR = TRUE runs without error and returns valid structure", {
 })
 
 test_that("independence = 'fcorr' returns a valid RCDResult", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
+  dat <- rcd_sample_300()
   res <- lingam_rcd(dat$data, independence = "fcorr")
 
   expect_s3_class(res, "RCDResult")
@@ -115,8 +115,8 @@ test_that("mlhsicr_regression falls back to the OLS solution when the HSIC objec
 })
 
 test_that("estimate_total_effect_rcd warns and returns NA for a confounded 'from', numeric otherwise", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  dat <- rcd_sample_300()
+  res <- fit_rcd_300()
 
   x2 <- dat$confounded_pair[1]
   x4 <- dat$confounded_pair[2]
@@ -134,8 +134,8 @@ test_that("estimate_total_effect_rcd warns and returns NA for a confounded 'from
 })
 
 test_that("estimate_total_effect_rcd works with method = 'ols'", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  dat <- rcd_sample_300()
+  res <- fit_rcd_300()
 
   eff <- estimate_total_effect_rcd(dat$data, res,
                                    from_index = 6L, to_index = 1L,
@@ -144,8 +144,8 @@ test_that("estimate_total_effect_rcd works with method = 'ols'", {
 })
 
 test_that("get_error_independence_p_values_rcd gives NA for NA-linked pairs and [0,1] otherwise", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  dat <- rcd_sample_300()
+  res <- fit_rcd_300()
 
   pvals <- get_error_independence_p_values_rcd(dat$data, res)
   expect_equal(dim(pvals), c(6L, 6L))
@@ -159,15 +159,14 @@ test_that("get_error_independence_p_values_rcd gives NA for NA-linked pairs and 
 })
 
 test_that("print.RCDResult runs without error and shows ancestor sets", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
-  res <- lingam_rcd(dat$data)
+  res <- fit_rcd_300()
 
   expect_output(print(res), "RCD")
   expect_output(print(res), "M\\(")
 })
 
 test_that("lingam_rcd_bootstrap returns a usable BootstrapResult", {
-  dat <- generate_rcd_sample(n = 300, seed = 42)
+  dat <- rcd_sample_300()
 
   bs <- lingam_rcd_bootstrap(dat$data, n_sampling = 4L, seed = 42, verbose = FALSE)
 

@@ -5,8 +5,11 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/morimotoosamu/lingamr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/morimotoosamu/lingamr/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/lingamr)](https://CRAN.R-project.org/package=lingamr)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 <!-- badges: end -->
 
 LiNGAM is a method for estimating structural equation models or linear
@@ -18,9 +21,6 @@ Non-Gaussian Acyclic Model), which is available in Python.
 
 - [The LiNGAM Project](https://sites.google.com/view/sshimizu06/lingam)
 - [lingam (Python)](https://github.com/cdt15/lingam)
-
-This is currently an alpha version under development, and we are
-releasing it for the purpose of testing and gathering feedback.
 
 ## Features
 
@@ -155,8 +155,8 @@ developing this package:
 - JMRA (Japan Marketing Research Association)
 
 Development of this package was assisted by AI coding tools (Google
-Gemini and Anthropic Claude). The author reviewed, tested, and
-validated all AI-generated code.
+Gemini and Anthropic Claude). The author reviewed, tested, and validated
+all AI-generated code.
 
 ## Feedback
 
