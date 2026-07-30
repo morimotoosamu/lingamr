@@ -3,6 +3,30 @@
 ## lingamr (development version)
 
 - Added
+  [`lingam_camuv()`](https://morimotoosamu.github.io/lingamr/reference/lingam_camuv.md)
+  and
+  [`generate_camuv_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_camuv_sample.md),
+  an R port of CAM-UV (Causal Additive Models with Unobserved Variables;
+  Maeda and Shimizu
+  2021. for causal discovery on nonlinear additive models with
+        unobserved variables. The result is a new `CAMUVResult` class:
+        the adjacency matrix holds 0/1 edge indicators (no coefficients
+        are estimated), and variable pairs suspected to be connected
+        through an unobserved causal or backdoor path are `NA`, with
+        matching [`print()`](https://rdrr.io/r/base/print.html) /
+        [`tidy()`](https://generics.r-lib.org/reference/tidy.html) /
+        [`glance()`](https://generics.r-lib.org/reference/glance.html) /
+        [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+        methods. The regressor is pluggable as in
+        [`lingam_resit()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit.md)
+        (the Python implementation hardcodes pygam’s `LinearGAM`; the
+        default here is mgcv’s `gam()`). Prior knowledge uses the
+        upstream pair format (`c(i, j)` = “variable i cannot be a cause
+        of variable j”, 1-based). `independence = "fcorr"` is restricted
+        to `num_explanatory_vals = 2`, where the Python implementation
+        silently breaks on larger subsets. There is no bootstrap
+        variant, matching the Python implementation.
+- Added
   [`lingam_resit()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit.md),
   [`lingam_resit_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit_bootstrap.md),
   and

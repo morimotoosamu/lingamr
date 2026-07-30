@@ -279,6 +279,11 @@ Causal discovery with latent confounder detection
 - [`lingam_resit_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit_bootstrap.md)
   : Bootstrap for RESIT
 
+## CAM-UV (nonlinear models with unobserved variables)
+
+- [`lingam_camuv()`](https://morimotoosamu.github.io/lingamr/reference/lingam_camuv.md)
+  : CAM-UV (Causal Additive Models with Unobserved Variables)
+
 ## LiM (mixed continuous and discrete data)
 
 - [`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md)
@@ -304,6 +309,8 @@ Causal discovery with latent confounder detection
 
 ## Sample data generation
 
+- [`generate_camuv_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_camuv_sample.md)
+  : Generate sample data with unobserved variables (for CAM-UV)
 - [`generate_lim_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lim_sample.md)
   : Generate sample data for LiM (3 mixed variables)
 - [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
@@ -335,6 +342,8 @@ Causal discovery with latent confounder detection
 
 - [`tidy(`*`<BootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.BootstrapResult.md)
   : Convert a BootstrapResult to a tidy data.frame
+- [`tidy(`*`<CAMUVResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.CAMUVResult.md)
+  : Convert a CAMUVResult to a tidy data.frame
 - [`tidy(`*`<ImputationBootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.ImputationBootstrapResult.md)
   : Convert an ImputationBootstrapResult to a tidy data.frame
 - [`tidy(`*`<LiMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.LiMResult.md)
@@ -351,6 +360,8 @@ Causal discovery with latent confounder detection
   : Convert an RCDResult to a tidy data.frame
 - [`tidy(`*`<ResitResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/tidy.ResitResult.md)
   : Convert a ResitResult to a tidy data.frame
+- [`glance(`*`<CAMUVResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.CAMUVResult.md)
+  : Get a one-row summary of a CAMUVResult
 - [`glance(`*`<LiMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.LiMResult.md)
   : Get a one-row summary of a LiMResult
 - [`glance(`*`<LingamResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.LingamResult.md)
@@ -363,6 +374,8 @@ Causal discovery with latent confounder detection
   : Get a one-row summary of an RCDResult
 - [`glance(`*`<ResitResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/glance.ResitResult.md)
   : Get a one-row summary of a ResitResult
+- [`autoplot(`*`<CAMUVResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.CAMUVResult.md)
+  : Plot the causal graph of a CAMUVResult with ggplot2
 - [`autoplot(`*`<LiMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.LiMResult.md)
   : Plot the causal graph of a LiMResult with ggplot2
 - [`autoplot(`*`<LingamResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/autoplot.LingamResult.md)
@@ -380,6 +393,8 @@ Causal discovery with latent confounder detection
 
 - [`print(`*`<BootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.BootstrapResult.md)
   : Display the contents of a BootstrapResult
+- [`print(`*`<CAMUVResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.CAMUVResult.md)
+  : Print method for CAMUVResult
 - [`print(`*`<ImputationBootstrapResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.ImputationBootstrapResult.md)
   : Print method for ImputationBootstrapResult
 - [`print(`*`<LiMResult>`*`)`](https://morimotoosamu.github.io/lingamr/reference/print.LiMResult.md)

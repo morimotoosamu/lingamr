@@ -692,7 +692,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.4 seconds.
+#> Completed in 3.6 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features

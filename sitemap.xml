@@ -11,6 +11,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/news/index.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/as_bootstrap_result.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/as_hsic_matrix.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.CAMUVResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.LiMResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.LingamResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/autoplot.MultiGroupLingamResult.html</loc></url>
@@ -27,6 +28,18 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calc_tau.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calc_taus.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calculate_total_effect.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_build_adjacency_matrix.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_check_correlation.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_check_identified_causality.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_check_independence_without_k.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_check_prior_knowledge.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_find_parents.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_get_child.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_get_neighborhoods.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_get_residual.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_is_independent.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_is_independent_by.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_make_pk_dict.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_glmnet_available.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_lavaan_available.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/check_mgcv_available.html</loc></url>
@@ -67,6 +80,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_penalized_regression.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_ridge_reg.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/fit_var_ols.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_camuv_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lim_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.html</loc></url>
@@ -94,6 +108,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_names.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_paths.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/get_var_probabilities.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.CAMUVResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.LiMResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.LingamResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.MultiGroupLingamResult.html</loc></url>
@@ -129,6 +144,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_loss_mixed.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_obj_grad.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_topological_order.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_camuv.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_direct.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_high_dim.html</loc></url>
@@ -161,6 +177,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/plot_varlingam_residual_qq.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/predict_adaptive_lasso_cv.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.BootstrapResult.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/print.CAMUVResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.ImputationBootstrapResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.LiMResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/print.LingamResult.html</loc></url>
@@ -205,6 +222,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/test_varlingam_residual_normality.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/test_varlingam_residual_normality_all.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.BootstrapResult.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.CAMUVResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.ImputationBootstrapResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.LiMResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/tidy.LingamResult.html</loc></url>
