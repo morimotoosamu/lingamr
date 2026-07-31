@@ -2,6 +2,35 @@ url: https://morimotoosamu.github.io/lingamr/
 template:
   bootstrap: 5
 
+articles:
+- title: Getting started
+  navbar: Getting started
+  contents:
+  - lingamr
+  - method-selection
+
+- title: Method guides
+  navbar: Method guides
+  contents:
+  - articles/direct-lingam
+  - articles/bootstrap-diagnostics
+  - articles/time-series
+  - articles/latent-confounders
+  - articles/nonlinear
+  - articles/special-data
+
+- title: 日本語記事 (Japanese articles)
+  navbar: 日本語
+  contents:
+  - lingamr-ja
+  - method-selection-ja
+  - articles/direct-lingam-ja
+  - articles/bootstrap-diagnostics-ja
+  - articles/time-series-ja
+  - articles/latent-confounders-ja
+  - articles/nonlinear-ja
+  - articles/special-data-ja
+
 reference:
 - title: Direct LiNGAM
   desc: Core causal discovery on i.i.d. data

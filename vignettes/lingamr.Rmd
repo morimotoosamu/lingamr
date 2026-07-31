@@ -17,1481 +17,170 @@ knitr::opts_chunk$set(
 set.seed(0)
 ```
 
-This vignette walks through a complete causal discovery workflow with
-`lingamr`, step by step, using sample data.
+`lingamr` estimates **causal structure** — which variable causes which, and
+how strongly — from purely observational data, using the LiNGAM family of
+algorithms (an R port of the Python
+[`lingam`](https://github.com/cdt15/lingam) package by the
+[Shimizu lab](https://www.shimizulab.org/)).
+
+This vignette explains the core idea behind LiNGAM and walks through a
+minimal end-to-end workflow. Detailed guides for every method live on the
+package website; see [Where to Go Next](#where-to-go-next).
 
 ```{r setup}
 library(lingamr)
 ```
 
 
-## Sample Data
+## The Idea: Why Non-Gaussianity Reveals Causal Direction
 
-`lingamr` provides five sample data generators. Each returns a list
-containing `data` (a data frame) and `true_adjacency` (the true adjacency matrix).
+Correlation alone cannot distinguish "x causes y" from "y causes x": both
+models can produce exactly the same covariance matrix. Classical methods
+based on second-order statistics therefore return, at best, an *equivalence
+class* of structures.
 
-| Function | Variables | Default n | Characteristics |
-|------|:------:|:-----------:|------|
-| `generate_lingam_sample_6()` | 6 | 1,000 | Standard fixed structure. The main example in this vignette |
-| `generate_lingam_sample_10()` | 10 | 1,000 | An extension of the 6-variable case (used in [A Larger Dataset](#a-larger-dataset-10-variables)) |
-| `generate_lingam_hard_sample()` | 9 | 200 | A difficult setting with strong multicollinearity |
-| `generate_lingam_large_sample()` | variable | 1,000 | A random sparse DAG with an arbitrary number of variables (used in [The Scalability Wall](#when-there-are-many-variables-the-scalability-wall)) |
-| `generate_lingam_paradox_data()` | 4 | 2,000 | The measurement error paradox (used in [The Paradox Example](#a-case-where-directlingam-struggles-the-measurement-error-paradox)) |
+LiNGAM (Linear Non-Gaussian Acyclic Model; Shimizu et al. 2006) resolves the
+direction by adding one assumption: the error terms are **non-Gaussian**. The
+model for each variable is
 
-### generate_lingam_sample_6()
+$$x_i = \sum_{j:\ \mathrm{parent\ of\ } i} b_{ij}\, x_j + e_i,$$
 
-`generate_lingam_sample_6()` returns artificial data following a 6-variable
-LiNGAM model, together with its true adjacency matrix.
-The data is stored in `data` and the adjacency matrix in `true_adjacency`.
+with mutually independent, non-Gaussian errors $e_i$, arranged in a DAG.
+Under these assumptions the full causal structure is **uniquely
+identifiable** from observational data — not just up to an equivalence class.
 
-```{r sample1_matrix6_1}
+The intuition fits in one experiment. Take the true model
+$y = 1.5x + e$ with a *uniform* (non-Gaussian) error, and regress in both
+directions:
+
+```{r nongauss_intuition, fig.width = 7, fig.height = 3.5}
+n <- 1000
+x <- runif(n, -1, 1)
+y <- 1.5 * x + runif(n, -1, 1)
+
+res_causal <- residuals(lm(y ~ x)) # correct direction:  x -> y
+res_anti   <- residuals(lm(x ~ y)) # reverse direction:  y -> x
+
+oldpar <- par(mfrow = c(1, 2))
+plot(x, res_causal, main = "Correct: residual of y ~ x", cex = 0.4)
+plot(y, res_anti,   main = "Reverse: residual of x ~ y", cex = 0.4)
+par(oldpar)
+```
+
+In the correct direction the residual is **independent** of the regressor
+(left panel: a featureless band). In the reverse direction it is not (right
+panel: the residual's spread depends on $y$). Direct LiNGAM turns this
+asymmetry into an algorithm: the variable whose residuals are most
+independent of it is the most upstream ("exogenous") one; peel it off,
+regress it out, and repeat.
+
+Had the error been Gaussian, both panels would look identical — this is why
+non-Gaussianity is essential, and why the *basic* LiNGAM model rests on four
+assumptions:
+
+1. **Linear** relationships,
+2. an **acyclic** graph (a DAG),
+3. **non-Gaussian**, mutually independent errors,
+4. **no latent confounder** (all common causes observed),
+
+plus i.i.d. observations. `lingamr` also ships estimators that relax each of
+these — see `vignette("method-selection")`.
+
+
+## A Minimal Workflow
+
+### Estimate
+
+`generate_lingam_sample_6()` generates data from a known 6-variable LiNGAM
+model, so we can compare estimates against the truth. `lingam_direct()` runs
+Direct LiNGAM — by default, independence is assessed via mutual information
+and coefficients are estimated with adaptive LASSO.
+
+```{r workflow_fit}
 x1k <- generate_lingam_sample_6(n = 1000)
 
-x1k$data |>
-  head()
-```
-
-```{r sample1_matrix6_2}
-x1k$true_adjacency
-```
-
-`plot_adjacency()` draws a causal graph based on the adjacency matrix.
-
-```{r sample1_matrix6_3}
-x1k$true_adjacency |>
-  plot_adjacency(
-    labels  = colnames(x1k$data),
-    title   = "True causal structure",
-    rankdir = "TB",
-    shape   = "circle"
-  )
-```
-
-
-## Causal Discovery
-
-`lingam_direct()` runs Direct LiNGAM. By default, independence is assessed
-using mutual information, and path coefficients are computed with adaptive
-LASSO regression.
-
-```{r lingam_direct}
-model <- x1k$data |>
-  lingam_direct()
-```
-
-To use HSIC for assessing independence, set the `measure` argument to
-"kernel". HSIC is computationally expensive; for `n > 1000`,
-`lingam_direct()` automatically switches to a low-rank approximation.
-
-
-### Causal Order
-
-The estimated causal order is stored in `causal_order` as index numbers.
-```{r causal_order}
-# index number
-model$causal_order
-
-# variable name
-colnames(x1k$data)[model$causal_order]
-```
-
-
-### Estimated Adjacency Matrix
-
-We inspect the estimated effect magnitudes. By default, the regression
-coefficients from adaptive LASSO regression are used.
-
-```{r adjacency_matrix}
-model$adjacency_matrix |>
-  round(3)
-```
-
-
-### Drawing the Causal Graph
-
-We draw the causal graph based on the adjacency matrix estimated by Direct LiNGAM.
-
-```{r plot_adjacency}
-model$adjacency_matrix |>
-  plot_adjacency(
-    labels    = colnames(model$adjacency_matrix),
-    title     = "Estimated Causal Structure (Direct LiNGAM)",
-    rankdir   = "TB",
-    shape     = "ellipse",
-    fillcolor = "lightgreen"
-  )
-```
-
-
-### Comparing the Estimated and True Structures
-
-When the true structure is known, as with sample data, you can pass the true
-adjacency matrix to the `true_B` argument of `plot_adjacency()` to color-code
-the estimated edges by comparing them against the true structure. This lets you
-assess estimation accuracy at a glance, which is useful for validating methods
-or for educational purposes.
-
-- **Green (solid)**: correctly detected edges (estimated and true)
-- **Red (solid)**: falsely detected edges (estimated but not true)
-- **Orange (dashed)**: missed edges (true but not estimated; the true coefficient is shown)
-
-```{r plot_adjacency_compare}
-model$adjacency_matrix |>
-  plot_adjacency(
-    labels  = colnames(model$adjacency_matrix),
-    true_B  = x1k$true_adjacency,
-    title   = "Estimated vs. True Structure",
-    rankdir = "TB",
-    shape   = "ellipse"
-  )
-```
-
-
-### Static Plotting with ggplot2
-
-While `plot_adjacency()` returns an interactive HTML figure via DiagrammeR,
-`autoplot()` draws the same causal structure as a static, ggplot2-based figure.
-This is stable for image and PDF output in R Markdown / Quarto, and you can
-layer ggplot2 functions on top to set themes or titles afterward. Node positions
-are computed using `igraph`'s hierarchical layout, so the causal flow generally
-runs from top to bottom.
-
-`autoplot()` is a ggplot2 generic, so call it as `ggplot2::autoplot()` or load
-it beforehand with `library(ggplot2)` (plotting requires `ggplot2` and `igraph`).
-
-```{r autoplot, eval = requireNamespace("ggplot2", quietly = TRUE) && requireNamespace("igraph", quietly = TRUE)}
-ggplot2::autoplot(model)
-```
-
-
-## Total Causal Effect
-
-The **total causal effect** is the overall impact of changing one variable by
-one unit, combining the direct path and all indirect paths (paths through
-mediating variables).
-
-```{r total_effects}
-total_effects <- x1k$data |>
-  estimate_all_total_effects(model)
-
-round(total_effects, 3)
-```
-
-
-### Comparison with Multiple Regression Coefficients
-
-Multiple regression coefficients and total causal effects do not agree when
-mediating variables are present.
-
-In the true causal structure of `generate_lingam_sample_6()`, there are two
-paths from x3 to x1 (there is no **direct** edge from x3 to x1).
-
-- x3 -> x0 -> x1 (indirect effect: 3.0 x 3.0 = **9.0**)
-- x3 -> x2 -> x1 (indirect effect: 6.0 x 2.0 = **12.0**)
-- **Total causal effect of x3 on x1 = 9.0 + 12.0 = 21.0**
-
-We compare the coefficients from an OLS regression that includes all variables
-to predict x1 against the results of `estimate_all_total_effects()`.
-
-```{r total_vs_regression}
-# Multiple regression: include all variables to predict x1
-lm_coefs <- coef(lm(x1 ~ ., data = x1k$data))
-
-# Comparison (variables causally related to x1: x0, x2, x3)
-data.frame(
-  variable           = c("x0", "x2", "x3"),
-  OLS_coefficient    = round(lm_coefs[c("x0", "x2", "x3")], 3),
-  total_causal_effect = round(total_effects["x1", c("x0", "x2", "x3")], 3)
-)
-```
-
-The OLS coefficient for x3 is nearly **0**. This is because including x0 and x2
-(the mediating variables) in the model causes x3's "effect through mediation"
-to be absorbed into the coefficients of x0 and x2.
-
-In contrast, the value of x3 from `estimate_all_total_effects()` is **~21**,
-which correctly represents how much x1 ultimately changes when x3 is moved by
-one unit.
-
-| Question | Metric to use |
-|------|------------|
-| "How does x1 change if I move x3 while holding x0 and x2 fixed?" | OLS multiple regression coefficient |
-| "How does x1 change if I move x3, through all paths?" | Total causal effect |
-
-When you want to know "the ultimate impact of intervening on a variable," use
-the total causal effect rather than the multiple regression coefficient.
-
-
-## Inference with Prior Knowledge
-
-With `make_prior_knowledge()`, you can incorporate domain knowledge about the
-causal relationships among variables into Direct LiNGAM. This narrows the search
-space and stabilizes estimation.
-
-### Format of the Prior Knowledge Matrix
-
-`make_prior_knowledge()` returns a $p \times p$ integer matrix. It uses the
-indexing convention **row = effect variable (to), column = cause variable (from)**,
-the same convention as the adjacency matrix.
-
-| Value | Meaning |
-|----|------|
-| `-1` | Unknown (default; Direct LiNGAM searches freely) |
-| `0` | This edge does not exist |
-| `1` | This edge definitely exists |
-
-The following shows how each argument affects the matrix.
-
-| Argument | Value set | Meaning |
-|------|------------|------|
-| `exogenous_variables` | the entire **row** of the specified variable -> `0` | Receives no influence from any variable (root variable) |
-| `sink_variables` | the entire **column** of the specified variable -> `0` | Exerts no influence on any variable (sink variable) |
-| `paths` | `pk[to, from] = 1` | Specifies that this edge exists |
-| `no_paths` | `pk[to, from] = 0` | Specifies that this edge does not exist |
-
-Variables can be specified either by **1-based index** or by **variable name**
-(which requires the `labels` argument).
-
-### Usage Example
-
-We supply domain knowledge about the true structure of `generate_lingam_sample_6()`.
-
-- **x3** (index 4) is exogenous -- it receives no influence from any other variable
-- **x1, x4, x5** (indices 2, 5, 6) are sink variables -- they exert no influence on other variables
-- **Between x0 and x2** there is no path (in either direction)
-
-#### Specifying by Index
-
-```{r make_prior_knowledge1_index}
-pk1 <- make_prior_knowledge(
-  n_variables         = 6,
-  exogenous_variables = 4,          # x3
-  sink_variables      = c(2, 5, 6), # x1, x4, x5
-  no_paths            = list(c(3, 1), c(1, 3)) # no x2<->x0
-)
-
-pk1
-```
-
-How to read the matrix: if `pk1["x1", "x3"]` is `-1`, then "x3->x1 is unknown
-(LiNGAM searches for it)"; if `0`, then "x3->x1 does not exist".
-
-#### Specifying by Variable Name
-
-Passing `labels` lets you specify by variable name. This improves readability
-and is robust to adding or reordering columns.
-
-```{r make_prior_knowledge1_name}
-pk1_named <- make_prior_knowledge(
-  n_variables         = 6,
-  exogenous_variables = "x3",
-  sink_variables      = c("x1", "x4", "x5"),
-  no_paths            = list(c("x2", "x0"), c("x0", "x2")),
-  labels              = colnames(x1k$data)
-)
-
-# Equivalent in content to pk1
-identical(pk1, pk1_named)
-```
-
-### Running Direct LiNGAM with Prior Knowledge
-
-Simply pass it to the `prior_knowledge` argument and it is reflected in the search.
-
-```{r LiNGAM_with_pk_1}
-model_pk1 <- x1k$data |>
-  lingam_direct(prior_knowledge = pk1, lambda = "BIC")
-
-cat("Causal Order: ", colnames(x1k$data)[model_pk1$causal_order], "\n")
-```
-
-```{r LiNGAM_with_pk_2}
-model_pk1$adjacency_matrix |>
-  round(3)
-
-model_pk1$adjacency_matrix |>
-  plot_adjacency(
-    labels    = colnames(model_pk1$adjacency_matrix),
-    title     = "Estimated (with Prior Knowledge)",
-    rankdir   = "TB",
-    shape     = "circle",
-    fillcolor = "lightgreen"
-  )
-```
-
-
-## Choosing a Regression Method (reg_method)
-
-In Direct LiNGAM, the adjacency matrix is estimated by regression after the
-causal order is determined. The `reg_method` argument selects that regression method.
-
-| `reg_method` | `glmnet` | Sparsification | Characteristics |
-|---|---|---|---|
-| `"ols"` | Not required | None | Estimates all edges. For sanity checks or environments without the package |
-| `"lasso"` | Required | Yes | Shrinks weak edges to 0 |
-| `"adaptive_lasso"` | Required | Yes (strong) | **Default**. Has the oracle property -- reliably sets truly zero edges to 0 |
-| `"ridge"` | Required | None | Stabilizes coefficients with $\ell_2$ regularization. Robust to multicollinearity. Does not sparsify |
-
-The oracle property is the theoretical guarantee that "the true structure can be
-reliably recovered as the sample size grows," so `"adaptive_lasso"` is usually
-recommended.
-
-### Comparison of the Four Methods
-
-```{r reg_method_compare}
-fit_ols    <- lingam_direct(x1k$data, reg_method = "ols")
-fit_lasso  <- lingam_direct(x1k$data, reg_method = "lasso",          lambda = "BIC")
-fit_alasso <- lingam_direct(x1k$data, reg_method = "adaptive_lasso", lambda = "BIC")
-fit_ridge  <- lingam_direct(x1k$data, reg_method = "ridge",          lambda = "BIC")
-
-# Compare the adjacency matrices side by side
-round(fit_ols$adjacency_matrix,    3)
-round(fit_lasso$adjacency_matrix,  3)
-round(fit_alasso$adjacency_matrix, 3)
-round(fit_ridge$adjacency_matrix,  3)
-```
-
-OLS and Ridge tend to leave nonzero coefficients on all edges, whereas LASSO and
-Adaptive LASSO shrink superfluous edges to 0. Ridge reduces the **magnitude** of
-coefficients but does not set them to zero.
-
-### Choosing lambda (common to LASSO / Adaptive LASSO)
-
-The choice of penalty strength $\lambda$ directly determines the sparsity of the estimate.
-
-| `lambda` | Method | Sparsity | Use |
-|---|---|---|---|
-| `"BIC"` | Information criterion | Highest | **Default**. Stable even with small samples |
-| `"AIC"` | Information criterion | High | Leaves slightly more edges than BIC |
-| `"lambda.min"` | CV (minimum prediction error) | Low | Prioritizes predictive accuracy. More edges |
-| `"lambda.1se"` | CV (1SE rule) | Medium to high | Robust CV variant |
-| `"oracle"` | Analytic formula (adaptive_lasso only) | - | $\lambda = 5 / n^{1.75}$. Guarantees the theoretical oracle property |
-
-```{r reg_method_lambda}
-# Compare BIC (default, sparsest) and lambda.min (minimum prediction error)
-fit_bic     <- lingam_direct(x1k$data, lambda = "BIC")
-fit_lam_min <- lingam_direct(x1k$data, lambda = "lambda.min")
-
-# Number of nonzero edges
-sum(fit_bic$adjacency_matrix     != 0)
-sum(fit_lam_min$adjacency_matrix != 0)
-```
-
-
-## Independence between Error Variables
-
-LiNGAM assumes that the residuals are independent.
-`get_error_independence_p_values()` returns the p-values from tests of
-independence between the residuals.
-
-```{r Independence_between_error_variables1}
-result <- x1k$data |>
-  lingam_direct()
-
-p_vals <- x1k$data |>
-  get_error_independence_p_values(result)
-
-round(p_vals, 3)
-```
-
-
-## The Non-Gaussianity Assumption
-
-The theoretical heart of LiNGAM is the assumption that **the error terms follow
-a non-Gaussian distribution**. When the errors are Gaussian, the **direction** of
-causation becomes fundamentally unidentifiable (a reverse-direction model that
-explains the same distribution exists), and the estimates are unreliable.
-
-We verify this difference in practice by switching the error distribution with
-the `noise_dist` argument of `generate_lingam_sample_6()`. The true structure is
-as follows (the root is x3).
-
-```{r nongauss_true}
-set.seed(0)
-truth <- generate_lingam_sample_6(noise_dist = "uniform")
-
-truth$true_adjacency |>
-  round(1)
-```
-
-The causal graph of the true structure:
-
-```{r nongauss_true_plot}
-truth$true_adjacency |>
-  plot_adjacency(
-    labels = colnames(truth$data),
-    title  = "True structure"
-  )
-```
-
-### Non-Gaussian Errors (Uniform Distribution) -- When It Works
-
-```{r nongauss_uniform}
-fit_uniform <- lingam_direct(truth$data)
-
-# Estimated causal order (the true root x3 comes first)
-colnames(truth$data)[fit_uniform$causal_order]
-
-# The estimated adjacency matrix recovers the true structure almost perfectly
-fit_uniform$adjacency_matrix |>
-  round(1)
-```
-
-The estimated graph matches the true structure. Edges are color-coded against
-the truth: green = correct, red = false positive, orange dashed = missed.
-
-```{r nongauss_uniform_plot}
-fit_uniform$adjacency_matrix |>
-  plot_adjacency(
-    labels = colnames(truth$data),
-    true_B = truth$true_adjacency,
-    title  = "Estimated (uniform errors)"
-  )
-```
-
-### Gaussian Errors -- When It Fails
-
-With the same causal structure, the results break down when the errors are Gaussian.
-
-```{r nongauss_gaussian}
-gauss <- generate_lingam_sample_6(noise_dist = "gaussian")
-fit_gauss <- lingam_direct(gauss$data)
-
-# The causal order does not match the true structure (root x3 does not come first)
-colnames(gauss$data)[fit_gauss$causal_order]
-
-fit_gauss$adjacency_matrix |>
-  round(1)
-```
-
-Compared with the true structure, many edges are wrong (red) or missed (orange
-dashed) -- the same color coding as above:
-
-```{r nongauss_gaussian_plot}
-fit_gauss$adjacency_matrix |>
-  plot_adjacency(
-    labels = colnames(gauss$data),
-    true_B = truth$true_adjacency,
-    title  = "Estimated (Gaussian errors)"
-  )
-```
-
-With non-Gaussian errors the true adjacency matrix is recovered as-is, whereas
-with Gaussian errors both the causal order and the coefficients deviate greatly
-from the true structure. This is why it is said that "LiNGAM exploits the
-non-Gaussianity of the data to determine the direction of causation." When
-applying it to real data, it is important to **test the normality of the
-residuals**, as in the next section, to check whether this assumption holds.
-
-
-## Testing the Normality of Residuals
-
-We test the normality of the residuals. Because LiNGAM assumes non-Gaussianity,
-having normality **rejected** (a small p-value) is consistent with the model's
-assumptions.
-
-```{r nortest}
-# Shapiro-Wilk (default)
-x1k$data |>
-  test_residual_normality(result)
-```
-
-We also check the normality of the residuals with a QQ plot.
-
-```{r qqplot}
-x1k$data |>
-  plot_residual_qq(result)
-```
-
-
-## Model Summary
-
-`summary_lingam()` runs the residual independence test and the normality test
-together, letting you review at a glance how well the two assumptions LiNGAM
-relies on hold (that the residuals are mutually independent, and that the
-residuals are non-Gaussian). Instead of calling
-`get_error_independence_p_values()` and `test_residual_normality()` separately,
-you can survey the diagnostics in one place.
-
-```{r summary_lingam}
-x1k$data |>
-  summary_lingam(result)
-```
-
-
-## Bootstrap Direct LiNGAM
-We assess the reliability of the model using the bootstrap method.
-
-```{r lingam_direct_bootstrap}
-bs_model <- x1k$data |>
-  lingam_direct_bootstrap(n_sampling = 100L, seed = 42)
-
-bs_model
-```
-
-When the number of iterations or variables is large, specifying
-`parallel = TRUE` lets it run faster on multiple cores. The number of cores is
-specified with `n_cores` (when unspecified, it is capped at 2 cores for safety).
-
-```{r lingam_direct_bootstrap_parallel, eval = FALSE}
-bs_model <- x1k$data |>
-  lingam_direct_bootstrap(
-    n_sampling = 100L,
-    seed       = 42,
-    parallel   = TRUE,
-    n_cores    = 4L
-  )
-```
-
-Note that parallel execution uses L'Ecuyer's parallel random number streams, so
-results are reproducible given the same `seed` and the same `n_cores`, but they
-will not numerically match the results of sequential execution
-(`parallel = FALSE`).
-
-
-### Inspecting the Bootstrap Results
-
-From the bootstrap results, we compute the frequency of occurrence of each path
-and the mean of the coefficients.
-
-```{r get_causal_direction_counts}
-bs_model |>
-  get_causal_direction_counts(labels = names(x1k$data))
-```
-
-
-### Adjacency Matrix of Mean Causal Effects
-
-We construct an adjacency matrix from the bootstrap results.
-
-```{r get_adjacency_matrix_summary}
-bs_adjacency_matrix <- bs_model |>
-  get_adjacency_matrix_summary(stat = "median")
-
-bs_adjacency_matrix |>
-  round(3)
-```
-
-We visualize the estimated adjacency matrix.
-```{r plot_bootstrap}
-bs_adjacency_matrix |>
-  plot_adjacency(
-    labels    = colnames(x1k$data),
-    title     = "Estimated (with Bootstrap)",
-    rankdir   = "TB",
-    shape     = "circle",
-    fillcolor = "lightgreen"
-  )
-```
-
-
-### Matrix of Path Occurrence Frequencies
-
-We compute the matrix of occurrence frequencies for each path.
-
-```{r get_probabilities}
-bs_model |>
-  get_probabilities()
-```
-
-
-### Mean Total Effects
-
-We compute the mean total effect of each path.
-
-```{r get_total_causal_effects}
-bs_model |>
-  get_total_causal_effects()
-```
-
-We turn the bootstrap results into a causal graph. By default, only paths that
-occur in at least 50% of samples are shown.
-
-```{r plot_bootstrap_probabilities}
-bs_model |>
-  plot_bootstrap_probabilities()
-```
-
-
-### Stability of the Causal Order
-
-`get_causal_order_stability()` aggregates the causal orders estimated in each
-bootstrap sample and quantifies how stable the order is. It returns the rank
-distribution of each variable, the precedence probability for variable pairs
-(`P[i, j]` = the fraction of samples in which variable i came upstream of j),
-and an overall stability score (0 = random, 1 = identical across all samples).
-
-```{r get_causal_order_stability}
-bs_model |>
-  get_causal_order_stability(labels = names(x1k$data))
-```
-
-
-## Integration with broom (tidy / glance)
-
-Estimation results can be converted to a data.frame with the `broom`-compatible
-`tidy()` / `glance()`, making integration with `ggplot2` and `dplyr` easy.
-`tidy()` returns an edge list (`from`, `to`, `estimate`), and `glance()` returns
-a one-row summary of the whole model. `tidy()` also works on bootstrap results,
-in which case it returns the occurrence frequencies for each direction, etc.
-
-```{r broom}
-# Convert the estimated adjacency matrix to an edge list
-tidy(model)
-
-# One-row summary of the whole model
-glance(model)
-
-# Direction-wise summary of the bootstrap results (variable names via labels)
-tidy(bs_model, labels = names(x1k$data))
-```
-
-
-## A Larger Dataset (10 Variables)
-
-An example of a larger dataset with 10 variables and 10,000 rows.
-
-```{r sample1_matrix10}
-x10k <- generate_lingam_sample_10(n = 10000)
-
-x10k$true_adjacency |>
-  plot_adjacency(
-    labels  = colnames(x10k$data),
-    title   = "True causal structure",
-    rankdir = "TB",
-    shape   = "circle"
-  )
-```
-
-
-
-## Comparing ICA-LiNGAM and Direct LiNGAM
-
-`pcalg::lingam()` is the original LiNGAM algorithm, which estimates the mixing
-matrix with FastICA and obtains the causal order and coefficients
-(Shimizu et al. 2006). It solves the same problem while taking an approach
-independent of `lingam_direct()`.
-
-### Running Both Algorithms
-
-We analyze the same 6-variable dataset ($n = 1000$) with both methods.
-
-```{r ica_run, eval = requireNamespace("pcalg", quietly = TRUE)}
-d_cmp <- generate_lingam_sample_6(n = 1000, seed = 42)
-
-t_cmp_direct <- system.time(res_cmp_direct <- lingam_direct(d_cmp$data))
-t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data)))
-
-cat(sprintf("Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n",
-            t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
-```
-
-### Comparing the Estimated Coefficients
-
-`$Bpruned` uses the same convention as the lingamr adjacency matrix
-(`B[i, j]` = coefficient of $x_j \to x_i$).
-
-```{r ica_compare, eval = requireNamespace("pcalg", quietly = TRUE)}
-B_ica <- res_cmp_ica$Bpruned
-rownames(B_ica) <- colnames(B_ica) <- names(d_cmp$data)
-
-idx_ica  <- which(abs(B_ica) > 0, arr.ind = TRUE)
-tidy_ica <- data.frame(
-  from  = colnames(B_ica)[idx_ica[, 2]],
-  to    = rownames(B_ica)[idx_ica[, 1]],
-  ica   = round(B_ica[idx_ica], 3)
-)
-
-tidy_dir <- tidy(res_cmp_direct)
-tidy_dir <- data.frame(from = tidy_dir$from, to = tidy_dir$to,
-                       direct = round(tidy_dir$estimate, 3))
-
-merge(tidy_dir, tidy_ica, by = c("from", "to"), sort = TRUE)
-```
-
-### Comparing the DAG Structures
-
-We compare the structures with a full outer join over all edges and check
-consistency with the true DAG.
-
-```{r ica_structure, eval = requireNamespace("pcalg", quietly = TRUE)}
-B_true   <- d_cmp$true_adjacency
-idx_true <- which(abs(B_true) > 0, arr.ind = TRUE)
-true_key <- paste(colnames(B_true)[idx_true[, 2]],
-                  rownames(B_true)[idx_true[, 1]], sep = "->")
-
-cmp <- merge(tidy_dir, tidy_ica, by = c("from", "to"), all = TRUE, sort = TRUE)
-cmp$truth <- paste(cmp$from, cmp$to, sep = "->") %in% true_key
-cmp
-```
-
-When the `direct` or `ica` column is `NA`, it means that method did not detect
-that edge. `truth = TRUE` indicates an edge that exists in the true DAG.
-
----
-
-## When There Are Many Variables: The Scalability Wall
-
-At each step, Direct LiNGAM performs independence tests on all remaining pairs
-of variables. Since the number of steps is $p$ and the number of tests per step
-is at most $p(p-1)$, the total number of independence tests is approximately
-
-$$\sum_{k=1}^{p} k(k-1) \approx \frac{p^3}{3}$$
-
-giving a computational cost of **$O(p^3)$**.
-By contrast, the FastICA used by ICA-LiNGAM is $O(p^2 n)$ (with BLAS
-optimization), so the gap widens as the number of variables grows.
-
-`generate_lingam_large_sample()` generates random sparse DAG data with a freely
-configurable number of variables `p`. Each variable $x_i$ ($i \ge 1$) randomly
-has at most `max_parents` parents chosen from $x_0, \ldots, x_{i-1}$. Since the
-causal order is guaranteed to follow the index order, the adjacency matrix is
-always a **lower triangular matrix**.
-
-### Generating the Data
-
-```{r large_gen}
-d20 <- generate_lingam_large_sample(p = 20, n = 1000, seed = 42)
-
-dim(d20$data)                    # 1000 rows x 20 columns
-sum(d20$true_adjacency != 0)     # number of true edges (sparse DAG)
-d20$true_causal_order            # 0, 1, ..., 19
-```
-
-### Comparing Execution Times
-
-When $p$ grows by a factor of 1.5 (10 -> 15), the number of independence tests
-grows by a factor of $15^3 / 10^3 \approx 3.4$.
-
-```{r large_timing}
-d10 <- generate_lingam_large_sample(p = 10, n = 500, seed = 42)
-d15 <- generate_lingam_large_sample(p = 15, n = 500, seed = 42)
-
-t10 <- system.time({ r10 <- lingam_direct(d10$data) })
-t15 <- system.time({ r15 <- lingam_direct(d15$data) })
-
-cat(sprintf(
-  "p = 10 : %.2f sec\np = 15 : %.2f sec\ntheoretical factor %.1fx vs. observed %.1fx\n",
-  t10["elapsed"],
-  t15["elapsed"],
-  15^3 / 10^3,
-  t15["elapsed"] / max(t10["elapsed"], 0.01)
-))
-```
-
-We run ICA-LiNGAM on the same data to compare speed directly.
-
-```{r large_timing_ica, eval = requireNamespace("pcalg", quietly = TRUE)}
-t10_ica <- system.time({ pcalg::lingam(as.matrix(d10$data)) })
-t15_ica <- system.time({ pcalg::lingam(as.matrix(d15$data)) })
-
-cat(sprintf(
-  "              p = 10   p = 15\nDirect LiNGAM : %5.2f sec  %5.2f sec\nICA-LiNGAM    : %5.2f sec  %5.2f sec\n",
-  t10["elapsed"], t15["elapsed"],
-  t10_ica["elapsed"], t15_ica["elapsed"]
-))
-```
-
-The larger $p$ becomes, the more Direct LiNGAM's $O(p^3)$ cost dominates, and the
-gap between the two widens. In large-scale settings such as $p = 30$ or $p = 50$,
-this trend becomes even more pronounced.
-
-### Checking Estimation Accuracy (p = 10)
-
-Even with a sparse DAG, as long as there are **non-Gaussian errors** (default:
-uniform distribution), Direct LiNGAM can recover the correct causal order.
-
-```{r large_causal_order}
-# Estimated causal order
-r10$causal_order
-
-# Whether it matches the true causal order 0, 1, ..., 9 exactly
-all(r10$causal_order == d10$true_causal_order)
-```
-
-We convert to an edge list with `tidy()` and inspect the estimated coefficients.
-
-```{r large_tidy}
-tidy(r10) |>
-  head(10)
-```
-
-
-## High-Dimensional Direct LiNGAM
-
-The $O(p^3)$ independence-test cost shown above becomes a real bottleneck once
-$p$ grows into the tens or hundreds, and breaks down entirely once $p > n$
-(more variables than observations), where the usual regression-based
-adjacency estimation is no longer well defined.
-
-`lingam_high_dim()` implements HighDimDirectLiNGAM (Wang & Drton 2020), a
-variant designed for this regime. Instead of pairwise independence tests, it
-searches the causal order using moment statistics of non-Gaussianity, computed
-from a cached Gram matrix. The algorithm is deterministic (no random
-restarts), and it returns the same `LingamResult` object as `lingam_direct()`,
-so `print()`, `tidy()`, `plot_adjacency()` and `estimate_total_effect()` all
-work unchanged.
-
-```{r high_dim_basic}
-hd_sample <- generate_lingam_sample_6(n = 500, seed = 1)
-hd_result <- lingam_high_dim(hd_sample$data)
-
-hd_result$causal_order
-round(hd_result$adjacency_matrix, 3)
-```
-
-When `n_samples <= n_features`, the usual BIC-based Adaptive LASSO cannot be
-used to estimate the adjacency matrix, so `lingam_high_dim()` falls back to a
-cross-validated LASSO (`glmnet::cv.glmnet`) and emits a warning:
-
-```{r high_dim_wide}
-wide_sample <- generate_lingam_large_sample(p = 30, n = 25, seed = 1)
-wide_result <- lingam_high_dim(wide_sample$data)
-
-wide_result$causal_order
-```
-
-## A Case Where DirectLiNGAM Struggles: The Measurement Error Paradox
-
-Causal discovery methods have assumptions, and when those are violated they may
-fail to recover the correct structure. `generate_lingam_paradox_data()` is a
-dataset designed to deliberately create such a difficult case. As with the other
-sample generators, it returns a list containing `data` and `true_adjacency`.
-
-The true structure of this data is a simple serial chain
-**x0 -> x1 -> x2 -> x3** (each coefficient 0.8). However, it has two notable features.
-
-- **Heavy measurement error is added to the root variable x0.** This disrupts the
-  independence assessment performed in DirectLiNGAM's first step, causing it to
-  choose the root incorrectly and making error propagation more likely.
-- All variables are **standardized** with `scale()` (no differences in scale).
-
-```{r paradox_generate}
-paradox <- generate_lingam_paradox_data(n = 2000L, seed = 42)
-
-head(paradox$data)
-
-# All variables are standardized (sd = 1)
-sapply(paradox$data, sd)
-```
-
-We visualize the true causal graph. The coefficient 0.8 is the structural
-coefficient on the latent scale before standardization.
-
-```{r paradox_true}
-paradox$true_adjacency |>
-  plot_adjacency(
-    labels  = colnames(paradox$true_adjacency),
-    title   = "True causal chain (x0 -> x1 -> x2 -> x3)",
-    rankdir = "LR",
-    shape   = "circle"
-  )
-```
-
-Now let us apply Direct LiNGAM.
-
-```{r paradox_fit}
-model_p <- lingam_direct(paradox$data)
-
-# Estimated causal order
-colnames(paradox$data)[model_p$causal_order]
-```
-
-Note that the **head of the estimated causal order is x1, not the true root x0**.
-Because of the measurement error on the root, DirectLiNGAM fails to select x0 as
-the first exogenous variable.
-
-```{r paradox_adjacency}
-model_p$adjacency_matrix |>
-  round(3)
-
-model_p$adjacency_matrix |>
-  plot_adjacency(
-    labels    = colnames(model_p$adjacency_matrix),
-    title     = "Estimated structure (paradox data)",
-    rankdir   = "LR",
-    shape     = "circle",
-    fillcolor = "lightpink"
-  )
-```
-
-While the downstream **x1 -> x2 -> x3** is recovered correctly, the **direction
-between x0 and x1 is reversed** (the truth is x0 -> x1, but the estimate is
-x1 -> x0), and x0 ends up being treated almost like a sink.
-
-We use the bootstrap to check whether this error occurred by chance or is systematic.
-
-```{r paradox_bootstrap}
-bs_paradox <- paradox$data |>
-  lingam_direct_bootstrap(n_sampling = 100L, seed = 42)
-
-# Occurrence probability of each direction (row = to, column = from)
-bs_paradox |>
-  get_probabilities() |>
-  round(2)
-```
-
-The important point is that the incorrect direction **x1 -> x0** is reproduced
-with nearly 100% probability. In other words, this error is not coincidental but
-**systematic**, and it appears stably across bootstrap samples.
-
-> **Lesson:** Bootstrap stability (high reproduction probability) does not
-> guarantee the *correctness* of the estimate. When the model's assumptions (here,
-> the assumption that "upstream variables have no measurement error") are violated,
-> the method may **stably** recover an incorrect structure. It is important to
-> evaluate results critically, together with tests of residual independence and
-> normality and domain knowledge about the data-generating process.
-
-
-## VAR-LiNGAM: Causal Discovery in Time Series
-
-Direct LiNGAM assumes that observations are **independent and identically
-distributed (i.i.d.)**, a requirement that time series data violate.
-**VAR-LiNGAM** (Hyvärinen et al., 2010) handles stationary time series by
-first fitting a Vector Autoregression (VAR) model to absorb temporal
-autocorrelation, then applying Direct LiNGAM to the VAR residuals to recover
-the **instantaneous** causal structure $B_0$.
-The model is:
-
-$$X_t = B_0\,X_t + \sum_{k=1}^{p} B_k\,X_{t-k} + e_t$$
-
-where $B_0$ encodes contemporaneous causal effects (strictly acyclic),
-$B_1, \ldots, B_p$ encode lagged effects, and $e_t$ are mutually independent
-non-Gaussian disturbances.
-
-### Sample Data
-
-`generate_varlingam_sample()` produces a three-variable time series from a
-VAR(1)-LiNGAM model.
-The instantaneous structure is $x_0 \to x_1 \to x_2$ (coefficients 0.6 and
-−0.5), and the only cross-variable lag-1 effect is $x_2(t-1) \to x_0(t)$
-(coefficient 0.3).
-
-```{r varlingam_sample}
-s <- generate_varlingam_sample(n = 1000, seed = 42)
-
-# True instantaneous coefficient matrix B0  (B0[i, j]: x_j -> x_i)
-s$true_B0
-
-# True lag-1 coefficient matrix  (M1[i, j]: x_j(t-1) -> x_i(t), structural)
-s$true_M1
-```
-
-### Fitting VAR-LiNGAM
-
-Pass the data matrix to `lingam_var()`.
-Rows must be in chronological order (earliest first).
-
-```{r lingam_var}
-model <- lingam_var(s$data, lags = 1)
+model <- lingam_direct(x1k$data)
 model
 ```
 
-The result object contains `adjacency_matrices`, a three-dimensional array of
-shape `[1 + lags, n_features, n_features]`:
+The two key components of the result:
 
-- **`[1, , ]` (`"lag0"`):** instantaneous matrix $B_0$.
-  `B0[i, j]` is the direct effect of $x_j$ on $x_i$ at the *same* time step.
-- **`[k + 1, , ]` (`"lag`*k*`"`):** lagged matrix $B_k$.
-  `Bk[i, j]` is the direct structural effect of $x_j(t-k)$ on $x_i(t)$.
+```{r workflow_inspect}
+# The estimated causal order, upstream first
+colnames(x1k$data)[model$causal_order]
 
-Both can be extracted by their dimension label:
-
-```{r varlingam_matrices}
-B0 <- model$adjacency_matrices["lag0", , ]
-B1 <- model$adjacency_matrices["lag1", , ]
-
-round(B0, 2)  # compare with s$true_B0
-round(B1, 2)  # compare with s$true_M1
+# The adjacency matrix: B[i, j] is the direct effect of x_j on x_i
+round(model$adjacency_matrix, 3)
 ```
 
-### Lag Order Selection
+### Visualize
 
-By default, `lingam_var()` automatically selects the lag order among `1:lags`
-using the Bayesian Information Criterion (`criterion = "bic"`).
-The alternatives `"aic"`, `"hqic"`, and `"fpe"` are also supported.
-To use a fixed lag order without automatic selection, set `criterion = NULL`:
+`plot_adjacency()` draws the causal graph; passing the true structure via
+`true_B` color-codes the comparison (green = correct, red = false positive,
+orange dashed = missed).
 
-```{r varlingam_lags, eval = FALSE}
-# Fix lag order to 2 without IC-based selection
-model_lag2 <- lingam_var(s$data, lags = 2, criterion = NULL)
+```{r workflow_plot}
+model$adjacency_matrix |>
+  plot_adjacency(
+    labels = colnames(x1k$data),
+    true_B = x1k$true_adjacency,
+    title  = "Estimated vs. true structure"
+  )
 ```
 
-### Stationarity Check
+### Intervene: Total Causal Effects
 
-VAR-LiNGAM is defined for **stationary** processes.
-`check_var_stationarity()` inspects the eigenvalues of the VAR companion matrix:
-the process is stationary when all moduli are **strictly less than 1**.
+The total causal effect — how much a variable ultimately moves when another
+is changed by one unit, through all paths — is what you need to reason about
+interventions (a multiple-regression coefficient answers a different
+question; see the
+[Direct LiNGAM article](https://morimotoosamu.github.io/lingamr/articles/direct-lingam.html)).
 
-```{r varlingam_stationarity}
-check_var_stationarity(model)
+```{r workflow_total}
+total_effects <- estimate_all_total_effects(x1k$data, model)
+round(total_effects, 2)
 ```
 
-A `max_modulus` at or above 1 indicates a unit-root or explosive process.
-In that case, differencing the series before analysis is recommended.
+### Check the Assumptions
 
-### Residual Diagnostics
+`summary_lingam()` bundles the two key diagnostics: residuals should be
+mutually **independent** (assumption 4) and **non-Gaussian** (assumption 3 —
+so normality being *rejected* is good news here).
 
-LiNGAM assumes that the error terms $e_t$ are **non-Gaussian**.
-`test_varlingam_residual_normality()` tests whether the LiNGAM innovations
-$e_t = (I - B_0)\,n_t$ (where $n_t$ are the stored VAR residuals) depart
-from normality.
-A small p-value (reject $H_0$: Gaussian) supports the model assumption.
-
-```{r varlingam_normality}
-test_varlingam_residual_normality(model)
+```{r workflow_summary}
+summary_lingam(x1k$data, model)
 ```
 
-`test_varlingam_residual_normality_all()` runs several tests at once and
-appends skewness and excess kurtosis columns for a quick overview:
+### Quantify Stability
 
-```{r varlingam_normality_all}
-test_varlingam_residual_normality_all(model, methods = c("shapiro", "jb"))
-```
+The bootstrap re-runs the estimation on resampled data and reports how often
+each edge recurs — low-probability edges should not be over-interpreted:
 
-`plot_varlingam_residual_qq()` draws per-variable normal Q-Q plots.
-Deviations from the straight reference line indicate non-Gaussianity.
+```{r workflow_bootstrap}
+bs <- lingam_direct_bootstrap(x1k$data, n_sampling = 50L, seed = 42)
 
-```{r varlingam_qq, fig.width = 7, fig.height = 3}
-plot_varlingam_residual_qq(model)
-```
-
-### Total Causal Effects
-
-`estimate_var_total_effect()` estimates the **total** causal effect of one
-variable on another, integrating over all direct and mediated paths.
-The `from_lag` argument controls the time offset of the cause:
-`from_lag = 0` (default) gives the contemporaneous total effect;
-`from_lag = 1` gives the one-step-ahead effect of $x_j(t-1)$ on $x_i(t)$.
-
-```{r varlingam_total_effect}
-# Total effect x0 -> x2 (contemporaneous)
-estimate_var_total_effect(s$data, model, from_index = 1, to_index = 3)
-
-# Total effect x0(t-1) -> x2(t) (one-step-ahead)
-estimate_var_total_effect(s$data, model, from_index = 1, to_index = 3, from_lag = 1)
-```
-
-Variable indices are **1-based** integers, or column names as character strings.
-
-### Bootstrap
-
-`lingam_var_bootstrap()` quantifies the uncertainty of the estimated structure
-by re-running VAR-LiNGAM on **residual bootstrap** samples.
-Unlike the Direct LiNGAM bootstrap (which resamples i.i.d. rows),
-VAR-LiNGAM holds the fitted values fixed and resamples only the VAR residuals,
-preserving the temporal structure of the series.
-
-```{r varlingam_bootstrap}
-bs_var <- lingam_var_bootstrap(
-  s$data,
-  n_sampling = 100L,
-  seed       = 42,
-  verbose    = FALSE
-)
-```
-
-`get_var_probabilities()` returns the proportion of bootstrap samples in which
-each directed edge was detected.
-The column layout mirrors `adjacency_matrices`: the first `n_features` columns
-correspond to the instantaneous structure (lag 0), the next `n_features` to
-lag 1, and so on.
-
-```{r varlingam_probabilities}
-round(get_var_probabilities(bs_var), 2)
-```
-
-`get_var_paths()` enumerates all causal paths between two variables found
-across bootstrap samples, together with each path's average total effect and
-detection probability.
-
-```{r varlingam_paths}
-# Paths from x0 to x2 at the same time step (from_lag = 0)
-get_var_paths(bs_var, from_index = 1, to_index = 3)
-```
-
-```{r varlingam_paths_lag}
-# Paths from x0(t-1) to x2(t)  (from_lag = 1)
-get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
+round(get_probabilities(bs), 2)
 ```
 
 
-## VARMA-LiNGAM: Time Series with Moving-Average Errors
-
-**VARMA-LiNGAM** (Kawahara et al., 2011) extends VAR-LiNGAM with a
-moving-average (MA) part: the model is
-$x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
-\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}$,
-so past disturbances can influence the present alongside the lagged
-variables. `lingam_varma()` estimates the reduced-form VARMA coefficients by
-the deterministic two-stage Hannan-Rissanen procedure (the Python reference
-uses state-space maximum likelihood), applies Direct LiNGAM to the residuals,
-and returns the AR-side matrices `psis` (with `psis[1, , ]` = B0) and the
-MA-side matrices `omegas`.
-
-```{r lingam_varma}
-s_varma <- generate_varmalingam_sample(n = 1000, seed = 42)
-model_varma <- lingam_varma(s_varma$data, order = c(1, 1))
-print(model_varma)
-```
-
-`check_varma_stationarity()` checks the AR eigenvalues (stationarity) and
-also the MA eigenvalues (invertibility), which Hannan-Rissanen does not
-enforce.
-
-```{r varma_stationarity}
-check_varma_stationarity(model_varma)
-```
-
-The bootstrap, edge probabilities, path enumeration
-(`lingam_varma_bootstrap()`, `get_varma_probabilities()`,
-`get_varma_paths()`), total effects (`estimate_varma_total_effect()`), and
-residual normality diagnostics mirror their VAR-LiNGAM counterparts. In the
-probability matrix, the first `1 + p` column blocks are the psi (lag)
-matrices and the final `q` blocks are the omega (MA) matrices.
-
-```{r varma_bootstrap}
-bs_varma <- lingam_varma_bootstrap(
-  s_varma$data,
-  n_sampling = 100L,
-  order      = c(1, 1),
-  criterion  = NULL,
-  seed       = 42,
-  verbose    = FALSE
-)
-round(get_varma_probabilities(bs_varma, min_causal_effect = 0.1), 2)
-```
-
-
-## LiNGAM for Mixed Data (LiM)
-
-Direct LiNGAM assumes every variable is continuous. `lingam_lim()` relaxes
-this assumption and estimates a causal structure from data containing a
-mixture of continuous and discrete variables, following
-Zeng et al. (2022). It combines a NOTEARS-style continuous optimization
-(the "global" phase) with a combinatorial local search over edge
-directions, pruning, and edge addition (the "local" phase).
-
-`generate_lim_sample()` generates a small dataset with a known causal chain
-of continuous and discrete variables: `x1` (continuous) -> `x2` (discrete)
--> `x3` (continuous).
-
-```{r lim_sample}
-set.seed(1)
-lim_dat <- generate_lim_sample(n = 2000)
-head(lim_dat$data)
-lim_dat$is_continuous
-```
-
-`lingam_lim()` requires `is_continuous`, a logical vector marking which
-columns are continuous (`TRUE`) versus discrete (`FALSE`).
-Because the optimization starts from a random initial point,
-reproducibility requires `set.seed()`.
-
-```{r lim_fit}
-lim_result <- lingam_lim(lim_dat$data, is_continuous = lim_dat$is_continuous)
-print(lim_result)
-```
-
-As with `lingam_direct()`, `adjacency_matrix` follows the
-`B[i, j]` = j -> i convention (row = to, column = from), and `causal_order`
-lists the estimated topological order as 1-based indices.
-
-```{r lim_order}
-colnames(lim_dat$data)[lim_result$causal_order]
-```
-
-Discrete variables are binary (0/1) by default; setting `is_poisson = TRUE`
-treats them as Poisson-distributed counts instead (the local search phase
-then scores them with Poisson regression log-likelihoods).
-`generate_lim_sample(is_poisson = TRUE)` generates a matching count-data
-example. See `?lingam_lim` for details on the local phase's edge-weight
-convention and its numeric differences from the Python implementation.
-
-
-## Multi-Group Direct LiNGAM
-
-`lingam_direct()` fits a single dataset. When data comes from several
-sources that plausibly share the same causal structure but not the same
-strength of effect (e.g. the same study run at multiple sites, or the same
-process observed in different time periods), `lingam_multi_group()` jointly
-estimates a **common causal order** across all groups while still allowing
-each group its own adjacency matrix (structural coefficients), following
-Shimizu (2012).
-
-`generate_multi_group_sample()` generates two datasets that share the causal
-structure of `generate_lingam_sample_6()` but with slightly different
-coefficients per group.
-
-```{r multi_group_sample}
-mg <- generate_multi_group_sample(n = c(1000, 1000), seed = 42)
-lapply(mg$data_list, head, 3)
-```
-
-```{r multi_group_fit}
-mg_result <- lingam_multi_group(mg$data_list, reg_method = "ols")
-print(mg_result)
-```
-
-`causal_order` is shared by all groups; `adjacency_matrices` holds one
-matrix per group, each following the usual `B[i, j]` = j -> i convention.
-
-To analyze a single group with the rest of `lingamr`'s single-group
-tooling (total causal effects, independence tests, plotting), extract it
-as a plain `LingamResult` with `get_group_result()`:
-
-```{r multi_group_extract}
-g1 <- get_group_result(mg_result, "group1")
-class(g1)
-
-estimate_all_total_effects(mg$data_list$group1, g1, method = "ols")
-```
-
-`lingam_multi_group_bootstrap()` provides bootstrap stability estimates in
-the same joint fashion: every iteration resamples each group independently,
-then jointly re-estimates the causal order and per-group adjacency
-matrices. It returns a named list of per-group `BootstrapResult` objects, so
-the existing bootstrap query functions apply directly per group:
-
-```{r multi_group_bootstrap}
-mg_bs <- lingam_multi_group_bootstrap(mg$data_list,
-  n_sampling = 20L, reg_method = "ols", seed = 1, verbose = FALSE
-)
-get_probabilities(mg_bs$group1)
-```
-
-Note that `lingam_multi_group_bootstrap()`'s total causal effects are
-computed as path-coefficient products over each iteration's adjacency
-matrix, not via regression; this matches the upstream Python
-implementation but differs from `lingam_direct_bootstrap()`'s
-regression-based `estimate_all_total_effects()`.
-
-
-## Causal Discovery with Missing Data
-
-All algorithms above assume a complete data matrix. When `X` contains missing
-values (`NA`), `bootstrap_with_imputation()` combines bootstrap resampling
-with multiple imputation: each resample is imputed into several complete
-datasets, and a common causal structure is jointly estimated across them with
-`lingam_multi_group()` (treating the imputed copies as "groups" that share one
-causal order). This is an R port of the Python
-`lingam.tools.bootstrap_with_imputation()`.
-
-```{r bootstrap_with_imputation_setup, eval = requireNamespace("mice", quietly = TRUE)}
-sample6_na <- generate_lingam_sample_6(n = 1000, seed = 1)
-X_na <- sample6_na$data
-set.seed(1)
-X_na$x5[sample.int(nrow(X_na), size = round(0.1 * nrow(X_na)))] <- NA # MCAR 10% on x5
-```
-
-```{r bootstrap_with_imputation_fit, eval = requireNamespace("mice", quietly = TRUE)}
-bwi <- bootstrap_with_imputation(X_na,
-  n_sampling = 20L, n_repeats = 5L, seed = 42, verbose = FALSE
-)
-print(bwi)
-```
-
-The default imputer is `mice::mice(method = "norm")` (Bayesian linear
-regression), the closest standard R equivalent of the upstream Python default
-(`IterativeImputer(sample_posterior = TRUE)`); numeric results will not match
-the Python implementation. Both the imputer and the causal-discovery step can
-be swapped for a custom `function` via the `imputer` and `cd_fit` arguments.
-
-Because each iteration produces `n_repeats` adjacency matrices (one per
-imputed dataset), the result's shape differs from `lingam_direct_bootstrap()`.
-`as_bootstrap_result()` collapses the `n_repeats` dimension (median or mean)
-into a regular `BootstrapResult`, so the existing bootstrap query functions
-apply as usual:
-
-```{r bootstrap_with_imputation_convert, eval = requireNamespace("mice", quietly = TRUE)}
-bs_na <- as_bootstrap_result(bwi, aggregate = "median")
-get_probabilities(bs_na)
-```
-
-`get_total_causal_effects()` is not available on this `BootstrapResult`, since
-`bootstrap_with_imputation()` never computes total effects.
-
-
-## Latent Confounders: Bottom-Up ParceLiNGAM
-
-Every algorithm above assumes there is no latent (unobserved) confounder: any
-variable that causes two or more of the observed variables must itself be
-observed. When that assumption fails, `lingam_direct()` will still return a
-full causal order, but silently -- some part of it may be wrong, with no
-indication of which part.
-
-`lingam_parce()` (BottomUpParceLiNGAM, Tashiro et al. 2014) is designed for
-this situation. It searches for the causal order from the sink (most
-downstream) side, testing at each step whether a candidate variable's
-residual is independent of the others. As soon as that test is rejected, the
-search stops, and every variable it could not yet place is returned together
-as a single **unresolved block** -- a signal that those variables likely
-share a latent confounder, rather than a (possibly wrong) guess at their
-order.
-
-`generate_parce_sample()` generates a 7-variable model in which `x6` is an
-unobserved common cause of `x2` and `x3`; only `x0`-`x5` are returned as data.
-
-```{r parce_sample}
-# HSIC is O(n^2), so a moderate n keeps this vignette fast to build
-confounded <- generate_parce_sample(n = 500, seed = 1)
-head(confounded$data)
-confounded$confounded_pair
-```
-
-```{r parce_fit}
-parce_result <- lingam_parce(confounded$data, reg_method = "ols")
-print(parce_result)
-```
-
-The causal order's first element is the unresolved block, shown in
-parentheses; here it correctly contains `x2` and `x3`. The corresponding
-entries of the adjacency matrix are `NA`, while edges among the remaining,
-fully-resolved variables are estimated as usual:
-
-```{r parce_block}
-parce_result$causal_order[[1]]
-parce_result$adjacency_matrix[confounded$confounded_pair, confounded$confounded_pair]
-```
-
-Because a confounded variable's true parents cannot be identified,
-`estimate_total_effect_parce()` warns and returns `NA` when asked for a total
-effect *from* a variable in the unresolved block, but still computes normal
-estimates for well-identified pairs:
-
-```{r parce_total_effect}
-# from a confounded variable: warns and returns NA
-estimate_total_effect_parce(confounded$data, parce_result,
-  from_index = confounded$confounded_pair[1], to_index = "x1"
-)
-
-# a well-identified pair: a normal numeric estimate
-estimate_total_effect_parce(confounded$data, parce_result,
-  from_index = "x0", to_index = "x5"
-)
-```
-
-`lingam_parce_bootstrap()` provides bootstrap stability estimates in the same
-style as `lingam_direct_bootstrap()`. `NA` (unresolved) edges are treated as
-absent when aggregating, so `get_probabilities()` and the other
-`BootstrapResult` query functions work as usual; `get_causal_order_stability()`
-is the one exception, since ParceLiNGAM's blocked causal order does not fit
-its fixed-length format.
-
-```{r parce_bootstrap}
-parce_bs <- lingam_parce_bootstrap(confounded$data,
-  n_sampling = 10L, reg_method = "ols", seed = 1, verbose = FALSE
-)
-get_probabilities(parce_bs)
-```
-
-
-## Latent Confounders: RCD
-
-`lingam_rcd()` (Repetitive Causal Discovery; Maeda and Shimizu 2020) tackles
-the same latent-confounder problem as `lingam_parce()`, but from a different
-angle: rather than searching for a causal order and giving up on an
-**unresolved block** once a test is rejected, RCD directly estimates each
-variable's **ancestor set** and then checks individual, parent-free pairs for
-a shared latent confounder. This makes RCD's output pair-level (which specific
-pairs are confounded) rather than block-level (which set of variables could
-not be ordered).
-
-`generate_rcd_sample()` generates a 7-variable model in which `x6` is an
-unobserved common cause of `x2` and `x4`; only `x0`-`x5` are returned as data.
-
-```{r rcd_sample}
-# HSIC is O(n^2), so a moderate n keeps this vignette fast to build
-rcd_confounded <- generate_rcd_sample(n = 300, seed = 1)
-head(rcd_confounded$data)
-rcd_confounded$confounded_pair
-```
-
-```{r rcd_fit}
-rcd_result <- lingam_rcd(rcd_confounded$data)
-print(rcd_result)
-```
-
-`ancestors_list` gives each variable's estimated ancestors (not a causal
-order), and the confounded pair's adjacency-matrix entries are `NA`:
-
-```{r rcd_ancestors}
-rcd_result$ancestors_list
-rcd_result$adjacency_matrix[rcd_confounded$confounded_pair, rcd_confounded$confounded_pair]
-```
-
-As with ParceLiNGAM, `estimate_total_effect_rcd()` warns and returns `NA`
-when asked for a total effect *from* a confounded variable:
-
-```{r rcd_total_effect}
-# from a confounded variable: warns and returns NA
-estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
-  from_index = rcd_confounded$confounded_pair[1], to_index = rcd_confounded$confounded_pair[2]
-)
-
-# a well-identified pair: a normal numeric estimate
-estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
-  from_index = "x5", to_index = "x0"
-)
-```
-
-
-## Evaluating Model Fit
-
-`evaluate_model_fit()` treats an estimated adjacency matrix as a structural
-equation model (SEM) and reports standard SEM fit measures (CFI, RMSEA,
-AIC/BIC, etc.) via the `lavaan` package (an optional dependency; install it
-with `install.packages("lavaan")`). This is useful for judging whether an
-estimated causal graph is consistent with the data, independent of how it
-was estimated.
-
-```{r evaluate_model_fit, eval = requireNamespace("lavaan", quietly = TRUE)}
-sample6 <- generate_lingam_sample_6()
-fit_result <- lingam_direct(sample6$data, reg_method = "ols")
-
-# fit measures for the estimated graph
-evaluate_model_fit(fit_result, sample6$data)
-```
-
-Reversing the direction of every edge produces a mis-specified model, and
-its fit measures are visibly worse (lower CFI, higher RMSEA):
-
-```{r evaluate_model_fit_reversed, eval = requireNamespace("lavaan", quietly = TRUE)}
-reversed_adjacency <- t(fit_result$adjacency_matrix)
-evaluate_model_fit(reversed_adjacency, sample6$data)
-```
-
-
-## When LiNGAM Cannot Be Used
-
-LiNGAM (and `lingamr`) requires several assumptions.
-When these are not met, estimation either fails or systematically recovers an
-incorrect structure.
-
-| Assumption | When problems arise | Remedy / alternative |
-|---|---|---|
-| **Non-Gaussian errors** | When all errors follow a Gaussian distribution, the causal direction becomes unidentifiable | See the "The Non-Gaussianity Assumption" section of this vignette. ICA-LiNGAM and Direct LiNGAM fail equally |
-| **Acyclic graph (DAG)** | When feedback loops (x -> y -> x) exist | Consider Cyclic LiNGAM (implemented in the Python version) |
-| **No latent common causes** | When unobserved common causes (hidden confounders) exist | Consider LvLiNGAM (Latent variable LiNGAM) |
-| **Linear causal relationships** | When the relationships among variables are nonlinear | Consider additive noise models (ANM) or nonlinear ICA |
-| **No measurement error (upstream variables)** | When heavy measurement error is present on variables near the root, the direction is systematically reversed | See the "The Measurement Error Paradox" section of this vignette |
-| **Independent and identically distributed (i.i.d.)** | When there is time-series data, hierarchical data, or cluster structure | Consider VAR-LiNGAM (time series), MultiBench (multi-domain), etc. |
-| **Sufficient sample size** | When $n$ is extremely small relative to the number of variables $p$ (rule of thumb: $n < 10p$), estimation tends to be unstable | Reduce the number of variables; sparsify with `reg_method = "adaptive_lasso"` |
-
-### A Checklist to Verify in Advance
-
-Before starting an actual analysis, we recommend confirming the following.
-
-1. **Acyclicity of the graph** -- Can feedback loops be ruled out from domain expertise?
-2. **Absence of latent variables** -- Are the key observed variables all present?
-3. **Non-Gaussianity of the errors** -- Can be checked with `test_residual_normality()`
-   (though this is a post-estimation diagnostic). As a quick check beforehand,
-   visually inspect each variable's histogram and skewness.
-4. **Presence of measurement error** -- Is there measurement error on variables near
-   the root? If so, interpret with care.
-5. **Sample size** -- Aim for $n \geq 10p$. If it falls short, do not over-trust the results.
-
-> **Summary:** LiNGAM is powerful when all five assumptions -- linear, acyclic,
-> non-Gaussian, no latent variables, and i.i.d. -- hold.
-> Verifying these with domain knowledge and residual diagnostics before analysis
-> is the first step toward reliable causal inference.
+## Where to Go Next
+
+Which estimator fits your data — time series, latent confounders, nonlinear
+relationships, mixed or missing data — is covered in
+`vignette("method-selection")`.
+
+Detailed worked examples live on the
+[package website](https://morimotoosamu.github.io/lingamr/):
+
+| Article | Covers |
+|---|---|
+| [Direct LiNGAM in depth](https://morimotoosamu.github.io/lingamr/articles/direct-lingam.html) | Prior knowledge, regression methods, non-Gaussianity experiments, high-dimensional data, failure modes |
+| [Bootstrap and diagnostics](https://morimotoosamu.github.io/lingamr/articles/bootstrap-diagnostics.html) | Stability analysis, assumption checks, SEM fit, broom integration |
+| [Time series](https://morimotoosamu.github.io/lingamr/articles/time-series.html) | VAR-LiNGAM, VARMA-LiNGAM |
+| [Latent confounders](https://morimotoosamu.github.io/lingamr/articles/latent-confounders.html) | BottomUpParceLiNGAM, RCD |
+| [Nonlinear methods](https://morimotoosamu.github.io/lingamr/articles/nonlinear.html) | RESIT, CAM-UV |
+| [Special data](https://morimotoosamu.github.io/lingamr/articles/special-data.html) | Mixed data (LiM), multiple groups, missing values |
+
+A Japanese translation of this vignette is available as
+`vignette("lingamr-ja")`; the website articles are also available in
+Japanese.

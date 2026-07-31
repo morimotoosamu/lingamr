@@ -1,0 +1,249 @@
+---
+title: "時系列: VAR-LiNGAMとVARMA-LiNGAM"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+Direct LiNGAMは観測値が**独立同一分布（i.i.d.）**であることを仮定するが、時系列
+データはこの要件を満たさない。この記事では `lingamr` の2つの時系列手法を扱う。
+
+- **VAR-LiNGAM**（`lingam_var()`）: 時間的依存が自己回帰（AR）部分で表現できる
+  定常時系列。
+- **VARMA-LiNGAM**（`lingam_varma()`）: 撹乱項に移動平均（MA）部分もあり、過去の
+  ショックが現在に影響する時系列。
+
+データがi.i.d.のクロスセクション観測なら、まず
+[Direct LiNGAM記事](direct-lingam-ja.html)から始めること。全手法の概観は
+[手法選択ガイド](method-selection-ja.html)を参照。
+
+```{r setup}
+library(lingamr)
+```
+
+
+## VAR-LiNGAM：時系列データの因果探索
+
+**VAR-LiNGAM**（Hyvärinen et al., 2010）は、まずベクトル自己回帰（VAR）モデルを
+当てはめて時間的な自己相関を吸収し、その後VARの残差にDirect LiNGAMを適用することで
+**瞬時**因果構造$B_0$を復元することで、定常な時系列を扱う。モデルは以下の通りである。
+
+$$X_t = B_0\,X_t + \sum_{k=1}^{p} B_k\,X_{t-k} + e_t$$
+
+ここで、$B_0$は同時点の因果効果（厳密に非巡回）を、$B_1, \ldots, B_p$はラグ効果を
+表し、$e_t$は互いに独立な非ガウス擾乱項である。
+
+### サンプルデータ
+
+`generate_varlingam_sample()` は、VAR(1)-LiNGAMモデルから3変数の時系列を生成する。
+瞬時構造は$x_0 \to x_1 \to x_2$（係数0.6と−0.5）であり、変数をまたぐラグ1効果は
+$x_2(t-1) \to x_0(t)$（係数0.3）のみである。
+
+```{r varlingam_sample}
+s <- generate_varlingam_sample(n = 1000, seed = 42)
+
+# True instantaneous coefficient matrix B0  (B0[i, j]: x_j -> x_i)
+s$true_B0
+
+# True lag-1 coefficient matrix  (M1[i, j]: x_j(t-1) -> x_i(t), structural)
+s$true_M1
+```
+
+### VAR-LiNGAMのあてはめ
+
+データ行列を `lingam_var()` に渡す。行は時系列順（最も古い時点が先頭）である必要が
+ある。
+
+```{r lingam_var}
+model <- lingam_var(s$data, lags = 1)
+model
+```
+
+結果オブジェクトには、`[1 + lags, n_features, n_features]` の形状を持つ3次元配列
+`adjacency_matrices` が含まれる。
+
+- **`[1, , ]`（`"lag0"`）:** 瞬時行列$B_0$。`B0[i, j]`は、*同じ*時点における$x_j$
+  から$x_i$への直接効果。
+- **`[k + 1, , ]`（`"lag`*k*`"`）:** ラグ行列$B_k$。`Bk[i, j]`は、$x_j(t-k)$から
+  $x_i(t)$への直接構造効果。
+
+いずれも次元ラベルで取り出せる。
+
+```{r varlingam_matrices}
+B0 <- model$adjacency_matrices["lag0", , ]
+B1 <- model$adjacency_matrices["lag1", , ]
+
+round(B0, 2)  # compare with s$true_B0
+round(B1, 2)  # compare with s$true_M1
+```
+
+### ラグ次数の選択
+
+デフォルトでは、`lingam_var()` はベイズ情報量規準（`criterion = "bic"`）を用いて
+`1:lags` の中からラグ次数を自動選択する。`"aic"`、`"hqic"`、`"fpe"` にも対応して
+いる。自動選択を使わず固定のラグ次数を使うには、`criterion = NULL` を設定する。
+
+```{r varlingam_lags, eval = FALSE}
+# Fix lag order to 2 without IC-based selection
+model_lag2 <- lingam_var(s$data, lags = 2, criterion = NULL)
+```
+
+### 定常性の確認
+
+VAR-LiNGAMは**定常**過程を対象に定義される。`check_var_stationarity()` はVARの
+コンパニオン行列の固有値を調べる。すべてのモジュラス（絶対値）が**厳密に1未満**
+であれば、過程は定常である。
+
+```{r varlingam_stationarity}
+check_var_stationarity(model)
+```
+
+`max_modulus` が1以上の場合、単位根過程または発散過程であることを示す。その場合は、
+分析前に系列を差分することが推奨される。
+
+### 残差診断
+
+LiNGAMは誤差項$e_t$が**非ガウス**であることを仮定する。
+`test_varlingam_residual_normality()` は、LiNGAMのイノベーション
+$e_t = (I - B_0)\,n_t$（$n_t$は保存されたVAR残差）が正規性から逸脱しているかを
+検定する。p値が小さい（$H_0$: ガウス、を棄却する）ことは、モデルの仮定を支持する。
+
+```{r varlingam_normality}
+test_varlingam_residual_normality(model)
+```
+
+`test_varlingam_residual_normality_all()` は複数の検定を一度に実行し、歪度と尖度
+（超過尖度）の列を追加して概要を素早く把握できるようにする。
+
+```{r varlingam_normality_all}
+test_varlingam_residual_normality_all(model, methods = c("shapiro", "jb"))
+```
+
+`plot_varlingam_residual_qq()` は変数ごとの正規QQプロットを描画する。直線の基準線
+からの逸脱は非ガウス性を示す。
+
+```{r varlingam_qq, fig.width = 7, fig.height = 3}
+plot_varlingam_residual_qq(model)
+```
+
+### 総因果効果
+
+`estimate_var_total_effect()` は、直接パスとすべての媒介パスを積算することで、ある
+変数から別の変数への**総**因果効果を推定する。`from_lag` 引数は原因の時点オフセット
+を制御する。`from_lag = 0`（デフォルト）は同時点の総効果を、`from_lag = 1` は
+$x_j(t-1)$から$x_i(t)$への1期先の効果を与える。
+
+```{r varlingam_total_effect}
+# Total effect x0 -> x2 (contemporaneous)
+estimate_var_total_effect(s$data, model, from_index = 1, to_index = 3)
+
+# Total effect x0(t-1) -> x2(t) (one-step-ahead)
+estimate_var_total_effect(s$data, model, from_index = 1, to_index = 3, from_lag = 1)
+```
+
+変数のインデックスは**1始まり**の整数、または文字列としての列名で指定する。
+
+### ブートストラップ
+
+`lingam_var_bootstrap()` は、**残差ブートストラップ**のサンプルに対してVAR-LiNGAMを
+再実行することで、推定構造の不確実性を定量化する。（i.i.d.の行をリサンプルする）
+Direct LiNGAMのブートストラップとは異なり、VAR-LiNGAMは当てはめ値を固定したまま
+VAR残差のみをリサンプルし、系列の時間的構造を保持する。
+
+```{r varlingam_bootstrap}
+bs_var <- lingam_var_bootstrap(
+  s$data,
+  n_sampling = 100L,
+  seed       = 42,
+  verbose    = FALSE
+)
+```
+
+`get_var_probabilities()` は、各有向エッジがブートストラップサンプルの何割で検出
+されたかを返す。列のレイアウトは `adjacency_matrices` と対応しており、最初の
+`n_features` 列が瞬時構造（lag 0）に、次の `n_features` 列がlag 1に対応し、以下
+同様に続く。
+
+```{r varlingam_probabilities}
+round(get_var_probabilities(bs_var), 2)
+```
+
+`get_var_paths()` は、ブートストラップサンプル全体から見つかった2変数間のすべての
+因果パスを、各パスの平均総効果と検出確率とともに列挙する。
+
+```{r varlingam_paths}
+# Paths from x0 to x2 at the same time step (from_lag = 0)
+get_var_paths(bs_var, from_index = 1, to_index = 3)
+```
+
+```{r varlingam_paths_lag}
+# Paths from x0(t-1) to x2(t)  (from_lag = 1)
+get_var_paths(bs_var, from_index = 1, to_index = 3, from_lag = 1)
+```
+
+
+## VARMA-LiNGAM：移動平均誤差を持つ時系列
+
+**VARMA-LiNGAM**（Kawahara et al., 2011）はVAR-LiNGAMを移動平均（MA）項で拡張した
+モデルであり、
+$x_t = B_0 x_t + \sum_{\tau=1}^{p} \psi_\tau x_{t-\tau} + e_t +
+\sum_{\omega=1}^{q} \Omega_\omega e_{t-\omega}$
+という形で、ラグ付き変数に加えて過去の撹乱項が現在に影響できる。
+`lingam_varma()` は誘導形VARMA係数を決定的な二段階Hannan-Rissanen法で推定し
+（Python実装は状態空間の最尤法を使う）、残差にDirect LiNGAMを適用して、
+AR側の行列 `psis`（`psis[1, , ]` がB0）とMA側の行列 `omegas` を返す。
+
+```{r lingam_varma}
+s_varma <- generate_varmalingam_sample(n = 1000, seed = 42)
+model_varma <- lingam_varma(s_varma$data, order = c(1, 1))
+print(model_varma)
+```
+
+`check_varma_stationarity()` はARの固有値（定常性）に加えて、Hannan-Rissanen法が
+保証しないMAの固有値（可逆性）も確認する。
+
+```{r varma_stationarity}
+check_varma_stationarity(model_varma)
+```
+
+ブートストラップ・エッジ確率・パス列挙（`lingam_varma_bootstrap()`、
+`get_varma_probabilities()`、`get_varma_paths()`）、総効果
+（`estimate_varma_total_effect()`）、残差正規性の診断はVAR-LiNGAM版と対応する。
+確率行列では、最初の `1 + p` 個の列ブロックがpsi（ラグ）行列に、最後の `q` 個の
+ブロックがomega（MA）行列に対応する。
+
+```{r varma_bootstrap}
+bs_varma <- lingam_varma_bootstrap(
+  s_varma$data,
+  n_sampling = 100L,
+  order      = c(1, 1),
+  criterion  = NULL,
+  seed       = 42,
+  verbose    = FALSE
+)
+round(get_varma_probabilities(bs_varma, min_causal_effect = 0.1), 2)
+```
+
+### VARとVARMAのどちらを使うか
+
+- まず**VAR-LiNGAM**から始める。よりシンプルで高速であり、ラグ次数を情報量規準で
+  自動選択できる。
+- ラグ次数を増やしてもVAR残差に自己相関が残る場合は**VARMA-LiNGAM**に切り替える。
+  これは、有限次数のVARでは多数のラグでしか近似できないMA成分を撹乱項が持つ
+  兆候である。
+- どちらの手法も定常性を仮定する。`check_var_stationarity()` /
+  `check_varma_stationarity()` で確認し、単位根が疑われる場合は系列を差分する。
+
+
+## 関連記事
+
+- [手法選択ガイド](method-selection-ja.html) — データに合う手法の選び方
+- [Direct LiNGAM 詳説](direct-lingam-ja.html) — i.i.d.向けの基本手法
+- [ブートストラップと診断](bootstrap-diagnostics-ja.html) — 推定構造の信頼性評価

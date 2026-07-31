@@ -1,0 +1,177 @@
+---
+title: "Latent Confounders: ParceLiNGAM and RCD"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+Standard Direct LiNGAM assumes there is no latent (unobserved) confounder:
+any variable that causes two or more of the observed variables must itself be
+observed. When that assumption fails, `lingam_direct()` will still return a
+full causal order, but silently — some part of it may be wrong, with no
+indication of which part.
+
+This article covers the two **linear** methods that address latent
+confounders:
+
+- **BottomUpParceLiNGAM** (`lingam_parce()`): returns the variables it could
+  not order as a single *unresolved block*, signaling where a latent
+  confounder is likely.
+- **RCD** (`lingam_rcd()`): estimates each variable's ancestor set and flags
+  *specific pairs* that share a latent confounder.
+
+If the causal relationships may also be **nonlinear**, see CAM-UV in the
+[nonlinear methods article](nonlinear.html), which handles unobserved
+variables in nonlinear models.
+
+```{r setup}
+library(lingamr)
+```
+
+
+## Bottom-Up ParceLiNGAM
+
+`lingam_parce()` (BottomUpParceLiNGAM, Tashiro et al. 2014) searches for the
+causal order from the sink (most downstream) side, testing at each step
+whether a candidate variable's residual is independent of the others. As soon
+as that test is rejected, the search stops, and every variable it could not
+yet place is returned together as a single **unresolved block** — a signal
+that those variables likely share a latent confounder, rather than a
+(possibly wrong) guess at their order.
+
+`generate_parce_sample()` generates a 7-variable model in which `x6` is an
+unobserved common cause of `x2` and `x3`; only `x0`-`x5` are returned as data.
+
+```{r parce_sample}
+# HSIC is O(n^2), so a moderate n keeps this article fast to build
+confounded <- generate_parce_sample(n = 500, seed = 1)
+head(confounded$data)
+confounded$confounded_pair
+```
+
+```{r parce_fit}
+parce_result <- lingam_parce(confounded$data, reg_method = "ols")
+print(parce_result)
+```
+
+The causal order's first element is the unresolved block, shown in
+parentheses; here it correctly contains `x2` and `x3`. The corresponding
+entries of the adjacency matrix are `NA`, while edges among the remaining,
+fully-resolved variables are estimated as usual:
+
+```{r parce_block}
+parce_result$causal_order[[1]]
+parce_result$adjacency_matrix[confounded$confounded_pair, confounded$confounded_pair]
+```
+
+Because a confounded variable's true parents cannot be identified,
+`estimate_total_effect_parce()` warns and returns `NA` when asked for a total
+effect *from* a variable in the unresolved block, but still computes normal
+estimates for well-identified pairs:
+
+```{r parce_total_effect}
+# from a confounded variable: warns and returns NA
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = confounded$confounded_pair[1], to_index = "x1"
+)
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = "x0", to_index = "x5"
+)
+```
+
+`lingam_parce_bootstrap()` provides bootstrap stability estimates in the same
+style as `lingam_direct_bootstrap()`. `NA` (unresolved) edges are treated as
+absent when aggregating, so `get_probabilities()` and the other
+`BootstrapResult` query functions work as usual; `get_causal_order_stability()`
+is the one exception, since ParceLiNGAM's blocked causal order does not fit
+its fixed-length format.
+
+```{r parce_bootstrap}
+parce_bs <- lingam_parce_bootstrap(confounded$data,
+  n_sampling = 10L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(parce_bs)
+```
+
+
+## RCD (Repetitive Causal Discovery)
+
+`lingam_rcd()` (Repetitive Causal Discovery; Maeda and Shimizu 2020) tackles
+the same latent-confounder problem as `lingam_parce()`, but from a different
+angle: rather than searching for a causal order and giving up on an
+**unresolved block** once a test is rejected, RCD directly estimates each
+variable's **ancestor set** and then checks individual, parent-free pairs for
+a shared latent confounder. This makes RCD's output pair-level (which specific
+pairs are confounded) rather than block-level (which set of variables could
+not be ordered).
+
+`generate_rcd_sample()` generates a 7-variable model in which `x6` is an
+unobserved common cause of `x2` and `x4`; only `x0`-`x5` are returned as data.
+
+```{r rcd_sample}
+# HSIC is O(n^2), so a moderate n keeps this article fast to build
+rcd_confounded <- generate_rcd_sample(n = 300, seed = 1)
+head(rcd_confounded$data)
+rcd_confounded$confounded_pair
+```
+
+```{r rcd_fit}
+rcd_result <- lingam_rcd(rcd_confounded$data)
+print(rcd_result)
+```
+
+`ancestors_list` gives each variable's estimated ancestors (not a causal
+order), and the confounded pair's adjacency-matrix entries are `NA`:
+
+```{r rcd_ancestors}
+rcd_result$ancestors_list
+rcd_result$adjacency_matrix[rcd_confounded$confounded_pair, rcd_confounded$confounded_pair]
+```
+
+As with ParceLiNGAM, `estimate_total_effect_rcd()` warns and returns `NA`
+when asked for a total effect *from* a confounded variable:
+
+```{r rcd_total_effect}
+# from a confounded variable: warns and returns NA
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = rcd_confounded$confounded_pair[1], to_index = rcd_confounded$confounded_pair[2]
+)
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = "x5", to_index = "x0"
+)
+```
+
+`lingam_rcd_bootstrap()` provides bootstrap stability estimates; the usual
+`BootstrapResult` query functions apply.
+
+
+## ParceLiNGAM or RCD?
+
+| Aspect | ParceLiNGAM | RCD |
+|---|---|---|
+| Output granularity | Block-level: a set of variables that could not be ordered | Pair-level: which specific pairs are confounded |
+| Main result | Blocked causal order + adjacency matrix with `NA` block | Ancestor sets + adjacency matrix with `NA` pairs |
+| Question it answers | "Which part of the ordering can I trust?" | "Exactly which pairs share a hidden common cause?" |
+
+Both rely on HSIC independence tests, whose cost grows as $O(n^2)$ — with
+large $n$, consider subsampling. If relationships are nonlinear, use
+[CAM-UV](nonlinear.html) instead.
+
+
+## Related Articles
+
+- [Method selection guide](method-selection.html) — which method fits your data
+- [Nonlinear methods (RESIT and CAM-UV)](nonlinear.html) — CAM-UV handles
+  latent confounders in nonlinear models
+- [Bootstrap and diagnostics](bootstrap-diagnostics.html)

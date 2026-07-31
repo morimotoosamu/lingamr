@@ -1,0 +1,249 @@
+---
+title: "ブートストラップ安定性とモデル診断"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+因果探索の推定結果は、その背後にある仮定が成り立つ範囲でしか信頼できない。この
+記事では、推定された構造を評価するために `lingamr` が提供するツール群を扱う。
+
+- **仮定の確認**: 残差の独立性と非ガウス性
+  （`get_error_independence_p_values()`、`test_residual_normality()`、
+  `summary_lingam()`）。
+- **ブートストラップ安定性**: 推定されたエッジや因果順序はどれだけ再現されるか
+  （`lingam_direct_bootstrap()` とその照会関数群）。
+- **モデル適合度**: 推定されたグラフのSEM適合度指標（`evaluate_model_fit()`）。
+- **broom連携**: 下流の分析のための `tidy()` / `glance()`。
+
+例では標準の6変数サンプルデータに対するDirect LiNGAMを使うが、同じワークフローは
+他の推定器にも当てはまる（各手法のブートストラップ版はそれぞれの記事で解説
+している）。
+
+```{r setup}
+library(lingamr)
+
+x1k <- generate_lingam_sample_6(n = 1000)
+model <- lingam_direct(x1k$data)
+```
+
+
+## 誤差変数間の独立性
+
+LiNGAMは、残差が独立であると仮定する。`get_error_independence_p_values()` は残差間の
+独立性検定のp値を返す。
+
+```{r Independence_between_error_variables1}
+p_vals <- x1k$data |>
+  get_error_independence_p_values(model)
+
+round(p_vals, 3)
+```
+
+p値が小さい（残差間に依存がある）場合、潜在交絡変数や構造の誤指定が示唆される --
+[潜在交絡変数の記事](latent-confounders-ja.html)の手法を検討すること。
+
+
+## 残差の正規性検定
+
+残差の正規性を検定する。LiNGAMは非ガウス性を仮定するため、正規性が**棄却される**
+（p値が小さい）ことは、モデルの仮定と整合的である。
+
+```{r nortest}
+# Shapiro-Wilk (default)
+x1k$data |>
+  test_residual_normality(model)
+```
+
+QQプロットでも残差の正規性を確認する。
+
+```{r qqplot}
+x1k$data |>
+  plot_residual_qq(model)
+```
+
+正規性が棄却*されない*場合、因果の方向は識別できていない可能性がある --
+[Direct LiNGAM記事](direct-lingam-ja.html)の非ガウス性の実験を参照。
+
+
+## モデルサマリー
+
+`summary_lingam()` は残差独立性検定と正規性検定をまとめて実行し、LiNGAMが依拠する
+2つの仮定（残差が互いに独立であること、残差が非ガウスであること）がどの程度成り立
+っているかを一目で確認できるようにする。`get_error_independence_p_values()` と
+`test_residual_normality()` を個別に呼ぶ代わりに、診断結果を一箇所でまとめて見る
+ことができる。
+
+```{r summary_lingam}
+x1k$data |>
+  summary_lingam(model)
+```
+
+
+## Direct LiNGAMのブートストラップ
+
+ブートストラップ法を用いてモデルの信頼性を評価する。
+
+```{r lingam_direct_bootstrap}
+bs_model <- x1k$data |>
+  lingam_direct_bootstrap(n_sampling = 100L, seed = 42)
+
+bs_model
+```
+
+反復回数や変数の数が多い場合は、`parallel = TRUE` を指定すると複数コアで高速に
+実行できる。コア数は `n_cores` で指定する（未指定時は安全のため2コアに制限される）。
+
+```{r lingam_direct_bootstrap_parallel, eval = FALSE}
+bs_model <- x1k$data |>
+  lingam_direct_bootstrap(
+    n_sampling = 100L,
+    seed       = 42,
+    parallel   = TRUE,
+    n_cores    = 4L
+  )
+```
+
+並列実行ではL'Ecuyerの並列乱数ストリームが使われるため、同じ `seed` と同じ
+`n_cores` であれば結果は再現可能だが、逐次実行（`parallel = FALSE`）の結果とは
+数値的に一致しない点に注意する。
+
+
+### ブートストラップ結果の確認
+
+ブートストラップ結果から、各パスの出現頻度と係数の平均を計算する。
+
+```{r get_causal_direction_counts}
+bs_model |>
+  get_causal_direction_counts(labels = names(x1k$data))
+```
+
+
+### 平均因果効果の隣接行列
+
+ブートストラップ結果から隣接行列を構築する。
+
+```{r get_adjacency_matrix_summary}
+bs_adjacency_matrix <- bs_model |>
+  get_adjacency_matrix_summary(stat = "median")
+
+bs_adjacency_matrix |>
+  round(3)
+```
+
+推定した隣接行列を可視化する。
+```{r plot_bootstrap}
+bs_adjacency_matrix |>
+  plot_adjacency(
+    labels    = colnames(x1k$data),
+    title     = "Estimated (with Bootstrap)",
+    rankdir   = "TB",
+    shape     = "circle",
+    fillcolor = "lightgreen"
+  )
+```
+
+
+### パス出現頻度の行列
+
+各パスの出現頻度行列を計算する。
+
+```{r get_probabilities}
+bs_model |>
+  get_probabilities()
+```
+
+
+### 平均総効果
+
+各パスの平均総効果を計算する。
+
+```{r get_total_causal_effects}
+bs_model |>
+  get_total_causal_effects()
+```
+
+ブートストラップ結果を因果グラフに変換する。デフォルトでは、サンプルの50%以上で
+出現したパスのみが表示される。
+
+```{r plot_bootstrap_probabilities}
+bs_model |>
+  plot_bootstrap_probabilities()
+```
+
+
+### 因果順序の安定性
+
+`get_causal_order_stability()` は各ブートストラップサンプルで推定された因果順序を
+集約し、その順序がどれだけ安定しているかを定量化する。各変数の順位分布、変数ペアの
+先行確率（`P[i, j]` = 変数iが変数jより上流にあったサンプルの割合）、および全体の
+安定性スコア（0 = ランダム、1 = 全サンプルで完全に一致）を返す。
+
+```{r get_causal_order_stability}
+bs_model |>
+  get_causal_order_stability(labels = names(x1k$data))
+```
+
+> **注意:** ブートストラップの安定性は正しさを保証しない。モデルの仮定が破られて
+> いる場合、誤った構造が*安定して*再現されることがある --
+> [Direct LiNGAM記事](direct-lingam-ja.html)の測定誤差パラドックスに実例がある。
+
+
+## モデル適合度の評価
+
+`evaluate_model_fit()` は、推定された隣接行列を構造方程式モデル（SEM）として扱い、
+`lavaan` パッケージ（オプション依存。`install.packages("lavaan")` でインストール）
+経由で標準的なSEM適合度指標（CFI、RMSEA、AIC/BICなど）を報告する。これは、推定
+された因果グラフが、どのように推定されたかとは独立に、データとどれだけ整合的かを
+判断する際に有用である。
+
+```{r evaluate_model_fit, eval = requireNamespace("lavaan", quietly = TRUE)}
+sample6 <- generate_lingam_sample_6()
+fit_result <- lingam_direct(sample6$data, reg_method = "ols")
+
+# fit measures for the estimated graph
+evaluate_model_fit(fit_result, sample6$data)
+```
+
+すべてのエッジの方向を逆転させると誤指定のモデルになり、その適合度指標は明らかに
+悪化する（CFIは低下し、RMSEAは上昇する）。
+
+```{r evaluate_model_fit_reversed, eval = requireNamespace("lavaan", quietly = TRUE)}
+reversed_adjacency <- t(fit_result$adjacency_matrix)
+evaluate_model_fit(reversed_adjacency, sample6$data)
+```
+
+
+## broomとの連携（tidy / glance）
+
+推定結果は、`broom` 互換の `tidy()` / `glance()` を使ってdata.frameに変換でき、
+`ggplot2` や `dplyr` との連携が容易になる。`tidy()` はエッジリスト（`from`、`to`、
+`estimate`）を返し、`glance()` はモデル全体の1行サマリーを返す。`tidy()` はブート
+ストラップ結果に対しても機能し、その場合は各方向の出現頻度などを返す。
+
+```{r broom}
+# Convert the estimated adjacency matrix to an edge list
+tidy(model)
+
+# One-row summary of the whole model
+glance(model)
+
+# Direction-wise summary of the bootstrap results (variable names via labels)
+tidy(bs_model, labels = names(x1k$data))
+```
+
+
+## 関連記事
+
+- [手法選択ガイド](method-selection-ja.html)
+- [Direct LiNGAM 詳説](direct-lingam-ja.html) — ブートストラップが安定して誤る
+  測定誤差パラドックスを含む
+- [時系列](time-series-ja.html)、[潜在交絡変数](latent-confounders-ja.html)、
+  [特殊なデータ](special-data-ja.html) — 各手法のブートストラップ版

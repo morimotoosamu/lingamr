@@ -1,0 +1,189 @@
+---
+title: "特殊なデータ: 混合変数・複数グループ・欠測値"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+Direct LiNGAMは、連続変数からなる単一の完全なデータ行列を仮定する。この記事では、
+その仮定が崩れるデータのための3つの拡張を扱う。
+
+- **LiM**（`lingam_lim()`）: 連続変数と離散変数（二値またはポアソンカウント）が
+  混在するデータ。
+- **MultiGroup Direct LiNGAM**（`lingam_multi_group()`）: 因果構造を共有するが
+  係数値は共有しない複数のデータセット。
+- **欠測データ**（`bootstrap_with_imputation()`）: `NA` を含むデータのための
+  ブートストラップ + 多重代入。
+
+```{r setup}
+library(lingamr)
+```
+
+
+## 混合データのためのLiNGAM（LiM）
+
+Direct LiNGAMはすべての変数が連続であることを仮定する。`lingam_lim()` はこの仮定を
+緩和し、Zeng et al. (2022) に従って、連続変数と離散変数が混在するデータ
+から因果構造を推定する。NOTEARS流の連続最適化（「global」フェーズ）と、エッジの
+方向・枝刈り・エッジ追加に関する組合せ的な局所探索（「local」フェーズ）を組み合わせ
+たものである。
+
+`generate_lim_sample()` は、連続変数と離散変数からなる既知の因果連鎖`x1`（連続）
+-> `x2`（離散）-> `x3`（連続）を持つ小規模なデータセットを生成する。
+
+```{r lim_sample}
+set.seed(1)
+lim_dat <- generate_lim_sample(n = 2000)
+head(lim_dat$data)
+lim_dat$is_continuous
+```
+
+`lingam_lim()` には、各列が連続（`TRUE`）か離散（`FALSE`）かを示す論理ベクトル
+`is_continuous` が必要である。最適化はランダムな初期点から始まるため、再現性を持たせる
+には `set.seed()` が必要である。
+
+```{r lim_fit}
+lim_result <- lingam_lim(lim_dat$data, is_continuous = lim_dat$is_continuous)
+print(lim_result)
+```
+
+`lingam_direct()` と同様、`adjacency_matrix` は `B[i, j]` = j -> i という規約
+（行 = to、列 = from）に従い、`causal_order` は推定されたトポロジカル順序を1始まり
+のインデックスで並べたものである。
+
+```{r lim_order}
+colnames(lim_dat$data)[lim_result$causal_order]
+```
+
+### カウント変数（ポアソン）
+
+離散変数は既定では二値（0/1）である。`is_poisson = TRUE` を指定するとポアソン分布に
+従うカウント変数として扱われる（localフェーズがポアソン回帰の対数尤度でスコアリング
+する）。`generate_lim_sample(is_poisson = TRUE)` で対応するカウントデータの例を生成
+できる。
+
+```{r lim_poisson}
+set.seed(2)
+lim_pois <- generate_lim_sample(n = 2000, is_poisson = TRUE)
+head(lim_pois$data)
+
+lim_pois_result <- lingam_lim(lim_pois$data,
+  is_continuous = lim_pois$is_continuous, is_poisson = TRUE
+)
+print(lim_pois_result)
+```
+
+localフェーズのエッジ重みの規約や、Python実装との数値的な違いの詳細は
+`?lingam_lim` を参照のこと。
+
+
+## MultiGroup Direct LiNGAM
+
+`lingam_direct()` は単一のデータセットに適用するものである。データが複数のソース
+から得られ、同じ因果構造を共有しているが効果の強さは同じではないと考えられる場合
+（例えば、同じ研究を複数拠点で実施した場合や、同じプロセスを異なる時期に観測した
+場合）、`lingam_multi_group()` はShimizu (2012) に従い、各グループに固有の隣接行列
+（構造係数）を許容しつつ、すべてのグループにわたって**共通の因果順序**を同時に推定
+する。
+
+`generate_multi_group_sample()` は、`generate_lingam_sample_6()` の因果構造を共有
+しつつ、グループごとに係数がわずかに異なる2つのデータセットを生成する。
+
+```{r multi_group_sample}
+mg <- generate_multi_group_sample(n = c(1000, 1000), seed = 42)
+lapply(mg$data_list, head, 3)
+```
+
+```{r multi_group_fit}
+mg_result <- lingam_multi_group(mg$data_list, reg_method = "ols")
+print(mg_result)
+```
+
+`causal_order` はすべてのグループで共有される。`adjacency_matrices` はグループ
+ごとに1つの行列を保持し、それぞれ通常の `B[i, j]` = j -> i という規約に従う。
+
+`lingamr` のシングルグループ向けツール群（総因果効果、独立性検定、プロット）で
+単一グループを分析するには、`get_group_result()` で通常の `LingamResult` として
+取り出す。
+
+```{r multi_group_extract}
+g1 <- get_group_result(mg_result, "group1")
+class(g1)
+
+estimate_all_total_effects(mg$data_list$group1, g1, method = "ols")
+```
+
+`lingam_multi_group_bootstrap()` も、同じ結合的な方法でブートストラップの安定性
+推定を提供する。各反復で各グループを個別にリサンプルした上で、因果順序とグループ
+ごとの隣接行列を結合的に再推定する。グループごとの `BootstrapResult` オブジェクト
+からなる名前付きリストを返すため、既存のブートストラップ照会関数をグループごとに
+そのまま適用できる。
+
+```{r multi_group_bootstrap}
+mg_bs <- lingam_multi_group_bootstrap(mg$data_list,
+  n_sampling = 20L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(mg_bs$group1)
+```
+
+`lingam_multi_group_bootstrap()` の総因果効果は、回帰によってではなく、各反復の
+隣接行列に対するパス係数の積として計算される点に注意する。これは上流のPython実装
+と一致するが、`lingam_direct_bootstrap()` の回帰ベースの
+`estimate_all_total_effects()` とは異なる。
+
+
+## 欠測データによる因果探索
+
+これまでのアルゴリズムはすべて、完全なデータ行列を仮定している。`X` に欠測値
+（`NA`）が含まれる場合、`bootstrap_with_imputation()` はブートストラップリサンプ
+リングと多重代入を組み合わせる。各リサンプルは複数の完全なデータセットに補完され、
+`lingam_multi_group()`（補完されたコピーを、1つの因果順序を共有する「グループ」と
+して扱う）を用いて、それらにわたって共通の因果構造が結合的に推定される。これは
+Pythonの `lingam.tools.bootstrap_with_imputation()` のR移植版である。
+
+```{r bootstrap_with_imputation_setup, eval = requireNamespace("mice", quietly = TRUE)}
+sample6_na <- generate_lingam_sample_6(n = 1000, seed = 1)
+X_na <- sample6_na$data
+set.seed(1)
+X_na$x5[sample.int(nrow(X_na), size = round(0.1 * nrow(X_na)))] <- NA # MCAR 10% on x5
+```
+
+```{r bootstrap_with_imputation_fit, eval = requireNamespace("mice", quietly = TRUE)}
+bwi <- bootstrap_with_imputation(X_na,
+  n_sampling = 20L, n_repeats = 5L, seed = 42, verbose = FALSE
+)
+print(bwi)
+```
+
+デフォルトの補完器は `mice::mice(method = "norm")`（ベイズ線形回帰）であり、上流の
+Pythonのデフォルト（`IterativeImputer(sample_posterior = TRUE)`）に最も近い標準的な
+R実装である。数値結果はPython実装とは一致しない。補完器と因果探索ステップの両方
+とも、`imputer` 引数と `cd_fit` 引数を通じてカスタム `function` に差し替えることが
+できる。
+
+各反復で（補完データセットごとに1つずつ）`n_repeats` 個の隣接行列が生成されるため、
+結果の形状は `lingam_direct_bootstrap()` とは異なる。`as_bootstrap_result()` は
+`n_repeats` 次元を（中央値または平均で）集約し、通常の `BootstrapResult` に変換
+するため、既存のブートストラップ照会関数をそのまま適用できる。
+
+```{r bootstrap_with_imputation_convert, eval = requireNamespace("mice", quietly = TRUE)}
+bs_na <- as_bootstrap_result(bwi, aggregate = "median")
+get_probabilities(bs_na)
+```
+
+`bootstrap_with_imputation()` は総効果を計算しないため、この `BootstrapResult` では
+`get_total_causal_effects()` は利用できない。
+
+
+## 関連記事
+
+- [手法選択ガイド](method-selection-ja.html) — データに合う手法の選び方
+- [Direct LiNGAM 詳説](direct-lingam-ja.html)
+- [ブートストラップと診断](bootstrap-diagnostics-ja.html)

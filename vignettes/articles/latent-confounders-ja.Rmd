@@ -1,0 +1,170 @@
+---
+title: "潜在交絡変数: ParceLiNGAMとRCD"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+標準のDirect LiNGAMは、潜在（未観測の）交絡変数が存在しないことを仮定している。
+すなわち、観測変数のうち2つ以上に影響を及ぼす変数は、それ自体も観測されていなければ
+ならない。この仮定が成り立たない場合、`lingam_direct()` は依然として完全な因果順序を
+返すが、それは無言のまま行われる。その一部が誤っている可能性があっても、どの部分が
+誤っているかは示されない。
+
+この記事では、潜在交絡変数に対応する**線形**の2手法を扱う。
+
+- **BottomUpParceLiNGAM**（`lingam_parce()`）: 順序付けできなかった変数を単一の
+  *未解決ブロック*として返し、潜在交絡変数がありそうな箇所を示す。
+- **RCD**（`lingam_rcd()`）: 各変数の祖先集合を推定し、潜在交絡変数を共有する
+  *特定のペア*を明示する。
+
+因果関係が**非線形**でもありうる場合は、
+[非線形手法の記事](nonlinear-ja.html)のCAM-UVを参照。非線形モデルにおける未観測
+変数を扱う手法である。
+
+```{r setup}
+library(lingamr)
+```
+
+
+## Bottom-Up ParceLiNGAM
+
+`lingam_parce()`（BottomUpParceLiNGAM、Tashiro et al. 2014）は、sink（最も下流）側
+から因果順序を探索し、各ステップで候補変数の残差が他の変数と独立かどうかを検定する。
+その検定が棄却された時点で探索は停止し、まだ配置できていないすべての変数は、単一の
+**未解決ブロック**としてまとめて返される -- これは、それらの変数がおそらく潜在交絡
+変数を共有していることを示すシグナルであり、順序に関する（誤っているかもしれない）
+推測ではない。
+
+`generate_parce_sample()` は、`x6` が `x2` と `x3` の未観測の共通原因である7変数
+モデルを生成する。データとして返されるのは `x0`-`x5` のみである。
+
+```{r parce_sample}
+# HSIC is O(n^2), so a moderate n keeps this article fast to build
+confounded <- generate_parce_sample(n = 500, seed = 1)
+head(confounded$data)
+confounded$confounded_pair
+```
+
+```{r parce_fit}
+parce_result <- lingam_parce(confounded$data, reg_method = "ols")
+print(parce_result)
+```
+
+因果順序の最初の要素は未解決ブロックであり、括弧付きで表示される。ここでは
+`x2` と `x3` が正しく含まれている。隣接行列の対応するエントリは `NA` になり、
+残りの完全に解決された変数間のエッジは通常通り推定される。
+
+```{r parce_block}
+parce_result$causal_order[[1]]
+parce_result$adjacency_matrix[confounded$confounded_pair, confounded$confounded_pair]
+```
+
+交絡された変数の真の親は特定できないため、`estimate_total_effect_parce()` は
+未解決ブロック内の変数を*起点*とする総効果を求められた場合には警告を発して `NA` を
+返すが、十分に識別可能なペアについては通常通り推定値を計算する。
+
+```{r parce_total_effect}
+# from a confounded variable: warns and returns NA
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = confounded$confounded_pair[1], to_index = "x1"
+)
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_parce(confounded$data, parce_result,
+  from_index = "x0", to_index = "x5"
+)
+```
+
+`lingam_parce_bootstrap()` は、`lingam_direct_bootstrap()` と同様のスタイルで
+ブートストラップの安定性推定を提供する。集約時には `NA`（未解決）のエッジは存在
+しないものとして扱われるため、`get_probabilities()` などの `BootstrapResult` 照会
+関数は通常通り機能する。ただし `get_causal_order_stability()` だけは例外で、
+ParceLiNGAMのブロック化された因果順序はその固定長フォーマットに合わないためである。
+
+```{r parce_bootstrap}
+parce_bs <- lingam_parce_bootstrap(confounded$data,
+  n_sampling = 10L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(parce_bs)
+```
+
+
+## RCD（Repetitive Causal Discovery）
+
+`lingam_rcd()`（Repetitive Causal Discovery; Maeda and Shimizu 2020）は、
+`lingam_parce()` と同じ潜在交絡変数の問題を扱うが、異なる角度からアプローチする。
+検定が棄却された時点で**未解決ブロック**として諦めて因果順序を探索するのではなく、
+RCDは各変数の**祖先集合**を直接推定し、そのうえで親を持たない個々のペアについて
+潜在交絡変数を共有していないかを検定する。この結果、RCDの出力はブロック単位
+（順序付けできなかった変数の集合）ではなく、ペア単位（どの特定のペアが交絡されて
+いるか）となる。
+
+`generate_rcd_sample()` は、`x6` が `x2` と `x4` の未観測の共通原因である7変数
+モデルを生成する。データとして返されるのは `x0`-`x5` のみである。
+
+```{r rcd_sample}
+# HSIC is O(n^2), so a moderate n keeps this article fast to build
+rcd_confounded <- generate_rcd_sample(n = 300, seed = 1)
+head(rcd_confounded$data)
+rcd_confounded$confounded_pair
+```
+
+```{r rcd_fit}
+rcd_result <- lingam_rcd(rcd_confounded$data)
+print(rcd_result)
+```
+
+`ancestors_list` は各変数の推定された祖先を与える（因果順序ではない）。交絡された
+ペアの隣接行列エントリは `NA` になる。
+
+```{r rcd_ancestors}
+rcd_result$ancestors_list
+rcd_result$adjacency_matrix[rcd_confounded$confounded_pair, rcd_confounded$confounded_pair]
+```
+
+ParceLiNGAMと同様、`estimate_total_effect_rcd()` は交絡された変数を起点とする総効果
+を求められた場合、警告を発して `NA` を返す。
+
+```{r rcd_total_effect}
+# from a confounded variable: warns and returns NA
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = rcd_confounded$confounded_pair[1], to_index = rcd_confounded$confounded_pair[2]
+)
+
+# a well-identified pair: a normal numeric estimate
+estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
+  from_index = "x5", to_index = "x0"
+)
+```
+
+`lingam_rcd_bootstrap()` はブートストラップの安定性推定を提供し、通常の
+`BootstrapResult` 照会関数がそのまま使える。
+
+
+## ParceLiNGAMとRCDのどちらを使うか
+
+| 観点 | ParceLiNGAM | RCD |
+|---|---|---|
+| 出力の粒度 | ブロック単位: 順序付けできなかった変数の集合 | ペア単位: どの特定のペアが交絡されているか |
+| 主な結果 | ブロック化された因果順序 + `NA` ブロックを含む隣接行列 | 祖先集合 + 交絡ペアが `NA` の隣接行列 |
+| 答えられる問い | 「順序のどの部分なら信頼できるか」 | 「隠れた共通原因を共有しているのは正確にはどのペアか」 |
+
+どちらもHSIC独立性検定に依存しており、そのコストは $O(n^2)$ で増加する。$n$ が
+大きい場合はサブサンプリングを検討すること。関係が非線形なら
+[CAM-UV](nonlinear-ja.html) を使う。
+
+
+## 関連記事
+
+- [手法選択ガイド](method-selection-ja.html) — データに合う手法の選び方
+- [非線形の手法（RESITとCAM-UV）](nonlinear-ja.html) — CAM-UVは非線形モデルの
+  潜在交絡変数を扱う
+- [ブートストラップと診断](bootstrap-diagnostics-ja.html)

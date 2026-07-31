@@ -1,0 +1,198 @@
+---
+title: "Special Data: Mixed Variables, Multiple Groups, and Missing Values"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5
+)
+set.seed(0)
+```
+
+Direct LiNGAM assumes a single, complete data matrix of continuous variables.
+This article covers three extensions for data that break those assumptions:
+
+- **LiM** (`lingam_lim()`): data mixing continuous and discrete variables
+  (binary or Poisson counts).
+- **MultiGroup Direct LiNGAM** (`lingam_multi_group()`): several datasets that
+  share a causal structure but not coefficient values.
+- **Missing data** (`bootstrap_with_imputation()`): bootstrap combined with
+  multiple imputation for data containing `NA`.
+
+```{r setup}
+library(lingamr)
+```
+
+
+## LiNGAM for Mixed Data (LiM)
+
+Direct LiNGAM assumes every variable is continuous. `lingam_lim()` relaxes
+this assumption and estimates a causal structure from data containing a
+mixture of continuous and discrete variables, following
+Zeng et al. (2022). It combines a NOTEARS-style continuous optimization
+(the "global" phase) with a combinatorial local search over edge
+directions, pruning, and edge addition (the "local" phase).
+
+`generate_lim_sample()` generates a small dataset with a known causal chain
+of continuous and discrete variables: `x1` (continuous) -> `x2` (discrete)
+-> `x3` (continuous).
+
+```{r lim_sample}
+set.seed(1)
+lim_dat <- generate_lim_sample(n = 2000)
+head(lim_dat$data)
+lim_dat$is_continuous
+```
+
+`lingam_lim()` requires `is_continuous`, a logical vector marking which
+columns are continuous (`TRUE`) versus discrete (`FALSE`).
+Because the optimization starts from a random initial point,
+reproducibility requires `set.seed()`.
+
+```{r lim_fit}
+lim_result <- lingam_lim(lim_dat$data, is_continuous = lim_dat$is_continuous)
+print(lim_result)
+```
+
+As with `lingam_direct()`, `adjacency_matrix` follows the
+`B[i, j]` = j -> i convention (row = to, column = from), and `causal_order`
+lists the estimated topological order as 1-based indices.
+
+```{r lim_order}
+colnames(lim_dat$data)[lim_result$causal_order]
+```
+
+### Count Variables (Poisson)
+
+Discrete variables are binary (0/1) by default; setting `is_poisson = TRUE`
+treats them as Poisson-distributed counts instead (the local search phase
+then scores them with Poisson regression log-likelihoods).
+`generate_lim_sample(is_poisson = TRUE)` generates a matching count-data
+example:
+
+```{r lim_poisson}
+set.seed(2)
+lim_pois <- generate_lim_sample(n = 2000, is_poisson = TRUE)
+head(lim_pois$data)
+
+lim_pois_result <- lingam_lim(lim_pois$data,
+  is_continuous = lim_pois$is_continuous, is_poisson = TRUE
+)
+print(lim_pois_result)
+```
+
+See `?lingam_lim` for details on the local phase's edge-weight convention
+and its numeric differences from the Python implementation.
+
+
+## Multi-Group Direct LiNGAM
+
+`lingam_direct()` fits a single dataset. When data comes from several
+sources that plausibly share the same causal structure but not the same
+strength of effect (e.g. the same study run at multiple sites, or the same
+process observed in different time periods), `lingam_multi_group()` jointly
+estimates a **common causal order** across all groups while still allowing
+each group its own adjacency matrix (structural coefficients), following
+Shimizu (2012).
+
+`generate_multi_group_sample()` generates two datasets that share the causal
+structure of `generate_lingam_sample_6()` but with slightly different
+coefficients per group.
+
+```{r multi_group_sample}
+mg <- generate_multi_group_sample(n = c(1000, 1000), seed = 42)
+lapply(mg$data_list, head, 3)
+```
+
+```{r multi_group_fit}
+mg_result <- lingam_multi_group(mg$data_list, reg_method = "ols")
+print(mg_result)
+```
+
+`causal_order` is shared by all groups; `adjacency_matrices` holds one
+matrix per group, each following the usual `B[i, j]` = j -> i convention.
+
+To analyze a single group with the rest of `lingamr`'s single-group
+tooling (total causal effects, independence tests, plotting), extract it
+as a plain `LingamResult` with `get_group_result()`:
+
+```{r multi_group_extract}
+g1 <- get_group_result(mg_result, "group1")
+class(g1)
+
+estimate_all_total_effects(mg$data_list$group1, g1, method = "ols")
+```
+
+`lingam_multi_group_bootstrap()` provides bootstrap stability estimates in
+the same joint fashion: every iteration resamples each group independently,
+then jointly re-estimates the causal order and per-group adjacency
+matrices. It returns a named list of per-group `BootstrapResult` objects, so
+the existing bootstrap query functions apply directly per group:
+
+```{r multi_group_bootstrap}
+mg_bs <- lingam_multi_group_bootstrap(mg$data_list,
+  n_sampling = 20L, reg_method = "ols", seed = 1, verbose = FALSE
+)
+get_probabilities(mg_bs$group1)
+```
+
+Note that `lingam_multi_group_bootstrap()`'s total causal effects are
+computed as path-coefficient products over each iteration's adjacency
+matrix, not via regression; this matches the upstream Python
+implementation but differs from `lingam_direct_bootstrap()`'s
+regression-based `estimate_all_total_effects()`.
+
+
+## Causal Discovery with Missing Data
+
+All algorithms above assume a complete data matrix. When `X` contains missing
+values (`NA`), `bootstrap_with_imputation()` combines bootstrap resampling
+with multiple imputation: each resample is imputed into several complete
+datasets, and a common causal structure is jointly estimated across them with
+`lingam_multi_group()` (treating the imputed copies as "groups" that share one
+causal order). This is an R port of the Python
+`lingam.tools.bootstrap_with_imputation()`.
+
+```{r bootstrap_with_imputation_setup, eval = requireNamespace("mice", quietly = TRUE)}
+sample6_na <- generate_lingam_sample_6(n = 1000, seed = 1)
+X_na <- sample6_na$data
+set.seed(1)
+X_na$x5[sample.int(nrow(X_na), size = round(0.1 * nrow(X_na)))] <- NA # MCAR 10% on x5
+```
+
+```{r bootstrap_with_imputation_fit, eval = requireNamespace("mice", quietly = TRUE)}
+bwi <- bootstrap_with_imputation(X_na,
+  n_sampling = 20L, n_repeats = 5L, seed = 42, verbose = FALSE
+)
+print(bwi)
+```
+
+The default imputer is `mice::mice(method = "norm")` (Bayesian linear
+regression), the closest standard R equivalent of the upstream Python default
+(`IterativeImputer(sample_posterior = TRUE)`); numeric results will not match
+the Python implementation. Both the imputer and the causal-discovery step can
+be swapped for a custom `function` via the `imputer` and `cd_fit` arguments.
+
+Because each iteration produces `n_repeats` adjacency matrices (one per
+imputed dataset), the result's shape differs from `lingam_direct_bootstrap()`.
+`as_bootstrap_result()` collapses the `n_repeats` dimension (median or mean)
+into a regular `BootstrapResult`, so the existing bootstrap query functions
+apply as usual:
+
+```{r bootstrap_with_imputation_convert, eval = requireNamespace("mice", quietly = TRUE)}
+bs_na <- as_bootstrap_result(bwi, aggregate = "median")
+get_probabilities(bs_na)
+```
+
+`get_total_causal_effects()` is not available on this `BootstrapResult`, since
+`bootstrap_with_imputation()` never computes total effects.
+
+
+## Related Articles
+
+- [Method selection guide](method-selection.html) — which method fits your data
+- [Direct LiNGAM in depth](direct-lingam.html)
+- [Bootstrap and diagnostics](bootstrap-diagnostics.html)
