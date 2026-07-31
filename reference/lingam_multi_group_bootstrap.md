@@ -157,6 +157,6 @@ bs_par <- lingam_multi_group_bootstrap(mg$data_list,
   n_cores = 2L
 )
 #> Multi-group bootstrap: 30 iterations, 2 groups, method=ols (parallel, 2 cores)
-#> Completed in 0.5 seconds.
+#> Completed in 0.6 seconds.
 # }
 ```

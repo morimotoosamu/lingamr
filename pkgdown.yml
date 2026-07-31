@@ -2,9 +2,23 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  articles/bootstrap-diagnostics-ja: bootstrap-diagnostics-ja.html
+  articles/bootstrap-diagnostics: bootstrap-diagnostics.html
+  articles/direct-lingam-ja: direct-lingam-ja.html
+  articles/direct-lingam: direct-lingam.html
+  articles/latent-confounders-ja: latent-confounders-ja.html
+  articles/latent-confounders: latent-confounders.html
   lingamr-ja: lingamr-ja.html
   lingamr: lingamr.html
-last_built: 2026-07-30T13:09Z
+  method-selection-ja: method-selection-ja.html
+  method-selection: method-selection.html
+  articles/nonlinear-ja: nonlinear-ja.html
+  articles/nonlinear: nonlinear.html
+  articles/special-data-ja: special-data-ja.html
+  articles/special-data: special-data.html
+  articles/time-series-ja: time-series-ja.html
+  articles/time-series: time-series.html
+last_built: 2026-07-31T11:50Z
 urls:
   reference: https://morimotoosamu.github.io/lingamr/reference
   article: https://morimotoosamu.github.io/lingamr/articles

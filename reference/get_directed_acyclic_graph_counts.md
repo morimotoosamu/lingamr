@@ -48,7 +48,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.1 seconds.
+#> Completed in 0.2 seconds.
 
 get_directed_acyclic_graph_counts(bs_model)
 #> $dag

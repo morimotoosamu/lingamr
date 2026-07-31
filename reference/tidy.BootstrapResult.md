@@ -41,7 +41,7 @@ bs <- lingam_direct_bootstrap(dat$data, n_sampling = 30L, reg_method = "ols", se
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.1 seconds.
+#> Completed in 0.2 seconds.
 tidy(bs)
 #>    from to count proportion   mean_effect median_effect  sd_effect     ci_lower
 #> 1     1  6    30 1.00000000  3.9169074323   4.003899696 0.21847967  3.445944525

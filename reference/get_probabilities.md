@@ -35,7 +35,7 @@ bs_model <- lingam_direct_bootstrap(LiNGAM_sample_1000$data,
 #>   iteration 10 / 30
 #>   iteration 20 / 30
 #>   iteration 30 / 30
-#> Completed in 0.1 seconds.
+#> Completed in 0.2 seconds.
 
 get_probabilities(bs_model)
 #>            [,1]       [,2]       [,3]      [,4]       [,5]       [,6]
