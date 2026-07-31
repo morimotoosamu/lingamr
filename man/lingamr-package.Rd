@@ -27,6 +27,10 @@ independent component analysis: Theory and applications. \emph{Oxford Bulletin o
 Economics and Statistics}, 75(5), 705-730. VARLiNGAM R code:
 \url{https://sites.google.com/site/dorisentner/publications/VARLiNGAM}
 
+Kawahara, Y., Shimizu, S., & Washio, T. (2011). Analyzing relationships
+among ARMA processes based on non-Gaussianity of external influences.
+\emph{Neurocomputing}, 74(12-13), 2212-2221. (VARMA-LiNGAM)
+
 Shimizu, S. (2012). Joint estimation of linear non-Gaussian acyclic models.
 \emph{Neurocomputing}, 81, 104-107. (MultiGroup Direct LiNGAM)
 
@@ -41,12 +45,21 @@ PMLR 108, 735-745.
 Wang, Y. S., & Drton, M. (2020). High-dimensional causal discovery under
 non-Gaussianity. \emph{Biometrika}, 107(1), 41-59.
 
+Peters, J., Mooij, J. M., Janzing, D., & Schölkopf, B. (2014). Causal
+discovery with continuous additive noise models. \emph{Journal of Machine
+Learning Research}, 15, 2009-2053. (RESIT)
+
+Maeda, T. N., & Shimizu, S. (2021). Causal additive models with unobserved
+variables. \emph{Proceedings of the Thirty-Seventh Conference on Uncertainty in
+Artificial Intelligence (UAI)}, PMLR 161, 97-106. (CAM-UV)
+
 Zeng, Y., Shimizu, S., Matsui, H., & Sun, F. (2022). Causal discovery for
 linear mixed data. \emph{Proceedings of the First Conference on Causal Learning
 and Reasoning (CLeaR 2022)}, PMLR 177, 994-1009.
 
-Python implementation (DirectLiNGAM, VAR-LiNGAM, MultiGroup, ParceLiNGAM,
-RCD, LiM, HighDim): cdt15/lingam, \url{https://github.com/cdt15/lingam}
+Python implementation (DirectLiNGAM, VAR-LiNGAM, VARMA-LiNGAM, MultiGroup,
+ParceLiNGAM, RCD, RESIT, CAM-UV, LiM, HighDim): cdt15/lingam,
+\url{https://github.com/cdt15/lingam}
 }
 \seealso{
 Useful links:

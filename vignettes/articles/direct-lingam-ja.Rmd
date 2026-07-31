@@ -33,7 +33,7 @@ library(lingamr)
 |------|:------:|:-----------:|------|
 | `generate_lingam_sample_6()` | 6 | 1,000 | 標準的な固定構造。本記事の主な例 |
 | `generate_lingam_sample_10()` | 10 | 1,000 | 6変数ケースの拡張版（[より大きなデータセット（10変数）](#a-larger-dataset-10-variables) で使用） |
-| `generate_lingam_hard_sample()` | 9 | 200 | 強い多重共線性を持つ難しい設定 |
+| `generate_lingam_hard_sample()` | 9 | 200 | 強い多重共線性を持つ難しい設定（[強い多重共線性](#strong-multicollinearity-init_method) で使用） |
 | `generate_lingam_large_sample()` | 可変 | 1,000 | 任意の変数数を持つランダムなスパースDAG（[変数が多い場合：スケーラビリティの壁](#when-there-are-many-variables-the-scalability-wall) で使用） |
 | `generate_lingam_paradox_data()` | 4 | 2,000 | 測定誤差パラドックス（[パラドックスの例](#a-case-where-directlingam-struggles-the-measurement-error-paradox) で使用） |
 
@@ -212,6 +212,24 @@ x3の「媒介を通じた効果」がx0とx2の係数に吸収されてしま�
 効果を使う。
 
 
+### 特定の変数ペア間の効果
+
+`estimate_all_total_effects()`は全ペアの効果を一度に行列として返す。特定の
+`from -> to`の1組だけが必要な場合は、`estimate_total_effect()`で直接計算
+できる。`from_index`・`to_index`は変数名・1始まりのインデックスのどちらでも
+指定できる。
+
+```{r total_effect_single}
+te_x3_x1 <- x1k$data |>
+  estimate_total_effect(model, from_index = "x3", to_index = "x1")
+
+round(te_x3_x1, 3)
+
+# Same value as the x3 column of the total_effects matrix computed above
+isTRUE(all.equal(te_x3_x1, total_effects["x1", "x3"], check.attributes = FALSE))
+```
+
+
 ## 事前知識を用いた推定
 
 `make_prior_knowledge()` を使うと、変数間の因果関係に関するドメイン知識をDirect
@@ -365,6 +383,84 @@ sum(fit_lam_min$adjacency_matrix != 0)
 ```
 
 
+## 強い多重共線性（init_method） {#strong-multicollinearity-init_method}
+
+`generate_lingam_hard_sample()` は、`x0`から`x4`までの5つのroot変数が1つの
+強い共通因子を共有する（`collinearity`引数で強さを指定。デフォルト0.95）
+データを生成する。どの変数も互いを引き起こしていないにもかかわらず、互いに
+強く相関する。下流の4変数`x5`から`x8`は、これらのrootの線形結合として生成
+される（`x8`はさらに`x5`・`x6`にも依存する）。これは、単一の目的変数の予測
+変数間に生じる通常の多重共線性より難しい設定である。ここでは、ほぼ共線な
+変数群が外生変数（root）自体であり、「rootの誤差項は互いに独立である」という
+DirectLiNGAMの前提そのものが破られている。
+
+```{r hard_generate}
+hard <- generate_lingam_hard_sample()
+
+head(hard$data)
+hard$true_adjacency
+
+# x0-x4 share a common factor and are therefore highly correlated
+round(cor(hard$data[c("x0", "x1", "x2", "x3", "x4")]), 3)
+```
+
+デフォルト設定でDirect LiNGAMを実行する。
+
+```{r hard_fit}
+fit_hard <- lingam_direct(hard$data)
+
+colnames(hard$data)[fit_hard$causal_order]
+```
+
+`x0`から`x4`が互いに依存しているため、推定された因果順序は真の構造を完全には
+満たさない。これを直接確認する: すべての真のエッジ`from -> to`について、
+推定順序で`from`が`to`より前に来ているべきである。
+
+```{r hard_order_check}
+true_edges <- which(hard$true_adjacency != 0, arr.ind = TRUE)
+order_pos  <- match(seq_len(ncol(hard$data)), fit_hard$causal_order)
+
+edge_check <- data.frame(
+  from            = colnames(hard$data)[true_edges[, "col"]],
+  to              = colnames(hard$data)[true_edges[, "row"]],
+  order_respected = order_pos[true_edges[, "col"]] < order_pos[true_edges[, "row"]]
+)
+
+edge_check
+sum(edge_check$order_respected)   # number of true edges correctly ordered
+```
+
+11本の真のエッジのうち、正しく順序付けられているのは6本のみである。残り
+（すべて`x6`または`x8`へのエッジ）は、真の親が推定順序で遅く配置されたために、
+見逃されるか逆方向に推定されている。これはまさに`generate_lingam_hard_sample()`
+が示そうとしている失敗モードである: 外生変数どうしが相関していると、回帰が
+始まる前の因果順序探索の段階ですでに破綻しうる。
+
+それでも`x0 -> x7`のエッジはたまたま正しく順序付けられており、これを使えば
+`init_method`が回帰段階だけに与える影響を切り分けて見ることができる。
+`estimate_total_effect()`はデフォルトでAdaptive LASSOの初期重みをOLSで推定する
+（`init_method = "ols"`）。`init_method = "ridge"`に切り替えると、交差検証付き
+Ridge回帰を使うようになり、多重共線性の下でも安定する。
+
+```{r hard_init_method}
+set.seed(0)
+te_hard_ols <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ols")
+
+te_hard_ridge <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ridge")
+
+round(c(ols = unname(te_hard_ols), ridge = unname(te_hard_ridge)), 3)
+```
+
+`x0 -> x7`の真の係数は**2.0**である。OLS初期化の推定値は大きく超過するのに
+対し、Ridge初期化の推定値は真の値にずっと近い -- これはまさに
+`generate_lingam_hard_sample()`のドキュメントが「強い多重共線性の下では
+Ridge初期化Adaptive LASSOが望ましい」とする理由と一致する。ただし
+`init_method`が影響するのはこの回帰段階のみであり、因果順序探索は変えない。
+したがって、上で示した順序の問題自体を解決するものではない。
+
+
 ## 非ガウス性の仮定
 
 LiNGAMの理論的な核心は、**誤差項が非ガウス分布に従う**という仮定である。誤差が
@@ -451,7 +547,7 @@ fit_gauss$adjacency_matrix |>
 [ブートストラップと診断の記事](bootstrap-diagnostics-ja.html)を参照。
 
 
-## より大きなデータセット（10変数）
+## より大きなデータセット（10変数） {#a-larger-dataset-10-variables}
 
 10変数・10,000行という、より大きなデータセットの例を示す。
 
@@ -532,7 +628,7 @@ cmp
 
 ---
 
-## 変数が多い場合：スケーラビリティの壁
+## 変数が多い場合：スケーラビリティの壁 {#when-there-are-many-variables-the-scalability-wall}
 
 Direct LiNGAMは各ステップで、残っているすべての変数ペアについて独立性検定を行う。
 ステップ数は $p$ で、各ステップの検定回数は最大 $p(p-1)$ であるため、独立性検定の
@@ -649,7 +745,7 @@ wide_result <- lingam_high_dim(wide_sample$data)
 wide_result$causal_order
 ```
 
-## DirectLiNGAMが苦手とする例：測定誤差パラドックス
+## DirectLiNGAMが苦手とする例：測定誤差パラドックス {#a-case-where-directlingam-struggles-the-measurement-error-paradox}
 
 因果探索の手法にはそれぞれ仮定があり、それが破られると正しい構造を復元できないこと
 がある。`generate_lingam_paradox_data()` は、意図的にそうした困難な状況を作り出す

@@ -88,6 +88,16 @@ estimate_total_effect_parce(confounded$data, parce_result,
 )
 ```
 
+`get_error_independence_p_values_parce()` complements this by testing, for
+every pair of variables, whether their residuals are independent — using the
+HSIC gamma-approximation test (`hsic_test_gamma()`) rather than a correlation
+test. Any pair touching a variable in the unresolved block cannot be tested
+and comes back as `NA`; well-identified pairs get a normal p-value:
+
+```{r parce_indep_pvalues}
+round(get_error_independence_p_values_parce(confounded$data, parce_result), 3)
+```
+
 `lingam_parce_bootstrap()` provides bootstrap stability estimates in the same
 style as `lingam_direct_bootstrap()`. `NA` (unresolved) edges are treated as
 absent when aggregating, so `get_probabilities()` and the other
@@ -150,6 +160,14 @@ estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
 estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
   from_index = "x5", to_index = "x0"
 )
+```
+
+`get_error_independence_p_values_rcd()` provides the same residual-independence
+check for RCD results: pairs touching a confounded variable are `NA`, while the
+rest get a normal p-value:
+
+```{r rcd_indep_pvalues}
+round(get_error_independence_p_values_rcd(rcd_confounded$data, rcd_result), 3)
 ```
 
 `lingam_rcd_bootstrap()` provides bootstrap stability estimates; the usual

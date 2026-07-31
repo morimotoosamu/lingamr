@@ -189,6 +189,44 @@ bs_model |>
 ```
 
 
+### Paths Between Two Variables
+
+`get_paths()` breaks the total causal effect between two variables down into
+the individual paths that carry it, along with each path's bootstrap
+probability. As shown in the [Direct LiNGAM article](direct-lingam.html), the
+true structure of `generate_lingam_sample_6()` has two paths from x3 to x1:
+`x3 -> x0 -> x1` (indirect effect 9.0) and `x3 -> x2 -> x1` (indirect effect
+12.0). Indices are 1-based, so x3 (column 4) to x1 (column 2) is:
+
+```{r get_paths}
+bs_model |>
+  get_paths(4, 2)
+```
+
+Both paths are recovered in 99 of the 100 bootstrap samples, with median
+effects close to the true values (9.0 and 12.0).
+
+
+### Frequency of Recurring DAG Structures
+
+`get_directed_acyclic_graph_counts()` looks at the whole graph estimated in
+each bootstrap sample and counts how often each distinct DAG — rather than
+individual edges — recurs. `n_dags` limits the output to the most frequent
+structures.
+
+```{r get_directed_acyclic_graph_counts}
+dag_counts <- bs_model |>
+  get_directed_acyclic_graph_counts(n_dags = 3)
+
+dag_counts$count
+
+dag_counts$dag[[1]]
+```
+
+The most frequent DAG (99 of the 100 samples) matches the true edge set of
+`generate_lingam_sample_6()` exactly.
+
+
 ### Stability of the Causal Order
 
 `get_causal_order_stability()` aggregates the causal orders estimated in each

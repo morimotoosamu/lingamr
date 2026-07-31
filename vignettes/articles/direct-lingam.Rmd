@@ -35,7 +35,7 @@ adjacency matrix).
 |------|:------:|:-----------:|------|
 | `generate_lingam_sample_6()` | 6 | 1,000 | Standard fixed structure. The main example in this article |
 | `generate_lingam_sample_10()` | 10 | 1,000 | An extension of the 6-variable case (used in [A Larger Dataset](#a-larger-dataset-10-variables)) |
-| `generate_lingam_hard_sample()` | 9 | 200 | A difficult setting with strong multicollinearity |
+| `generate_lingam_hard_sample()` | 9 | 200 | A difficult setting with strong multicollinearity (used in [Strong Multicollinearity](#strong-multicollinearity-init_method)) |
 | `generate_lingam_large_sample()` | variable | 1,000 | A random sparse DAG with an arbitrary number of variables (used in [The Scalability Wall](#when-there-are-many-variables-the-scalability-wall)) |
 | `generate_lingam_paradox_data()` | 4 | 2,000 | The measurement error paradox (used in [The Paradox Example](#a-case-where-directlingam-struggles-the-measurement-error-paradox)) |
 
@@ -223,6 +223,24 @@ When you want to know "the ultimate impact of intervening on a variable," use
 the total causal effect rather than the multiple regression coefficient.
 
 
+### Effect Between a Single Pair of Variables
+
+`estimate_all_total_effects()` returns the full matrix of pairwise effects at
+once. When only one specific `from -> to` pair is needed,
+`estimate_total_effect()` computes it directly; `from_index` and `to_index`
+accept either a variable name or a 1-based index.
+
+```{r total_effect_single}
+te_x3_x1 <- x1k$data |>
+  estimate_total_effect(model, from_index = "x3", to_index = "x1")
+
+round(te_x3_x1, 3)
+
+# Same value as the x3 column of the total_effects matrix computed above
+isTRUE(all.equal(te_x3_x1, total_effects["x1", "x3"], check.attributes = FALSE))
+```
+
+
 ## Inference with Prior Knowledge
 
 With `make_prior_knowledge()`, you can incorporate domain knowledge about the
@@ -377,6 +395,88 @@ fit_lam_min <- lingam_direct(x1k$data, lambda = "lambda.min")
 sum(fit_bic$adjacency_matrix     != 0)
 sum(fit_lam_min$adjacency_matrix != 0)
 ```
+
+
+## Strong Multicollinearity (init_method) {#strong-multicollinearity-init_method}
+
+`generate_lingam_hard_sample()` builds five root variables, `x0` through
+`x4`, that all share one strong common factor (`collinearity`, default 0.95),
+so they are highly correlated with each other even though none of them
+causes any other. Four downstream variables, `x5` through `x8`, are linear
+combinations of these roots (`x8` also depends on `x5` and `x6`). This is
+harder than ordinary multicollinearity among the predictors of a single
+response: here the near-collinear variables are themselves exogenous, which
+breaks DirectLiNGAM's assumption that the error terms of root variables are
+mutually independent.
+
+```{r hard_generate}
+hard <- generate_lingam_hard_sample()
+
+head(hard$data)
+hard$true_adjacency
+
+# x0-x4 share a common factor and are therefore highly correlated
+round(cor(hard$data[c("x0", "x1", "x2", "x3", "x4")]), 3)
+```
+
+We run Direct LiNGAM with its defaults.
+
+```{r hard_fit}
+fit_hard <- lingam_direct(hard$data)
+
+colnames(hard$data)[fit_hard$causal_order]
+```
+
+Because `x0` through `x4` are mutually dependent, the estimated causal order
+does not fully respect the true structure. We check this directly: for every
+true edge `from -> to`, `from` should precede `to` in the estimated order.
+
+```{r hard_order_check}
+true_edges <- which(hard$true_adjacency != 0, arr.ind = TRUE)
+order_pos  <- match(seq_len(ncol(hard$data)), fit_hard$causal_order)
+
+edge_check <- data.frame(
+  from            = colnames(hard$data)[true_edges[, "col"]],
+  to              = colnames(hard$data)[true_edges[, "row"]],
+  order_respected = order_pos[true_edges[, "col"]] < order_pos[true_edges[, "row"]]
+)
+
+edge_check
+sum(edge_check$order_respected)   # number of true edges correctly ordered
+```
+
+Only 6 of the 11 true edges are correctly ordered. The rest -- all edges into
+`x6` or `x8` -- are missed or estimated in the reverse direction, because
+their true parents were placed too late in the estimated order. This is the
+failure mode `generate_lingam_hard_sample()` is designed to expose: correlated
+exogenous variables can break the causal order search before regression even
+starts.
+
+Even so, the `x0 -> x7` edge happens to be ordered correctly, which lets us
+isolate the effect of `init_method` on the regression step alone.
+`estimate_total_effect()` estimates Adaptive LASSO's initial weights with OLS
+by default (`init_method = "ols"`); `init_method = "ridge"` uses
+cross-validated Ridge regression instead, which stays stable under
+multicollinearity.
+
+```{r hard_init_method}
+set.seed(0)
+te_hard_ols <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ols")
+
+te_hard_ridge <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ridge")
+
+round(c(ols = unname(te_hard_ols), ridge = unname(te_hard_ridge)), 3)
+```
+
+The true coefficient of `x0 -> x7` is **2.0**. The OLS-initialized estimate
+overshoots substantially, while the Ridge-initialized estimate lands much
+closer to the truth -- the improvement `generate_lingam_hard_sample()`'s
+documentation attributes to Ridge-initialized Adaptive LASSO under strong
+multicollinearity. Keep in mind that `init_method` only affects this
+regression stage: it does not change the causal order search, so it cannot
+fix the ordering problem shown above.
 
 
 ## The Non-Gaussianity Assumption

@@ -83,6 +83,15 @@ estimate_total_effect_parce(confounded$data, parce_result,
 )
 ```
 
+`get_error_independence_p_values_parce()` はこれを補完し、すべての変数ペアについて
+残差が独立かどうかを、相関検定ではなくHSICガンマ近似検定（`hsic_test_gamma()`）で
+検定する。未解決ブロック内の変数を含むペアは検定できず `NA` になり、十分に識別可能
+なペアには通常のp値が得られる。
+
+```{r parce_indep_pvalues}
+round(get_error_independence_p_values_parce(confounded$data, parce_result), 3)
+```
+
 `lingam_parce_bootstrap()` は、`lingam_direct_bootstrap()` と同様のスタイルで
 ブートストラップの安定性推定を提供する。集約時には `NA`（未解決）のエッジは存在
 しないものとして扱われるため、`get_probabilities()` などの `BootstrapResult` 照会
@@ -143,6 +152,14 @@ estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
 estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
   from_index = "x5", to_index = "x0"
 )
+```
+
+`get_error_independence_p_values_rcd()` はRCDの結果に対して同様の残差独立性検定を
+提供する。交絡された変数を含むペアは `NA` になり、それ以外のペアには通常のp値が
+得られる。
+
+```{r rcd_indep_pvalues}
+round(get_error_independence_p_values_rcd(rcd_confounded$data, rcd_result), 3)
 ```
 
 `lingam_rcd_bootstrap()` はブートストラップの安定性推定を提供し、通常の

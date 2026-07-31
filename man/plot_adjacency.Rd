@@ -35,7 +35,7 @@ automatically)}
 
 \item{threshold}{Minimum absolute coefficient value to display (default: 0)}
 
-\item{rankdir}{Layout direction (default: "LR")
+\item{rankdir}{Layout direction (default: "TB")
 "LR" = left -> right, "RL" = right -> left, "TB" = top -> bottom,
 "BT" = bottom -> top}
 
@@ -47,7 +47,7 @@ automatically)}
 
 \item{fillcolor}{Node fill color (default: "lightyellow")}
 
-\item{bordercolor}{Border color}
+\item{bordercolor}{Border color (default: "black")}
 
 \item{fontsize_node}{Node font size (default: 14)}
 
@@ -74,7 +74,7 @@ classified into three colors:
 
 \item{color_fn}{Color for missed edges (default: "darkorange")}
 
-\item{debug}{Enable debug mode (logical)}
+\item{debug}{Enable debug mode (default: FALSE)}
 }
 \value{
 A grViz object (when DiagrammeR is available)

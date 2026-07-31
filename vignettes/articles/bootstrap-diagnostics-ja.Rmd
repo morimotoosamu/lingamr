@@ -179,6 +179,42 @@ bs_model |>
 ```
 
 
+### 2変数間のパス
+
+`get_paths()` は2変数間の総因果効果を、それを媒介する個々のパスとそのブートスト
+ラップ確率に分解する。[Direct LiNGAM記事](direct-lingam-ja.html)で見たとおり、
+`generate_lingam_sample_6()` の真の構造では、x3からx1へのパスが2つ存在する:
+`x3 -> x0 -> x1`（間接効果9.0）と `x3 -> x2 -> x1`（間接効果12.0）。インデックス
+は1始まりなので、x3（4列目）からx1（2列目）は次のように指定する。
+
+```{r get_paths}
+bs_model |>
+  get_paths(4, 2)
+```
+
+いずれのパスも100サンプル中99サンプルで検出され、効果の中央値は真の値（9.0と
+12.0）に近い。
+
+
+### 繰り返し出現するDAG構造の頻度
+
+`get_directed_acyclic_graph_counts()` は各ブートストラップサンプルで推定された
+グラフ全体に注目し、個々のエッジではなく異なるDAGがどれだけ繰り返し出現するかを
+数える。`n_dags` で頻度上位何件を返すかを絞り込める。
+
+```{r get_directed_acyclic_graph_counts}
+dag_counts <- bs_model |>
+  get_directed_acyclic_graph_counts(n_dags = 3)
+
+dag_counts$count
+
+dag_counts$dag[[1]]
+```
+
+最も頻度の高いDAG（100サンプル中99サンプル）は、`generate_lingam_sample_6()` の
+真のエッジ集合と完全に一致する。
+
+
 ### 因果順序の安定性
 
 `get_causal_order_stability()` は各ブートストラップサンプルで推定された因果順序を

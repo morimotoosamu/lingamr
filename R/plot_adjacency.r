@@ -15,7 +15,7 @@
 #' @param labels Vector of variable names (if NULL, x0, x1, ... are generated
 #'   automatically)
 #' @param threshold Minimum absolute coefficient value to display (default: 0)
-#' @param rankdir Layout direction (default: "LR")
+#' @param rankdir Layout direction (default: "TB")
 #'   "LR" = left -> right, "RL" = right -> left, "TB" = top -> bottom,
 #'   "BT" = bottom -> top
 #' @param title Graph title (default: "Estimated Causal Structure")
@@ -23,7 +23,7 @@
 #'   "circle", "box", "ellipse", "diamond", "plaintext",
 #'   "square", "triangle", "hexagon", "octagon", etc.
 #' @param fillcolor Node fill color (default: "lightyellow")
-#' @param bordercolor Border color
+#' @param bordercolor Border color (default: "black")
 #' @param fontsize_node Node font size (default: 14)
 #' @param fontsize_edge Edge label font size (default: 10)
 #' @param edge_color Edge color (default: "gray40"). Unused when `true_B` is
@@ -39,7 +39,7 @@
 #' @param color_tp Color for correct edges (default: "forestgreen")
 #' @param color_fp Color for false-positive edges (default: "firebrick")
 #' @param color_fn Color for missed edges (default: "darkorange")
-#' @param debug Enable debug mode (logical)
+#' @param debug Enable debug mode (default: FALSE)
 #' @return A grViz object (when DiagrammeR is available)
 #' @importFrom grDevices col2rgb
 #' @export

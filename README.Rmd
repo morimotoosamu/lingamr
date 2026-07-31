@@ -35,14 +35,18 @@ LiNGAM is a method for estimating structural equation models or linear Bayesian 
 
 * Direct LiNGAM (`lingam_direct()`), with selectable regression backends
   (OLS, LASSO, adaptive LASSO, ridge) for adjacency-matrix estimation
-* VAR-LiNGAM (`lingam_var()`) for time series causal discovery
+* VAR-LiNGAM (`lingam_var()`) for time series causal discovery, and
+  VARMA-LiNGAM (`lingam_varma()`) when errors follow a moving-average process
 * Algorithms robust against latent confounders: BottomUpParceLiNGAM
   (`lingam_parce()`) and RCD (`lingam_rcd()`)
 * MultiGroupDirectLiNGAM (`lingam_multi_group()`) for jointly estimating a
   shared causal order across multiple datasets
 * HighDimDirectLiNGAM (`lingam_high_dim()`) for high-dimensional data
   (large `p`, or `p > n`)
-* LiM (`lingam_lim()`) for causal discovery on mixed continuous/binary data
+* Algorithms for nonlinear causal discovery: RESIT (`lingam_resit()`) and
+  CAM-UV (`lingam_camuv()`, which also detects unobserved confounders)
+* LiM (`lingam_lim()`) for causal discovery on mixed continuous, binary, and
+  Poisson count data
 * `bootstrap_with_imputation()` for causal discovery on data with missing
   values, and `evaluate_model_fit()` for SEM-based fit evaluation via lavaan
 * Stability assessment of causal structures using the bootstrap method, including causal-order stability
@@ -101,13 +105,19 @@ model$adjacency_matrix |>
 
 ## Learn more
 
-For a full walkthrough — prior knowledge, total causal effects, residual
-independence and normality tests, and bootstrap (including parallel execution) —
-see the vignette:
+Start with the introductory vignette for the core idea and a minimal
+end-to-end workflow:
 
 ``` r
 vignette("lingamr")
 ```
+
+For choosing the right estimator (time series, latent confounders, nonlinear
+relationships, mixed or missing data), see `vignette("method-selection")`.
+Detailed guides — prior knowledge, total causal effects, residual
+independence and normality tests, bootstrap (including parallel execution),
+and more — live on the
+[package website](https://morimotoosamu.github.io/lingamr/).
 
 
 ## Licence

@@ -27,14 +27,17 @@ English version:
 
 - Direct LiNGAM(`lingam_direct()`)。隣接行列の推定に複数の回帰バックエンド
   (OLS、LASSO、適応的LASSO、ridge)を選択可能
-- VAR-LiNGAM(`lingam_var()`)による時系列データの因果探索
+- VAR-LiNGAM(`lingam_var()`)による時系列データの因果探索と、誤差が
+  移動平均過程に従う場合のVARMA-LiNGAM(`lingam_varma()`)
 - 潜在交絡変数に頑健なアルゴリズム: BottomUpParceLiNGAM
   (`lingam_parce()`)とRCD(`lingam_rcd()`)
 - 複数データセットで共通の因果順序を同時推定するMultiGroupDirectLiNGAM
   (`lingam_multi_group()`)
 - 高次元データ(`p`が大きい、または`p > n`)向けのHighDimDirectLiNGAM
   (`lingam_high_dim()`)
-- 連続・二値の混合データに対応するLiM(`lingam_lim()`)
+- 非線形な因果探索アルゴリズム: RESIT(`lingam_resit()`)と、未観測の
+  交絡変数も検出できるCAM-UV(`lingam_camuv()`)
+- 連続・二値・ポアソン計数データの混合に対応するLiM(`lingam_lim()`)
 - 欠測値を含むデータの因果探索を行う`bootstrap_with_imputation()`と、
   lavaanによるSEM適合度評価`evaluate_model_fit()`
 - ブートストラップ法による因果構造の安定性評価(因果順序の安定性を含む)
@@ -98,14 +101,20 @@ model$adjacency_matrix |>
 
 ## 詳しく知るには
 
-事前知識の組み込み、総因果効果、残差の独立性・正規性検定、ブートストラップ
-(並列実行を含む)まで一通り解説したチュートリアルは、vignetteを参照して
-ください。
+まずは導入vignetteでLiNGAMの基本的な考え方と最小限の一連の流れを
+確認してください。
 
 ``` r
-vignette("lingamr")    # 英語版
 vignette("lingamr-ja") # 日本語版
+vignette("lingamr")    # 英語版
 ```
+
+データに合った手法を選ぶには(時系列、潜在交絡変数、非線形な関係、
+混合データや欠測値など)`vignette("method-selection-ja")`を参照して
+ください。事前知識の組み込み、総因果効果、残差の独立性・正規性検定、
+ブートストラップ(並列実行を含む)などの詳しい解説は、
+[パッケージサイト](https://morimotoosamu.github.io/lingamr/)の
+各記事にあります。
 
 ## ライセンス
 

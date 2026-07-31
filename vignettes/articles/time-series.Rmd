@@ -228,12 +228,58 @@ enforce.
 check_varma_stationarity(model_varma)
 ```
 
-The bootstrap, edge probabilities, path enumeration
-(`lingam_varma_bootstrap()`, `get_varma_probabilities()`,
-`get_varma_paths()`), total effects (`estimate_varma_total_effect()`), and
-residual normality diagnostics mirror their VAR-LiNGAM counterparts. In the
-probability matrix, the first `1 + p` column blocks are the psi (lag)
-matrices and the final `q` blocks are the omega (MA) matrices.
+### Residual Diagnostics
+
+As in VAR-LiNGAM, the error terms are assumed to be **non-Gaussian**.
+`test_varmalingam_residual_normality()` tests whether a VARMA-LiNGAM residual
+series departs from normality. By default (`on = "innovations"`) it targets
+the LiNGAM innovations $e_t = (I - B_0)\,n_t$, where $n_t$ are the stored
+VARMA residuals; set `on = "varma"` to test $n_t$ directly instead. A small
+p-value (reject $H_0$: Gaussian) supports the model assumption.
+
+```{r varma_normality}
+test_varmalingam_residual_normality(model_varma)
+```
+
+`test_varmalingam_residual_normality_all()` runs several tests at once and
+appends skewness and excess kurtosis columns for a quick overview:
+
+```{r varma_normality_all}
+test_varmalingam_residual_normality_all(model_varma, methods = c("shapiro", "jb"))
+```
+
+`plot_varmalingam_residual_qq()` draws per-variable normal Q-Q plots (the same
+`on` argument selects the residual series). Deviations from the straight
+reference line indicate non-Gaussianity.
+
+```{r varma_qq, fig.width = 7, fig.height = 3}
+plot_varmalingam_residual_qq(model_varma)
+```
+
+### Total Causal Effects
+
+`estimate_varma_total_effect()` estimates the **total** causal effect of one
+variable on another, the VARMA-LiNGAM counterpart of
+`estimate_var_total_effect()`: it integrates over both the AR (psi) and MA
+(omega) structure. As in VAR-LiNGAM, `from_lag = 0` (default) gives the
+contemporaneous total effect and `from_lag = 1` gives the one-step-ahead
+effect of $x_j(t-1)$ on $x_i(t)$.
+
+```{r varma_total_effect}
+# Total effect x0 -> x2 (contemporaneous)
+estimate_varma_total_effect(s_varma$data, model_varma, from_index = 1, to_index = 3)
+
+# Total effect x0(t-1) -> x2(t) (one-step-ahead)
+estimate_varma_total_effect(s_varma$data, model_varma, from_index = 1, to_index = 3, from_lag = 1)
+```
+
+### Bootstrap
+
+`lingam_varma_bootstrap()`, `get_varma_probabilities()`, and
+`get_varma_paths()` mirror their VAR-LiNGAM counterparts, re-running
+VARMA-LiNGAM on residual bootstrap samples. In the probability matrix, the
+first `1 + p` column blocks are the psi (lag) matrices and the final `q`
+blocks are the omega (MA) matrices.
 
 ```{r varma_bootstrap}
 bs_varma <- lingam_varma_bootstrap(
