@@ -114,6 +114,24 @@ estimate_total_effect_parce(confounded$data, parce_result,
 #> [1] 0.5121874
 ```
 
+[`get_error_independence_p_values_parce()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values_parce.md)
+はこれを補完し、すべての変数ペアについて
+残差が独立かどうかを、相関検定ではなくHSICガンマ近似検定（[`hsic_test_gamma()`](https://morimotoosamu.github.io/lingamr/reference/hsic_test_gamma.md)）で
+検定する。未解決ブロック内の変数を含むペアは検定できず `NA`
+になり、十分に識別可能 なペアには通常のp値が得られる。
+
+``` r
+
+round(get_error_independence_p_values_parce(confounded$data, parce_result), 3)
+#>       x0    x1 x2 x3    x4    x5
+#> x0    NA 0.453 NA NA 0.795 0.367
+#> x1 0.453    NA NA NA 0.924 0.471
+#> x2    NA    NA NA NA    NA    NA
+#> x3    NA    NA NA NA    NA    NA
+#> x4 0.795 0.924 NA NA    NA 0.873
+#> x5 0.367 0.471 NA NA 0.873    NA
+```
+
 [`lingam_parce_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_parce_bootstrap.md)
 は、[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md)
 と同様のスタイルで ブートストラップの安定性推定を提供する。集約時には
@@ -249,6 +267,23 @@ estimate_total_effect_rcd(rcd_confounded$data, rcd_result,
 )
 #>      x5 
 #> 1.05674
+```
+
+[`get_error_independence_p_values_rcd()`](https://morimotoosamu.github.io/lingamr/reference/get_error_independence_p_values_rcd.md)
+はRCDの結果に対して同様の残差独立性検定を
+提供する。交絡された変数を含むペアは `NA`
+になり、それ以外のペアには通常のp値が 得られる。
+
+``` r
+
+round(get_error_independence_p_values_rcd(rcd_confounded$data, rcd_result), 3)
+#>       x0    x1 x2    x3 x4    x5
+#> x0    NA 0.000 NA 0.494 NA 0.088
+#> x1 0.000    NA NA 0.808 NA 0.401
+#> x2    NA    NA NA    NA NA    NA
+#> x3 0.494 0.808 NA    NA NA 0.017
+#> x4    NA    NA NA    NA NA    NA
+#> x5 0.088 0.401 NA 0.017 NA    NA
 ```
 
 [`lingam_rcd_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_rcd_bootstrap.md)

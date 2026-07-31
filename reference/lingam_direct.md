@@ -1,6 +1,14 @@
 # Direct LiNGAM
 
-Direct LiNGAM
+R port of DirectLiNGAM (Shimizu et al. 2011), the foundational LiNGAM
+estimator. Assuming a linear structural equation model with
+non-Gaussian, mutually independent errors and no latent confounders,
+DirectLiNGAM recovers the causal order by repeatedly identifying the
+most exogenous remaining variable — the one whose residual, after
+regressing out all other remaining variables, is least dependent on them
+— and regressing it out before moving to the next. Once the causal order
+is fixed, edge coefficients are estimated with the regression method
+chosen via `reg_method`.
 
 ## Usage
 

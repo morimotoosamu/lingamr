@@ -190,6 +190,22 @@ well-identified pairs:</p>
 <span>  from_index <span class="op">=</span> <span class="st">"x0"</span>, to_index <span class="op">=</span> <span class="st">"x5"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.5121874</span></span></code></pre></div>
+<p><code><a href="../reference/get_error_independence_p_values_parce.html">get_error_independence_p_values_parce()</a></code> complements this
+by testing, for every pair of variables, whether their residuals are
+independent — using the HSIC gamma-approximation test
+(<code><a href="../reference/hsic_test_gamma.html">hsic_test_gamma()</a></code>) rather than a correlation test. Any
+pair touching a variable in the unresolved block cannot be tested and
+comes back as <code>NA</code>; well-identified pairs get a normal
+p-value:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_error_independence_p_values_parce.html">get_error_independence_p_values_parce</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">parce_result</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       x0    x1 x2 x3    x4    x5</span></span>
+<span><span class="co">#&gt; x0    NA 0.453 NA NA 0.795 0.367</span></span>
+<span><span class="co">#&gt; x1 0.453    NA NA NA 0.924 0.471</span></span>
+<span><span class="co">#&gt; x2    NA    NA NA NA    NA    NA</span></span>
+<span><span class="co">#&gt; x3    NA    NA NA NA    NA    NA</span></span>
+<span><span class="co">#&gt; x4 0.795 0.924 NA NA    NA 0.873</span></span>
+<span><span class="co">#&gt; x5 0.367 0.471 NA NA 0.873    NA</span></span></code></pre></div>
 <p><code><a href="../reference/lingam_parce_bootstrap.html">lingam_parce_bootstrap()</a></code> provides bootstrap stability
 estimates in the same style as <code><a href="../reference/lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>.
 <code>NA</code> (unresolved) edges are treated as absent when
@@ -198,7 +214,7 @@ aggregating, so <code><a href="../reference/get_probabilities.html">get_probabil
 <code><a href="../reference/get_causal_order_stability.html">get_causal_order_stability()</a></code> is the one exception, since
 ParceLiNGAM’s blocked causal order does not fit its fixed-length
 format.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">parce_bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_parce_bootstrap.html">lingam_parce_bootstrap</a></span><span class="op">(</span><span class="va">confounded</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">10L</span>, reg_method <span class="op">=</span> <span class="st">"ols"</span>, seed <span class="op">=</span> <span class="fl">1</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -227,7 +243,7 @@ block-level (which set of variables could not be ordered).</p>
 which <code>x6</code> is an unobserved common cause of <code>x2</code>
 and <code>x4</code>; only <code>x0</code>-<code>x5</code> are returned
 as data.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># HSIC is O(n^2), so a moderate n keeps this article fast to build</span></span>
 <span><span class="va">rcd_confounded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_rcd_sample.html">generate_rcd_sample</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
@@ -240,7 +256,7 @@ as data.</p>
 <span><span class="co">#&gt; 6 -0.30389184 -0.225029302 -0.5032249 -0.172267536  0.5221642 -0.0690391705</span></span>
 <span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span></span>
 <span><span class="co">#&gt; [1] 3 5</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcd_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_rcd.html">lingam_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rcd_result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RCD Result</span></span>
@@ -267,7 +283,7 @@ as data.</p>
 <p><code>ancestors_list</code> gives each variable’s estimated ancestors
 (not a causal order), and the confounded pair’s adjacency-matrix entries
 are <code>NA</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcd_result</span><span class="op">$</span><span class="va">ancestors_list</span></span>
 <span><span class="co">#&gt; $x0</span></span>
 <span><span class="co">#&gt; [1] 2 4 6</span></span>
@@ -293,7 +309,7 @@ are <code>NA</code>:</p>
 <p>As with ParceLiNGAM, <code><a href="../reference/estimate_total_effect_rcd.html">estimate_total_effect_rcd()</a></code> warns
 and returns <code>NA</code> when asked for a total effect <em>from</em>
 a confounded variable:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># from a confounded variable: warns and returns NA</span></span>
 <span><span class="fu"><a href="../reference/estimate_total_effect_rcd.html">estimate_total_effect_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">rcd_result</span>,</span>
 <span>  from_index <span class="op">=</span> <span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, to_index <span class="op">=</span> <span class="va">rcd_confounded</span><span class="op">$</span><span class="va">confounded_pair</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
@@ -309,6 +325,18 @@ a confounded variable:</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;      x5 </span></span>
 <span><span class="co">#&gt; 1.05674</span></span></code></pre></div>
+<p><code><a href="../reference/get_error_independence_p_values_rcd.html">get_error_independence_p_values_rcd()</a></code> provides the same
+residual-independence check for RCD results: pairs touching a confounded
+variable are <code>NA</code>, while the rest get a normal p-value:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_error_independence_p_values_rcd.html">get_error_independence_p_values_rcd</a></span><span class="op">(</span><span class="va">rcd_confounded</span><span class="op">$</span><span class="va">data</span>, <span class="va">rcd_result</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       x0    x1 x2    x3 x4    x5</span></span>
+<span><span class="co">#&gt; x0    NA 0.000 NA 0.494 NA 0.088</span></span>
+<span><span class="co">#&gt; x1 0.000    NA NA 0.808 NA 0.401</span></span>
+<span><span class="co">#&gt; x2    NA    NA NA    NA NA    NA</span></span>
+<span><span class="co">#&gt; x3 0.494 0.808 NA    NA NA 0.017</span></span>
+<span><span class="co">#&gt; x4    NA    NA NA    NA NA    NA</span></span>
+<span><span class="co">#&gt; x5 0.088 0.401 NA 0.017 NA    NA</span></span></code></pre></div>
 <p><code><a href="../reference/lingam_rcd_bootstrap.html">lingam_rcd_bootstrap()</a></code> provides bootstrap stability
 estimates; the usual <code>BootstrapResult</code> query functions
 apply.</p>

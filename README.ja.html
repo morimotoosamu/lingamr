@@ -68,11 +68,12 @@
 </ul><div class="section level2">
 <h2 id="特徴">特徴<a class="anchor" aria-label="anchor" href="#%E7%89%B9%E5%BE%B4"></a></h2>
 <ul><li>Direct LiNGAM(<code><a href="reference/lingam_direct.html">lingam_direct()</a></code>)。隣接行列の推定に複数の回帰バックエンド (OLS、LASSO、適応的LASSO、ridge)を選択可能</li>
-<li>VAR-LiNGAM(<code><a href="reference/lingam_var.html">lingam_var()</a></code>)による時系列データの因果探索</li>
+<li>VAR-LiNGAM(<code><a href="reference/lingam_var.html">lingam_var()</a></code>)による時系列データの因果探索と、誤差が 移動平均過程に従う場合のVARMA-LiNGAM(<code><a href="reference/lingam_varma.html">lingam_varma()</a></code>)</li>
 <li>潜在交絡変数に頑健なアルゴリズム: BottomUpParceLiNGAM (<code><a href="reference/lingam_parce.html">lingam_parce()</a></code>)とRCD(<code><a href="reference/lingam_rcd.html">lingam_rcd()</a></code>)</li>
 <li>複数データセットで共通の因果順序を同時推定するMultiGroupDirectLiNGAM (<code><a href="reference/lingam_multi_group.html">lingam_multi_group()</a></code>)</li>
 <li>高次元データ(<code>p</code>が大きい、または<code>p &gt; n</code>)向けのHighDimDirectLiNGAM (<code><a href="reference/lingam_high_dim.html">lingam_high_dim()</a></code>)</li>
-<li>連続・二値の混合データに対応するLiM(<code><a href="reference/lingam_lim.html">lingam_lim()</a></code>)</li>
+<li>非線形な因果探索アルゴリズム: RESIT(<code><a href="reference/lingam_resit.html">lingam_resit()</a></code>)と、未観測の 交絡変数も検出できるCAM-UV(<code><a href="reference/lingam_camuv.html">lingam_camuv()</a></code>)</li>
+<li>連続・二値・ポアソン計数データの混合に対応するLiM(<code><a href="reference/lingam_lim.html">lingam_lim()</a></code>)</li>
 <li>欠測値を含むデータの因果探索を行う<code><a href="reference/bootstrap_with_imputation.html">bootstrap_with_imputation()</a></code>と、 lavaanによるSEM適合度評価<code><a href="reference/evaluate_model_fit.html">evaluate_model_fit()</a></code>
 </li>
 <li>ブートストラップ法による因果構造の安定性評価(因果順序の安定性を含む)</li>
@@ -121,10 +122,11 @@
 </div>
 <div class="section level2">
 <h2 id="詳しく知るには">詳しく知るには<a class="anchor" aria-label="anchor" href="#%E8%A9%B3%E3%81%97%E3%81%8F%E7%9F%A5%E3%82%8B%E3%81%AB%E3%81%AF"></a></h2>
-<p>事前知識の組み込み、総因果効果、残差の独立性・正規性検定、ブートストラップ (並列実行を含む)まで一通り解説したチュートリアルは、vignetteを参照して ください。</p>
+<p>まずは導入vignetteでLiNGAMの基本的な考え方と最小限の一連の流れを 確認してください。</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"lingamr"</span><span class="op">)</span>    <span class="co"># 英語版</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"lingamr-ja"</span><span class="op">)</span> <span class="co"># 日本語版</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"lingamr-ja"</span><span class="op">)</span> <span class="co"># 日本語版</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"lingamr"</span><span class="op">)</span>    <span class="co"># 英語版</span></span></code></pre></div>
+<p>データに合った手法を選ぶには(時系列、潜在交絡変数、非線形な関係、 混合データや欠測値など)<code><a href="articles/method-selection-ja.html">vignette("method-selection-ja")</a></code>を参照して ください。事前知識の組み込み、総因果効果、残差の独立性・正規性検定、 ブートストラップ(並列実行を含む)などの詳しい解説は、 <a href="https://morimotoosamu.github.io/lingamr/">パッケージサイト</a>の 各記事にあります。</p>
 </div>
 <div class="section level2">
 <h2 id="ライセンス">ライセンス<a class="anchor" aria-label="anchor" href="#%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9"></a></h2>

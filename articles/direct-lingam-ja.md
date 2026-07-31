@@ -25,7 +25,7 @@ library(lingamr)
 |----|:--:|:--:|----|
 | [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md) | 6 | 1,000 | 標準的な固定構造。本記事の主な例 |
 | [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md) | 10 | 1,000 | 6変数ケースの拡張版（[より大きなデータセット（10変数）](#a-larger-dataset-10-variables) で使用） |
-| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | 強い多重共線性を持つ難しい設定 |
+| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | 強い多重共線性を持つ難しい設定（[強い多重共線性](#strong-multicollinearity-init_method) で使用） |
 | [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md) | 可変 | 1,000 | 任意の変数数を持つランダムなスパースDAG（[変数が多い場合：スケーラビリティの壁](#when-there-are-many-variables-the-scalability-wall) で使用） |
 | [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md) | 4 | 2,000 | 測定誤差パラドックス（[パラドックスの例](#a-case-where-directlingam-struggles-the-measurement-error-paradox) で使用） |
 
@@ -259,6 +259,27 @@ x3の「媒介を通じた効果」がx0とx2の係数に吸収されてしま�
 「ある変数に介入したときの最終的な影響」を知りたい場合は、重回帰係数ではなく総因果
 効果を使う。
 
+### 特定の変数ペア間の効果
+
+[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)は全ペアの効果を一度に行列として返す。特定の
+`from -> to`の1組だけが必要な場合は、[`estimate_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect.md)で直接計算
+できる。`from_index`・`to_index`は変数名・1始まりのインデックスのどちらでも
+指定できる。
+
+``` r
+
+te_x3_x1 <- x1k$data |>
+  estimate_total_effect(model, from_index = "x3", to_index = "x1")
+
+round(te_x3_x1, 3)
+#>     x3 
+#> 21.059
+
+# Same value as the x3 column of the total_effects matrix computed above
+isTRUE(all.equal(te_x3_x1, total_effects["x1", "x3"], check.attributes = FALSE))
+#> [1] TRUE
+```
+
 ## 事前知識を用いた推定
 
 [`make_prior_knowledge()`](https://morimotoosamu.github.io/lingamr/reference/make_prior_knowledge.md)
@@ -469,6 +490,136 @@ sum(fit_lam_min$adjacency_matrix != 0)
 #> [1] 7
 ```
 
+## 強い多重共線性（init_method）
+
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+は、`x0`から`x4`までの5つのroot変数が1つの
+強い共通因子を共有する（`collinearity`引数で強さを指定。デフォルト0.95）
+データを生成する。どの変数も互いを引き起こしていないにもかかわらず、互いに
+強く相関する。下流の4変数`x5`から`x8`は、これらのrootの線形結合として生成
+される（`x8`はさらに`x5`・`x6`にも依存する）。これは、単一の目的変数の予測
+変数間に生じる通常の多重共線性より難しい設定である。ここでは、ほぼ共線な
+変数群が外生変数（root）自体であり、「rootの誤差項は互いに独立である」という
+DirectLiNGAMの前提そのものが破られている。
+
+``` r
+
+hard <- generate_lingam_hard_sample()
+
+head(hard$data)
+#>          x0        x1        x2        x3        x4       x5       x6       x7
+#> 1 1.0228248 0.8886297 0.9693088 0.9349473 0.7947395 5.298107 4.166792 4.281243
+#> 2 0.4830486 0.4748335 0.2787734 0.2895976 0.2664368 2.228899 1.343471 2.033147
+#> 3 0.3727160 0.3013776 0.4418671 0.3585968 0.4657222 2.435443 1.570280 1.732436
+#> 4 1.1951289 1.1560823 1.1158846 1.0539815 1.0437446 6.023135 4.747024 5.105043
+#> 5 0.4059819 0.3034858 0.2156491 0.3155540 0.2783906 1.961220 1.356371 1.488881
+#> 6 0.9547901 0.9622644 0.8374879 0.8856775 0.9972516 4.823226 3.801561 3.977539
+#>          x8
+#> 1 10.173626
+#> 2  4.010030
+#> 3  4.205728
+#> 4 11.537226
+#> 5  3.830753
+#> 6  8.669491
+hard$true_adjacency
+#>     x0  x1  x2 x3 x4 x5 x6 x7 x8
+#> x0 0.0 0.0 0.0  0  0  0  0  0  0
+#> x1 0.0 0.0 0.0  0  0  0  0  0  0
+#> x2 0.0 0.0 0.0  0  0  0  0  0  0
+#> x3 0.0 0.0 0.0  0  0  0  0  0  0
+#> x4 0.0 0.0 0.0  0  0  0  0  0  0
+#> x5 1.5 1.5 1.5  0  0  0  0  0  0
+#> x6 0.0 1.0 1.0  1  1  0  0  0  0
+#> x7 2.0 0.0 0.0  2  0  0  0  0  0
+#> x8 0.0 0.0 0.0  0  0  1  1  0  0
+
+# x0-x4 share a common factor and are therefore highly correlated
+round(cor(hard$data[c("x0", "x1", "x2", "x3", "x4")]), 3)
+#>       x0    x1    x2    x3    x4
+#> x0 1.000 0.896 0.904 0.907 0.917
+#> x1 0.896 1.000 0.918 0.907 0.908
+#> x2 0.904 0.918 1.000 0.905 0.906
+#> x3 0.907 0.907 0.905 1.000 0.904
+#> x4 0.917 0.908 0.906 0.904 1.000
+```
+
+デフォルト設定でDirect LiNGAMを実行する。
+
+``` r
+
+fit_hard <- lingam_direct(hard$data)
+
+colnames(hard$data)[fit_hard$causal_order]
+#> [1] "x3" "x8" "x6" "x2" "x0" "x1" "x4" "x5" "x7"
+```
+
+`x0`から`x4`が互いに依存しているため、推定された因果順序は真の構造を完全には
+満たさない。これを直接確認する: すべての真のエッジ`from -> to`について、
+推定順序で`from`が`to`より前に来ているべきである。
+
+``` r
+
+true_edges <- which(hard$true_adjacency != 0, arr.ind = TRUE)
+order_pos  <- match(seq_len(ncol(hard$data)), fit_hard$causal_order)
+
+edge_check <- data.frame(
+  from            = colnames(hard$data)[true_edges[, "col"]],
+  to              = colnames(hard$data)[true_edges[, "row"]],
+  order_respected = order_pos[true_edges[, "col"]] < order_pos[true_edges[, "row"]]
+)
+
+edge_check
+#>    from to order_respected
+#> 1    x0 x5            TRUE
+#> 2    x0 x7            TRUE
+#> 3    x1 x5            TRUE
+#> 4    x1 x6           FALSE
+#> 5    x2 x5            TRUE
+#> 6    x2 x6           FALSE
+#> 7    x3 x6            TRUE
+#> 8    x3 x7            TRUE
+#> 9    x4 x6           FALSE
+#> 10   x5 x8           FALSE
+#> 11   x6 x8           FALSE
+sum(edge_check$order_respected)   # number of true edges correctly ordered
+#> [1] 6
+```
+
+11本の真のエッジのうち、正しく順序付けられているのは6本のみである。残り
+（すべて`x6`または`x8`へのエッジ）は、真の親が推定順序で遅く配置されたために、
+見逃されるか逆方向に推定されている。これはまさに[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+が示そうとしている失敗モードである:
+外生変数どうしが相関していると、回帰が
+始まる前の因果順序探索の段階ですでに破綻しうる。
+
+それでも`x0 -> x7`のエッジはたまたま正しく順序付けられており、これを使えば
+`init_method`が回帰段階だけに与える影響を切り分けて見ることができる。
+[`estimate_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect.md)はデフォルトでAdaptive
+LASSOの初期重みをOLSで推定する
+（`init_method = "ols"`）。`init_method = "ridge"`に切り替えると、交差検証付き
+Ridge回帰を使うようになり、多重共線性の下でも安定する。
+
+``` r
+
+set.seed(0)
+te_hard_ols <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ols")
+
+te_hard_ridge <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ridge")
+
+round(c(ols = unname(te_hard_ols), ridge = unname(te_hard_ridge)), 3)
+#>   ols ridge 
+#> 3.624 2.590
+```
+
+`x0 -> x7`の真の係数は**2.0**である。OLS初期化の推定値は大きく超過するのに
+対し、Ridge初期化の推定値は真の値にずっと近い – これはまさに
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)のドキュメントが「強い多重共線性の下では
+Ridge初期化Adaptive LASSOが望ましい」とする理由と一致する。ただし
+`init_method`が影響するのはこの回帰段階のみであり、因果順序探索は変えない。
+したがって、上で示した順序の問題自体を解決するものではない。
+
 ## 非ガウス性の仮定
 
 LiNGAMの理論的な核心は、**誤差項が非ガウス分布に従う**という仮定である。誤差が
@@ -623,7 +774,7 @@ t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data
 cat(sprintf("Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n",
             t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
 #> Direct LiNGAM : 0.01 sec
-#> ICA-LiNGAM    : 0.02 sec
+#> ICA-LiNGAM    : 0.01 sec
 ```
 
 ### 推定係数の比較
@@ -746,8 +897,8 @@ cat(sprintf(
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.03 sec
-#> p = 15 : 0.06 sec
+#> p = 10 : 0.02 sec
+#> p = 15 : 0.05 sec
 #> theoretical factor 3.4x vs. observed 2.1x
 ```
 
@@ -764,8 +915,8 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.02 sec   0.03 sec
+#> Direct LiNGAM :  0.02 sec   0.05 sec
+#> ICA-LiNGAM    :  0.01 sec   0.02 sec
 ```
 
 $`p`$ が大きくなるほどDirect
@@ -1023,7 +1174,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.7 seconds.
+#> Completed in 1.2 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>

@@ -106,6 +106,16 @@
   [`generate_lim_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lim_sample.md)
   gains a matching `is_poisson` argument, and `LiMResult` objects now
   carry an `is_poisson` field.
+- Restructured the vignettes:
+  [`vignette("lingamr")`](https://morimotoosamu.github.io/lingamr/articles/lingamr.md)
+  (and its Japanese translation) is now a short introduction covering
+  the core idea and a minimal end-to-end workflow, with method-selection
+  guidance split into a new
+  [`vignette("method-selection")`](https://morimotoosamu.github.io/lingamr/articles/method-selection.md).
+  In-depth, per-method walkthroughs (prior knowledge, regression
+  backends, bootstrap and diagnostics, time series, latent confounders,
+  nonlinear methods, and special data types) moved to pkgdown-only
+  articles on the package website, in both English and Japanese.
 
 ## lingamr 0.1.2
 

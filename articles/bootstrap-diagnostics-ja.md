@@ -151,7 +151,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.5 seconds.
+#> Completed in 2.6 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -307,6 +307,59 @@ bs_model |>
   plot_bootstrap_probabilities()
 ```
 
+### 2変数間のパス
+
+[`get_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_paths.md)
+は2変数間の総因果効果を、それを媒介する個々のパスとそのブートスト
+ラップ確率に分解する。[Direct
+LiNGAM記事](https://morimotoosamu.github.io/lingamr/articles/direct-lingam-ja.md)で見たとおり、
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+の真の構造では、x3からx1へのパスが2つ存在する:
+`x3 -> x0 -> x1`（間接効果9.0）と
+`x3 -> x2 -> x1`（間接効果12.0）。インデックス
+は1始まりなので、x3（4列目）からx1（2列目）は次のように指定する。
+
+``` r
+
+bs_model |>
+  get_paths(4, 2)
+#>      path    effect probability
+#> 1 4, 1, 2  9.041187        0.99
+#> 2 4, 3, 2 12.020020        0.99
+```
+
+いずれのパスも100サンプル中99サンプルで検出され、効果の中央値は真の値（9.0と
+12.0）に近い。
+
+### 繰り返し出現するDAG構造の頻度
+
+[`get_directed_acyclic_graph_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_directed_acyclic_graph_counts.md)
+は各ブートストラップサンプルで推定された
+グラフ全体に注目し、個々のエッジではなく異なるDAGがどれだけ繰り返し出現するかを
+数える。`n_dags` で頻度上位何件を返すかを絞り込める。
+
+``` r
+
+dag_counts <- bs_model |>
+  get_directed_acyclic_graph_counts(n_dags = 3)
+
+dag_counts$count
+#> [1] 99  1
+
+dag_counts$dag[[1]]
+#>   from to
+#> 1    1  2
+#> 2    1  5
+#> 3    1  6
+#> 4    3  2
+#> 5    3  5
+#> 6    4  1
+#> 7    4  3
+```
+
+最も頻度の高いDAG（100サンプル中99サンプル）は、[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+の 真のエッジ集合と完全に一致する。
+
 ### 因果順序の安定性
 
 [`get_causal_order_stability()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.md)
@@ -378,10 +431,10 @@ evaluate_model_fit(fit_result, sample6$data)
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
-#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
-#>   RMSEA       AIC       BIC   LogLik
-#> 1     0 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
+#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
+#>         AIC       BIC   LogLik
+#> 1 -4264.864 -4166.708 2152.432
 ```
 
 ## broomとの連携（tidy / glance）

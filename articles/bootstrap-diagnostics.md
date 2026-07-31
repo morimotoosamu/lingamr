@@ -158,7 +158,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 3.5 seconds.
+#> Completed in 2.7 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -316,6 +316,62 @@ bs_model |>
   plot_bootstrap_probabilities()
 ```
 
+### Paths Between Two Variables
+
+[`get_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_paths.md)
+breaks the total causal effect between two variables down into the
+individual paths that carry it, along with each path’s bootstrap
+probability. As shown in the [Direct LiNGAM
+article](https://morimotoosamu.github.io/lingamr/articles/direct-lingam.md),
+the true structure of
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+has two paths from x3 to x1: `x3 -> x0 -> x1` (indirect effect 9.0) and
+`x3 -> x2 -> x1` (indirect effect 12.0). Indices are 1-based, so x3
+(column 4) to x1 (column 2) is:
+
+``` r
+
+bs_model |>
+  get_paths(4, 2)
+#>      path    effect probability
+#> 1 4, 1, 2  9.041187        0.99
+#> 2 4, 3, 2 12.020020        0.99
+```
+
+Both paths are recovered in 99 of the 100 bootstrap samples, with median
+effects close to the true values (9.0 and 12.0).
+
+### Frequency of Recurring DAG Structures
+
+[`get_directed_acyclic_graph_counts()`](https://morimotoosamu.github.io/lingamr/reference/get_directed_acyclic_graph_counts.md)
+looks at the whole graph estimated in each bootstrap sample and counts
+how often each distinct DAG — rather than individual edges — recurs.
+`n_dags` limits the output to the most frequent structures.
+
+``` r
+
+dag_counts <- bs_model |>
+  get_directed_acyclic_graph_counts(n_dags = 3)
+
+dag_counts$count
+#> [1] 99  1
+
+dag_counts$dag[[1]]
+#>   from to
+#> 1    1  2
+#> 2    1  5
+#> 3    1  6
+#> 4    3  2
+#> 5    3  5
+#> 6    4  1
+#> 7    4  3
+```
+
+The most frequent DAG (99 of the 100 samples) matches the true edge set
+of
+[`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md)
+exactly.
+
 ### Stability of the Causal Order
 
 [`get_causal_order_stability()`](https://morimotoosamu.github.io/lingamr/reference/get_causal_order_stability.md)
@@ -389,10 +445,10 @@ and its fit measures are visibly worse (lower CFI, higher RMSEA):
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
-#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
-#>   RMSEA       AIC       BIC   LogLik
-#> 1     0 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
+#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
+#>         AIC       BIC   LogLik
+#> 1 -4264.864 -4166.708 2152.432
 ```
 
 ## Integration with broom (tidy / glance)

@@ -212,7 +212,7 @@ bs <- lingam_direct_bootstrap(x1k$data, n_sampling = 50L, seed = 42)
 #>   iteration 30 / 50
 #>   iteration 40 / 50
 #>   iteration 50 / 50
-#> Completed in 1.7 seconds.
+#> Completed in 1.3 seconds.
 
 round(get_probabilities(bs), 2)
 #>      [,1] [,2] [,3] [,4] [,5] [,6]

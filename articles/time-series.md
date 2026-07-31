@@ -353,15 +353,94 @@ check_varma_stationarity(model_varma)
 #> Invertible:           YES
 ```
 
-The bootstrap, edge probabilities, path enumeration
-([`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md),
+### Residual Diagnostics
+
+As in VAR-LiNGAM, the error terms are assumed to be **non-Gaussian**.
+[`test_varmalingam_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality.md)
+tests whether a VARMA-LiNGAM residual series departs from normality. By
+default (`on = "innovations"`) it targets the LiNGAM innovations
+$`e_t = (I - B_0)\,n_t`$, where $`n_t`$ are the stored VARMA residuals;
+set `on = "varma"` to test $`n_t`$ directly instead. A small p-value
+(reject $`H_0`$: Gaussian) supports the model assumption.
+
+``` r
+
+test_varmalingam_residual_normality(model_varma)
+#> === Residual Normality Test ===
+#> Method:         shapiro
+#> Sample size:    999
+#> Significance:   0.050
+#> Non-Gaussian:   3 / 3 variables
+#> 
+#>  variable statistic   p_value is_non_gauss skewness kurtosis
+#>        x0    0.9587  3.42e-16         TRUE    0.079   -1.164
+#>        x1    0.9561 < 2.2e-16         TRUE    0.007   -1.223
+#>        x2    0.9638  4.94e-15         TRUE   -0.050   -1.139
+#> 
+#> Interpretation:
+#>   is_non_gauss = TRUE  -> rejects normality (supports LiNGAM assumption)
+#>   is_non_gauss = FALSE -> cannot reject normality (LiNGAM may not fit)
+#> 
+#> All residuals are non-Gaussian. LiNGAM assumption is supported.
+```
+
+[`test_varmalingam_residual_normality_all()`](https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality_all.md)
+runs several tests at once and appends skewness and excess kurtosis
+columns for a quick overview:
+
+``` r
+
+test_varmalingam_residual_normality_all(model_varma, methods = c("shapiro", "jb"))
+#>   variable     skewness  kurtosis    p_shapiro         p_jb all_non_gauss
+#> 1       x0  0.079398790 -1.163565 3.422206e-16 3.425038e-13          TRUE
+#> 2       x1  0.006503161 -1.223165 9.881994e-17 2.986500e-14          TRUE
+#> 3       x2 -0.050016361 -1.139036 4.944104e-15 1.522893e-12          TRUE
+```
+
+[`plot_varmalingam_residual_qq()`](https://morimotoosamu.github.io/lingamr/reference/plot_varmalingam_residual_qq.md)
+draws per-variable normal Q-Q plots (the same `on` argument selects the
+residual series). Deviations from the straight reference line indicate
+non-Gaussianity.
+
+``` r
+
+plot_varmalingam_residual_qq(model_varma)
+```
+
+![](time-series_files/figure-html/varma_qq-1.png)
+
+### Total Causal Effects
+
+[`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)
+estimates the **total** causal effect of one variable on another, the
+VARMA-LiNGAM counterpart of
+[`estimate_var_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_var_total_effect.md):
+it integrates over both the AR (psi) and MA (omega) structure. As in
+VAR-LiNGAM, `from_lag = 0` (default) gives the contemporaneous total
+effect and `from_lag = 1` gives the one-step-ahead effect of
+$`x_j(t-1)`$ on $`x_i(t)`$.
+
+``` r
+
+# Total effect x0 -> x2 (contemporaneous)
+estimate_varma_total_effect(s_varma$data, model_varma, from_index = 1, to_index = 3)
+#> [1] -0.2512211
+
+# Total effect x0(t-1) -> x2(t) (one-step-ahead)
+estimate_varma_total_effect(s_varma$data, model_varma, from_index = 1, to_index = 3, from_lag = 1)
+#> [1] -0.1064222
+```
+
+### Bootstrap
+
+[`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md),
 [`get_varma_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.md),
-[`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)),
-total effects
-([`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)),
-and residual normality diagnostics mirror their VAR-LiNGAM counterparts.
-In the probability matrix, the first `1 + p` column blocks are the psi
-(lag) matrices and the final `q` blocks are the omega (MA) matrices.
+and
+[`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)
+mirror their VAR-LiNGAM counterparts, re-running VARMA-LiNGAM on
+residual bootstrap samples. In the probability matrix, the first `1 + p`
+column blocks are the psi (lag) matrices and the final `q` blocks are
+the omega (MA) matrices.
 
 ``` r
 

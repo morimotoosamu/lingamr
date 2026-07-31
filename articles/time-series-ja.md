@@ -346,11 +346,91 @@ check_varma_stationarity(model_varma)
 #> Invertible:           YES
 ```
 
-ブートストラップ・エッジ確率・パス列挙（[`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md)、
-[`get_varma_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.md)、[`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)）、総効果
-（[`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)）、残差正規性の診断はVAR-LiNGAM版と対応する。
-確率行列では、最初の `1 + p` 個の列ブロックがpsi（ラグ）行列に、最後の
-`q` 個の ブロックがomega（MA）行列に対応する。
+### 残差診断
+
+VAR-LiNGAMと同様に、誤差項は**非ガウス**であることを仮定する。
+[`test_varmalingam_residual_normality()`](https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality.md)
+は、VARMA-LiNGAMの残差系列が正規性から
+逸脱しているかを検定する。デフォルト（`on = "innovations"`）ではLiNGAMのイノベー
+ション$`e_t = (I - B_0)\,n_t`$（$`n_t`$は保存されたVARMA残差）を対象とし、
+`on = "varma"`
+を指定すると$`n_t`$自体を直接検定できる。p値が小さいこと（$`H_0`$:
+ガウス 分布の棄却）は、モデルの仮定を支持する。
+
+``` r
+
+test_varmalingam_residual_normality(model_varma)
+#> === Residual Normality Test ===
+#> Method:         shapiro
+#> Sample size:    999
+#> Significance:   0.050
+#> Non-Gaussian:   3 / 3 variables
+#> 
+#>  variable statistic   p_value is_non_gauss skewness kurtosis
+#>        x0    0.9587  3.42e-16         TRUE    0.079   -1.164
+#>        x1    0.9561 < 2.2e-16         TRUE    0.007   -1.223
+#>        x2    0.9638  4.94e-15         TRUE   -0.050   -1.139
+#> 
+#> Interpretation:
+#>   is_non_gauss = TRUE  -> rejects normality (supports LiNGAM assumption)
+#>   is_non_gauss = FALSE -> cannot reject normality (LiNGAM may not fit)
+#> 
+#> All residuals are non-Gaussian. LiNGAM assumption is supported.
+```
+
+[`test_varmalingam_residual_normality_all()`](https://morimotoosamu.github.io/lingamr/reference/test_varmalingam_residual_normality_all.md)
+は複数の検定を一度に実行し、歪度と尖度
+（超過尖度）の列を追加して概要を素早く把握できるようにする。
+
+``` r
+
+test_varmalingam_residual_normality_all(model_varma, methods = c("shapiro", "jb"))
+#>   variable     skewness  kurtosis    p_shapiro         p_jb all_non_gauss
+#> 1       x0  0.079398790 -1.163565 3.422206e-16 3.425038e-13          TRUE
+#> 2       x1  0.006503161 -1.223165 9.881994e-17 2.986500e-14          TRUE
+#> 3       x2 -0.050016361 -1.139036 4.944104e-15 1.522893e-12          TRUE
+```
+
+[`plot_varmalingam_residual_qq()`](https://morimotoosamu.github.io/lingamr/reference/plot_varmalingam_residual_qq.md)
+は変数ごとの正規QQプロットを描画する（対象系列は 同じく `on`
+引数で切り替える）。直線の基準線からの逸脱は非ガウス性を示す。
+
+``` r
+
+plot_varmalingam_residual_qq(model_varma)
+```
+
+![](time-series-ja_files/figure-html/varma_qq-1.png)
+
+### 総因果効果
+
+[`estimate_varma_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_varma_total_effect.md)
+は、ある変数から別の変数への**総**因果効果を推定
+する。[`estimate_var_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_var_total_effect.md)
+のVARMA-LiNGAM版にあたり、psi（AR側）に加えて
+omega（MA側）の構造も積算する。VAR-LiNGAMと同様に、`from_lag = 0`（デフォルト）は
+同時点の総効果を、`from_lag = 1`
+は$`x_j(t-1)`$から$`x_i(t)`$への1期先の効果を与える。
+
+``` r
+
+# Total effect x0 -> x2 (contemporaneous)
+estimate_varma_total_effect(s_varma$data, model_varma, from_index = 1, to_index = 3)
+#> [1] -0.2512211
+
+# Total effect x0(t-1) -> x2(t) (one-step-ahead)
+estimate_varma_total_effect(s_varma$data, model_varma, from_index = 1, to_index = 3, from_lag = 1)
+#> [1] -0.1064222
+```
+
+### ブートストラップ
+
+[`lingam_varma_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma_bootstrap.md)、[`get_varma_probabilities()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_probabilities.md)、[`get_varma_paths()`](https://morimotoosamu.github.io/lingamr/reference/get_varma_paths.md)
+は
+VAR-LiNGAM版と対応しており、残差ブートストラップサンプルに対してVARMA-LiNGAMを
+再実行する。確率行列では、最初の `1 + p`
+個の列ブロックがpsi（ラグ）行列に、最後の `q`
+個のブロックがomega（MA）行列に対応する。
 
 ``` r
 

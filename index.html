@@ -97,11 +97,12 @@
 </h2>
 <ul>
 <li>Direct LiNGAM (<code><a href="reference/lingam_direct.html">lingam_direct()</a></code>), with selectable regression backends (OLS, LASSO, adaptive LASSO, ridge) for adjacency-matrix estimation</li>
-<li>VAR-LiNGAM (<code><a href="reference/lingam_var.html">lingam_var()</a></code>) for time series causal discovery</li>
+<li>VAR-LiNGAM (<code><a href="reference/lingam_var.html">lingam_var()</a></code>) for time series causal discovery, and VARMA-LiNGAM (<code><a href="reference/lingam_varma.html">lingam_varma()</a></code>) when errors follow a moving-average process</li>
 <li>Algorithms robust against latent confounders: BottomUpParceLiNGAM (<code><a href="reference/lingam_parce.html">lingam_parce()</a></code>) and RCD (<code><a href="reference/lingam_rcd.html">lingam_rcd()</a></code>)</li>
 <li>MultiGroupDirectLiNGAM (<code><a href="reference/lingam_multi_group.html">lingam_multi_group()</a></code>) for jointly estimating a shared causal order across multiple datasets</li>
 <li>HighDimDirectLiNGAM (<code><a href="reference/lingam_high_dim.html">lingam_high_dim()</a></code>) for high-dimensional data (large <code>p</code>, or <code>p &gt; n</code>)</li>
-<li>LiM (<code><a href="reference/lingam_lim.html">lingam_lim()</a></code>) for causal discovery on mixed continuous/binary data</li>
+<li>Algorithms for nonlinear causal discovery: RESIT (<code><a href="reference/lingam_resit.html">lingam_resit()</a></code>) and CAM-UV (<code><a href="reference/lingam_camuv.html">lingam_camuv()</a></code>, which also detects unobserved confounders)</li>
+<li>LiM (<code><a href="reference/lingam_lim.html">lingam_lim()</a></code>) for causal discovery on mixed continuous, binary, and Poisson count data</li>
 <li>
 <code><a href="reference/bootstrap_with_imputation.html">bootstrap_with_imputation()</a></code> for causal discovery on data with missing values, and <code><a href="reference/evaluate_model_fit.html">evaluate_model_fit()</a></code> for SEM-based fit evaluation via lavaan</li>
 <li>Stability assessment of causal structures using the bootstrap method, including causal-order stability</li>
@@ -154,9 +155,10 @@
 <div class="section level2">
 <h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
-<p>For a full walkthrough — prior knowledge, total causal effects, residual independence and normality tests, and bootstrap (including parallel execution) — see the vignette:</p>
+<p>Start with the introductory vignette for the core idea and a minimal end-to-end workflow:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"lingamr"</span><span class="op">)</span></span></code></pre></div>
+<p>For choosing the right estimator (time series, latent confounders, nonlinear relationships, mixed or missing data), see <code><a href="articles/method-selection.html">vignette("method-selection")</a></code>. Detailed guides — prior knowledge, total causal effects, residual independence and normality tests, bootstrap (including parallel execution), and more — live on the <a href="https://morimotoosamu.github.io/lingamr/">package website</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="licence">Licence<a class="anchor" aria-label="anchor" href="#licence"></a>

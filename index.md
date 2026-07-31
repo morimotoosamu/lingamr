@@ -18,7 +18,9 @@ Non-Gaussian Acyclic Model), which is available in Python.
   ridge) for adjacency-matrix estimation
 - VAR-LiNGAM
   ([`lingam_var()`](https://morimotoosamu.github.io/lingamr/reference/lingam_var.md))
-  for time series causal discovery
+  for time series causal discovery, and VARMA-LiNGAM
+  ([`lingam_varma()`](https://morimotoosamu.github.io/lingamr/reference/lingam_varma.md))
+  when errors follow a moving-average process
 - Algorithms robust against latent confounders: BottomUpParceLiNGAM
   ([`lingam_parce()`](https://morimotoosamu.github.io/lingamr/reference/lingam_parce.md))
   and RCD
@@ -29,9 +31,15 @@ Non-Gaussian Acyclic Model), which is available in Python.
 - HighDimDirectLiNGAM
   ([`lingam_high_dim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_high_dim.md))
   for high-dimensional data (large `p`, or `p > n`)
+- Algorithms for nonlinear causal discovery: RESIT
+  ([`lingam_resit()`](https://morimotoosamu.github.io/lingamr/reference/lingam_resit.md))
+  and CAM-UV
+  ([`lingam_camuv()`](https://morimotoosamu.github.io/lingamr/reference/lingam_camuv.md),
+  which also detects unobserved confounders)
 - LiM
   ([`lingam_lim()`](https://morimotoosamu.github.io/lingamr/reference/lingam_lim.md))
-  for causal discovery on mixed continuous/binary data
+  for causal discovery on mixed continuous, binary, and Poisson count
+  data
 - [`bootstrap_with_imputation()`](https://morimotoosamu.github.io/lingamr/reference/bootstrap_with_imputation.md)
   for causal discovery on data with missing values, and
   [`evaluate_model_fit()`](https://morimotoosamu.github.io/lingamr/reference/evaluate_model_fit.md)
@@ -108,14 +116,21 @@ model$adjacency_matrix |>
 
 ## Learn more
 
-For a full walkthrough — prior knowledge, total causal effects, residual
-independence and normality tests, and bootstrap (including parallel
-execution) — see the vignette:
+Start with the introductory vignette for the core idea and a minimal
+end-to-end workflow:
 
 ``` r
 
 vignette("lingamr")
 ```
+
+For choosing the right estimator (time series, latent confounders,
+nonlinear relationships, mixed or missing data), see
+[`vignette("method-selection")`](https://morimotoosamu.github.io/lingamr/articles/method-selection.md).
+Detailed guides — prior knowledge, total causal effects, residual
+independence and normality tests, bootstrap (including parallel
+execution), and more — live on the [package
+website](https://morimotoosamu.github.io/lingamr/).
 
 ## Licence
 

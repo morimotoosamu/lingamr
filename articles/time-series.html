@@ -420,15 +420,90 @@ Hannan-Rissanen does not enforce.</p>
 <span><span class="co">#&gt; Stationary:           YES</span></span>
 <span><span class="co">#&gt; Max |MA eigenvalue|:  0.0000  (threshold 1.00)</span></span>
 <span><span class="co">#&gt; Invertible:           YES</span></span></code></pre></div>
-<p>The bootstrap, edge probabilities, path enumeration
-(<code><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap()</a></code>,
-<code><a href="../reference/get_varma_probabilities.html">get_varma_probabilities()</a></code>, <code><a href="../reference/get_varma_paths.html">get_varma_paths()</a></code>),
-total effects (<code><a href="../reference/estimate_varma_total_effect.html">estimate_varma_total_effect()</a></code>), and residual
-normality diagnostics mirror their VAR-LiNGAM counterparts. In the
+<div class="section level3">
+<h3 id="residual-diagnostics-1">Residual Diagnostics<a class="anchor" aria-label="anchor" href="#residual-diagnostics-1"></a>
+</h3>
+<p>As in VAR-LiNGAM, the error terms are assumed to be
+<strong>non-Gaussian</strong>.
+<code><a href="../reference/test_varmalingam_residual_normality.html">test_varmalingam_residual_normality()</a></code> tests whether a
+VARMA-LiNGAM residual series departs from normality. By default
+(<code>on = "innovations"</code>) it targets the LiNGAM innovations
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>e</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>I</mi><mo>−</mo><msub><mi>B</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>n</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">e_t = (I - B_0)\,n_t</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>t</mi></msub><annotation encoding="application/x-tex">n_t</annotation></semantics></math>
+are the stored VARMA residuals; set <code>on = "varma"</code> to test
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>t</mi></msub><annotation encoding="application/x-tex">n_t</annotation></semantics></math>
+directly instead. A small p-value (reject
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>:
+Gaussian) supports the model assumption.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/test_varmalingam_residual_normality.html">test_varmalingam_residual_normality</a></span><span class="op">(</span><span class="va">model_varma</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === Residual Normality Test ===</span></span>
+<span><span class="co">#&gt; Method:         shapiro</span></span>
+<span><span class="co">#&gt; Sample size:    999</span></span>
+<span><span class="co">#&gt; Significance:   0.050</span></span>
+<span><span class="co">#&gt; Non-Gaussian:   3 / 3 variables</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  variable statistic   p_value is_non_gauss skewness kurtosis</span></span>
+<span><span class="co">#&gt;        x0    0.9587  3.42e-16         TRUE    0.079   -1.164</span></span>
+<span><span class="co">#&gt;        x1    0.9561 &lt; 2.2e-16         TRUE    0.007   -1.223</span></span>
+<span><span class="co">#&gt;        x2    0.9638  4.94e-15         TRUE   -0.050   -1.139</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Interpretation:</span></span>
+<span><span class="co">#&gt;   is_non_gauss = TRUE  -&gt; rejects normality (supports LiNGAM assumption)</span></span>
+<span><span class="co">#&gt;   is_non_gauss = FALSE -&gt; cannot reject normality (LiNGAM may not fit)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; All residuals are non-Gaussian. LiNGAM assumption is supported.</span></span></code></pre></div>
+<p><code><a href="../reference/test_varmalingam_residual_normality_all.html">test_varmalingam_residual_normality_all()</a></code> runs several
+tests at once and appends skewness and excess kurtosis columns for a
+quick overview:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/test_varmalingam_residual_normality_all.html">test_varmalingam_residual_normality_all</a></span><span class="op">(</span><span class="va">model_varma</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shapiro"</span>, <span class="st">"jb"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   variable     skewness  kurtosis    p_shapiro         p_jb all_non_gauss</span></span>
+<span><span class="co">#&gt; 1       x0  0.079398790 -1.163565 3.422206e-16 3.425038e-13          TRUE</span></span>
+<span><span class="co">#&gt; 2       x1  0.006503161 -1.223165 9.881994e-17 2.986500e-14          TRUE</span></span>
+<span><span class="co">#&gt; 3       x2 -0.050016361 -1.139036 4.944104e-15 1.522893e-12          TRUE</span></span></code></pre></div>
+<p><code><a href="../reference/plot_varmalingam_residual_qq.html">plot_varmalingam_residual_qq()</a></code> draws per-variable normal
+Q-Q plots (the same <code>on</code> argument selects the residual
+series). Deviations from the straight reference line indicate
+non-Gaussianity.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_varmalingam_residual_qq.html">plot_varmalingam_residual_qq</a></span><span class="op">(</span><span class="va">model_varma</span><span class="op">)</span></span></code></pre></div>
+<p><img src="time-series_files/figure-html/varma_qq-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level3">
+<h3 id="total-causal-effects-1">Total Causal Effects<a class="anchor" aria-label="anchor" href="#total-causal-effects-1"></a>
+</h3>
+<p><code><a href="../reference/estimate_varma_total_effect.html">estimate_varma_total_effect()</a></code> estimates the
+<strong>total</strong> causal effect of one variable on another, the
+VARMA-LiNGAM counterpart of <code><a href="../reference/estimate_var_total_effect.html">estimate_var_total_effect()</a></code>: it
+integrates over both the AR (psi) and MA (omega) structure. As in
+VAR-LiNGAM, <code>from_lag = 0</code> (default) gives the
+contemporaneous total effect and <code>from_lag = 1</code> gives the
+one-step-ahead effect of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x_j(t-1)</annotation></semantics></math>
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x_i(t)</annotation></semantics></math>.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Total effect x0 -&gt; x2 (contemporaneous)</span></span>
+<span><span class="fu"><a href="../reference/estimate_varma_total_effect.html">estimate_varma_total_effect</a></span><span class="op">(</span><span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>, <span class="va">model_varma</span>, from_index <span class="op">=</span> <span class="fl">1</span>, to_index <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -0.2512211</span></span>
+<span></span>
+<span><span class="co"># Total effect x0(t-1) -&gt; x2(t) (one-step-ahead)</span></span>
+<span><span class="fu"><a href="../reference/estimate_varma_total_effect.html">estimate_varma_total_effect</a></span><span class="op">(</span><span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>, <span class="va">model_varma</span>, from_index <span class="op">=</span> <span class="fl">1</span>, to_index <span class="op">=</span> <span class="fl">3</span>, from_lag <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -0.1064222</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="bootstrap-1">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap-1"></a>
+</h3>
+<p><code><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap()</a></code>,
+<code><a href="../reference/get_varma_probabilities.html">get_varma_probabilities()</a></code>, and
+<code><a href="../reference/get_varma_paths.html">get_varma_paths()</a></code> mirror their VAR-LiNGAM counterparts,
+re-running VARMA-LiNGAM on residual bootstrap samples. In the
 probability matrix, the first <code>1 + p</code> column blocks are the
 psi (lag) matrices and the final <code>q</code> blocks are the omega
 (MA) matrices.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bs_varma</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lingam_varma_bootstrap.html">lingam_varma_bootstrap</a></span><span class="op">(</span></span>
 <span>  <span class="va">s_varma</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>  n_sampling <span class="op">=</span> <span class="fl">100L</span>,</span>
@@ -442,6 +517,7 @@ psi (lag) matrices and the final <code>q</code> blocks are the omega
 <span><span class="co">#&gt; [1,] 0.00    0    0 0.99 0.00 0.93 0.73 0.00 0.00</span></span>
 <span><span class="co">#&gt; [2,] 1.00    0    0 0.75 1.00 0.84 0.09 0.01 0.06</span></span>
 <span><span class="co">#&gt; [3,] 0.07    1    0 0.16 0.08 0.89 0.11 0.00 0.99</span></span></code></pre></div>
+</div>
 <div class="section level3">
 <h3 id="var-or-varma">VAR or VARMA?<a class="anchor" aria-label="anchor" href="#var-or-varma"></a>
 </h3>

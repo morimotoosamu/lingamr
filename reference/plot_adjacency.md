@@ -47,7 +47,7 @@ plot_adjacency(
 
 - rankdir:
 
-  Layout direction (default: "LR") "LR" = left -\> right, "RL" = right
+  Layout direction (default: "TB") "LR" = left -\> right, "RL" = right
   -\> left, "TB" = top -\> bottom, "BT" = bottom -\> top
 
 - title:
@@ -65,7 +65,7 @@ plot_adjacency(
 
 - bordercolor:
 
-  Border color
+  Border color (default: "black")
 
 - fontsize_node:
 
@@ -109,7 +109,7 @@ plot_adjacency(
 
 - debug:
 
-  Enable debug mode (logical)
+  Enable debug mode (default: FALSE)
 
 ## Value
 

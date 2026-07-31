@@ -43,7 +43,7 @@ dat[sample(nrow(dat), 20), 1] <- NA
 bs <- bootstrap_with_imputation(dat, n_sampling = 5L, n_repeats = 2L, seed = 42)
 #> Bootstrap with imputation: 5 iterations, n_repeats=2 (sequential)
 #>   iteration 1 / 5
-#> Completed in 0.3 seconds.
+#> Completed in 0.2 seconds.
 tidy(bs)
 #>    from to count proportion mean_effect median_effect   sd_effect   ci_lower
 #> 1     3  2     5        1.0   2.1383915     2.0617327 0.176654962  1.9992568

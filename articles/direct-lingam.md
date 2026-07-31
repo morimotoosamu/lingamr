@@ -26,7 +26,7 @@ adjacency matrix).
 |----|:--:|:--:|----|
 | [`generate_lingam_sample_6()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_6.md) | 6 | 1,000 | Standard fixed structure. The main example in this article |
 | [`generate_lingam_sample_10()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_sample_10.md) | 10 | 1,000 | An extension of the 6-variable case (used in [A Larger Dataset](#a-larger-dataset-10-variables)) |
-| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | A difficult setting with strong multicollinearity |
+| [`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md) | 9 | 200 | A difficult setting with strong multicollinearity (used in [Strong Multicollinearity](#strong-multicollinearity-init_method)) |
 | [`generate_lingam_large_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_large_sample.md) | variable | 1,000 | A random sparse DAG with an arbitrary number of variables (used in [The Scalability Wall](#when-there-are-many-variables-the-scalability-wall)) |
 | [`generate_lingam_paradox_data()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_paradox_data.md) | 4 | 2,000 | The measurement error paradox (used in [The Paradox Example](#a-case-where-directlingam-struggles-the-measurement-error-paradox)) |
 
@@ -272,6 +272,29 @@ When you want to know “the ultimate impact of intervening on a
 variable,” use the total causal effect rather than the multiple
 regression coefficient.
 
+### Effect Between a Single Pair of Variables
+
+[`estimate_all_total_effects()`](https://morimotoosamu.github.io/lingamr/reference/estimate_all_total_effects.md)
+returns the full matrix of pairwise effects at once. When only one
+specific `from -> to` pair is needed,
+[`estimate_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect.md)
+computes it directly; `from_index` and `to_index` accept either a
+variable name or a 1-based index.
+
+``` r
+
+te_x3_x1 <- x1k$data |>
+  estimate_total_effect(model, from_index = "x3", to_index = "x1")
+
+round(te_x3_x1, 3)
+#>     x3 
+#> 21.059
+
+# Same value as the x3 column of the total_effects matrix computed above
+isTRUE(all.equal(te_x3_x1, total_effects["x1", "x3"], check.attributes = FALSE))
+#> [1] TRUE
+```
+
 ## Inference with Prior Knowledge
 
 With
@@ -487,6 +510,141 @@ sum(fit_bic$adjacency_matrix     != 0)
 sum(fit_lam_min$adjacency_matrix != 0)
 #> [1] 7
 ```
+
+## Strong Multicollinearity (init_method)
+
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+builds five root variables, `x0` through `x4`, that all share one strong
+common factor (`collinearity`, default 0.95), so they are highly
+correlated with each other even though none of them causes any other.
+Four downstream variables, `x5` through `x8`, are linear combinations of
+these roots (`x8` also depends on `x5` and `x6`). This is harder than
+ordinary multicollinearity among the predictors of a single response:
+here the near-collinear variables are themselves exogenous, which breaks
+DirectLiNGAM’s assumption that the error terms of root variables are
+mutually independent.
+
+``` r
+
+hard <- generate_lingam_hard_sample()
+
+head(hard$data)
+#>          x0        x1        x2        x3        x4       x5       x6       x7
+#> 1 1.0228248 0.8886297 0.9693088 0.9349473 0.7947395 5.298107 4.166792 4.281243
+#> 2 0.4830486 0.4748335 0.2787734 0.2895976 0.2664368 2.228899 1.343471 2.033147
+#> 3 0.3727160 0.3013776 0.4418671 0.3585968 0.4657222 2.435443 1.570280 1.732436
+#> 4 1.1951289 1.1560823 1.1158846 1.0539815 1.0437446 6.023135 4.747024 5.105043
+#> 5 0.4059819 0.3034858 0.2156491 0.3155540 0.2783906 1.961220 1.356371 1.488881
+#> 6 0.9547901 0.9622644 0.8374879 0.8856775 0.9972516 4.823226 3.801561 3.977539
+#>          x8
+#> 1 10.173626
+#> 2  4.010030
+#> 3  4.205728
+#> 4 11.537226
+#> 5  3.830753
+#> 6  8.669491
+hard$true_adjacency
+#>     x0  x1  x2 x3 x4 x5 x6 x7 x8
+#> x0 0.0 0.0 0.0  0  0  0  0  0  0
+#> x1 0.0 0.0 0.0  0  0  0  0  0  0
+#> x2 0.0 0.0 0.0  0  0  0  0  0  0
+#> x3 0.0 0.0 0.0  0  0  0  0  0  0
+#> x4 0.0 0.0 0.0  0  0  0  0  0  0
+#> x5 1.5 1.5 1.5  0  0  0  0  0  0
+#> x6 0.0 1.0 1.0  1  1  0  0  0  0
+#> x7 2.0 0.0 0.0  2  0  0  0  0  0
+#> x8 0.0 0.0 0.0  0  0  1  1  0  0
+
+# x0-x4 share a common factor and are therefore highly correlated
+round(cor(hard$data[c("x0", "x1", "x2", "x3", "x4")]), 3)
+#>       x0    x1    x2    x3    x4
+#> x0 1.000 0.896 0.904 0.907 0.917
+#> x1 0.896 1.000 0.918 0.907 0.908
+#> x2 0.904 0.918 1.000 0.905 0.906
+#> x3 0.907 0.907 0.905 1.000 0.904
+#> x4 0.917 0.908 0.906 0.904 1.000
+```
+
+We run Direct LiNGAM with its defaults.
+
+``` r
+
+fit_hard <- lingam_direct(hard$data)
+
+colnames(hard$data)[fit_hard$causal_order]
+#> [1] "x3" "x8" "x6" "x2" "x0" "x1" "x4" "x5" "x7"
+```
+
+Because `x0` through `x4` are mutually dependent, the estimated causal
+order does not fully respect the true structure. We check this directly:
+for every true edge `from -> to`, `from` should precede `to` in the
+estimated order.
+
+``` r
+
+true_edges <- which(hard$true_adjacency != 0, arr.ind = TRUE)
+order_pos  <- match(seq_len(ncol(hard$data)), fit_hard$causal_order)
+
+edge_check <- data.frame(
+  from            = colnames(hard$data)[true_edges[, "col"]],
+  to              = colnames(hard$data)[true_edges[, "row"]],
+  order_respected = order_pos[true_edges[, "col"]] < order_pos[true_edges[, "row"]]
+)
+
+edge_check
+#>    from to order_respected
+#> 1    x0 x5            TRUE
+#> 2    x0 x7            TRUE
+#> 3    x1 x5            TRUE
+#> 4    x1 x6           FALSE
+#> 5    x2 x5            TRUE
+#> 6    x2 x6           FALSE
+#> 7    x3 x6            TRUE
+#> 8    x3 x7            TRUE
+#> 9    x4 x6           FALSE
+#> 10   x5 x8           FALSE
+#> 11   x6 x8           FALSE
+sum(edge_check$order_respected)   # number of true edges correctly ordered
+#> [1] 6
+```
+
+Only 6 of the 11 true edges are correctly ordered. The rest – all edges
+into `x6` or `x8` – are missed or estimated in the reverse direction,
+because their true parents were placed too late in the estimated order.
+This is the failure mode
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)
+is designed to expose: correlated exogenous variables can break the
+causal order search before regression even starts.
+
+Even so, the `x0 -> x7` edge happens to be ordered correctly, which lets
+us isolate the effect of `init_method` on the regression step alone.
+[`estimate_total_effect()`](https://morimotoosamu.github.io/lingamr/reference/estimate_total_effect.md)
+estimates Adaptive LASSO’s initial weights with OLS by default
+(`init_method = "ols"`); `init_method = "ridge"` uses cross-validated
+Ridge regression instead, which stays stable under multicollinearity.
+
+``` r
+
+set.seed(0)
+te_hard_ols <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ols")
+
+te_hard_ridge <- hard$data |>
+  estimate_total_effect(fit_hard, from_index = "x0", to_index = "x7", init_method = "ridge")
+
+round(c(ols = unname(te_hard_ols), ridge = unname(te_hard_ridge)), 3)
+#>   ols ridge 
+#> 3.624 2.590
+```
+
+The true coefficient of `x0 -> x7` is **2.0**. The OLS-initialized
+estimate overshoots substantially, while the Ridge-initialized estimate
+lands much closer to the truth – the improvement
+[`generate_lingam_hard_sample()`](https://morimotoosamu.github.io/lingamr/reference/generate_lingam_hard_sample.md)’s
+documentation attributes to Ridge-initialized Adaptive LASSO under
+strong multicollinearity. Keep in mind that `init_method` only affects
+this regression stage: it does not change the causal order search, so it
+cannot fix the ordering problem shown above.
 
 ## The Non-Gaussianity Assumption
 
@@ -773,9 +931,9 @@ cat(sprintf(
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.03 sec
-#> p = 15 : 0.06 sec
-#> theoretical factor 3.4x vs. observed 2.1x
+#> p = 10 : 0.02 sec
+#> p = 15 : 0.05 sec
+#> theoretical factor 3.4x vs. observed 2.2x
 ```
 
 We run ICA-LiNGAM on the same data to compare speed directly.
@@ -791,8 +949,8 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.03 sec   0.06 sec
-#> ICA-LiNGAM    :  0.02 sec   0.03 sec
+#> Direct LiNGAM :  0.02 sec   0.05 sec
+#> ICA-LiNGAM    :  0.01 sec   0.02 sec
 ```
 
 The larger $`p`$ becomes, the more Direct LiNGAM’s $`O(p^3)`$ cost
@@ -1064,7 +1222,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.6 seconds.
+#> Completed in 1.2 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>
