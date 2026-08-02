@@ -238,14 +238,16 @@ test_varlingam_residual_normality_all <- function(result,
     stop("No usable normality-test method (required packages not installed).", call. = FALSE)
   }
 
-  # Skewness/kurtosis are method-independent, so take them from the first run.
+  # Skewness/kurtosis are method-independent, so take them from the first run
+  # (which also supplies that method's p-values -- no need to run it twice).
   first <- test_varlingam_residual_normality(result, method = methods[1], alpha = alpha, on = on)
   out <- data.frame(
     variable = first$variable,
     skewness = first$skewness,
     kurtosis = first$kurtosis
   )
-  for (m in methods) {
+  out[[paste0("p_", methods[1])]] <- first$p_value
+  for (m in methods[-1]) {
     r <- test_varlingam_residual_normality(result, method = m, alpha = alpha, on = on)
     out[[paste0("p_", m)]] <- r$p_value
   }

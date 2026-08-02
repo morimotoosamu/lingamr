@@ -229,6 +229,11 @@ resit_remove_edges <- function(X, pa, pi_order, reg_fn, alpha) {
   for (k_pos in 2:p) {
     target <- pi_order[k_pos]
     parents_snapshot <- pa[[target]] # pa[pi[k]].copy() in the original
+    if (length(parents_snapshot) == 0L) next
+
+    # the second HSIC argument is the same joint parent matrix for every l;
+    # precompute its Gram parts once per target
+    pre_parents <- hsic_precompute(X[, parents_snapshot, drop = FALSE])
 
     for (l in parents_snapshot) {
       predictors <- setdiff(pa[[target]], l)
@@ -240,9 +245,7 @@ resit_remove_edges <- function(X, pa, pi_order, reg_fn, alpha) {
       } else {
         residual <- X[, target]
       }
-      hsic_p <- hsic_test_gamma(
-        residual, X[, parents_snapshot, drop = FALSE]
-      )$p
+      hsic_p <- hsic_gamma_from_pre(hsic_precompute(residual), pre_parents)$p
       if (hsic_p > alpha) {
         pa[[target]] <- setdiff(pa[[target]], l)
       }

@@ -86,16 +86,15 @@ calc_taus <- function(Y, yty, pa, ch, k, cond_sets, an_sets) {
     resid_var <- mean(resid^2)
     resid_k <- mean(resid^k)
 
-    for (j in ch) {
-      value <- (1 / n) * sum(resid_k_1 * Y[, j]) * resid_var -
-        resid_k * (1 / n) * sum(resid * Y[, j])
-      ret[j] <- min(ret[j], abs(value))
-    }
-
-    for (a in an_sets[[z]]) {
-      value <- (1 / n) * sum(resid_k_1 * Y[, a]) * resid_var -
-        resid_k * (1 / n) * sum(resid * Y[, a])
-      ret[a] <- min(ret[a], abs(value))
+    # ch and an_sets[[z]] share the same statistic; one BLAS crossprod
+    # replaces the per-column R loop (duplicated targets are harmless:
+    # both occurrences carry the identical value, so pmin agrees with the
+    # sequential min updates)
+    targets <- c(ch, an_sets[[z]])
+    if (length(targets) > 0) {
+      cp <- crossprod(cbind(resid_k_1, resid), Y[, targets, drop = FALSE])
+      value <- (1 / n) * cp[1, ] * resid_var - resid_k * (1 / n) * cp[2, ]
+      ret[targets] <- pmin(ret[targets], abs(value))
     }
   }
 
@@ -125,7 +124,17 @@ get_prune_stats <- function(Y, yty, i, j, K, last_root, condition_set, J) {
   prune_stat <- rep(1e5, p)
 
   if (is.null(last_root)) {
-    prune_stat[j] <- vapply(j, function(j_) calc_tau(K, Y[, i], Y[, j_]), numeric(1))
+    # calc_tau()'s pa-only moments do not depend on j_; hoist them out of
+    # the loop (the per-column mean() calls are unchanged, so results are
+    # bit-identical to calling calc_tau() directly)
+    pa <- Y[, i]
+    pa_k_1 <- pa^(K - 1)
+    pa_sq_mean <- mean(pa^2)
+    pa_k_mean <- mean(pa^K)
+    prune_stat[j] <- vapply(j, function(j_) {
+      ch <- Y[, j_]
+      abs(mean(pa_k_1 * ch) * pa_sq_mean - pa_k_mean * mean(pa * ch))
+    }, numeric(1))
     return(prune_stat)
   }
 

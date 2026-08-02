@@ -113,6 +113,9 @@ lingam_var_bootstrap <- function(X,
   M <- vf$coefs          # array (lags, n_features, n_features)
   residuals <- vf$residuals
   n_resid <- nrow(residuals)
+  # slice the coefficient array once; 3D indexing inside the recursion below
+  # would copy M[k, , ] on every time step
+  M_list <- lapply(seq_len(lags), function(k) M[k, , ])
 
   # One bootstrap iteration: residual resample -> VAR recursion -> re-estimate.
   # Wrapped in tryCatch (like lingam_direct_bootstrap) so that one pathological
@@ -132,7 +135,7 @@ lingam_var_bootstrap <- function(X,
         } else {
           ar <- numeric(n_features)
           for (k in seq_len(lags)) {
-            ar <- ar + as.numeric(M[k, , ] %*% resampled_X[j - k, ])
+            ar <- ar + as.numeric(M_list[[k]] %*% resampled_X[j - k, ])
           }
           resampled_X[j, ] <- ar + sampled[j, ]
         }
@@ -155,22 +158,18 @@ lingam_var_bootstrap <- function(X,
       am_sq[seq_len(n_features), ] <- am_joined
 
       te <- matrix(0, nrow = n_features, ncol = n_features * (lags + 1L))
+      te_all <- calculate_total_effects_all(am_sq)
       for (ci in seq_len(n_features)) {
         to <- rev(causal_order)[ci]
         # contemporaneous sources: those preceding `to` in the causal order
         n_earlier <- n_features - ci
         if (n_earlier >= 1L) {
-          for (from in causal_order[seq_len(n_earlier)]) {
-            te[to, from] <- calculate_total_effect(am_sq, from, to)
-          }
+          from <- causal_order[seq_len(n_earlier)]
+          te[to, from] <- te_all[to, from]
         }
         # lagged sources: all variables at each lag
-        for (lag in seq_len(lags)) {
-          for (from in seq_len(n_features)) {
-            from_col <- from + n_features * lag
-            te[to, from_col] <- calculate_total_effect(am_sq, from_col, to)
-          }
-        }
+        lag_cols <- n_features + seq_len(n_features * lags)
+        te[to, lag_cols] <- te_all[to, lag_cols]
       }
 
       list(ok = TRUE, adjacency = am_joined, total_effects = te, idx = ridx,

@@ -126,17 +126,11 @@ lingam_parce_bootstrap <- function(X,
 
       te <- if (compute_total_effects) {
         has_na_row <- apply(B, 1, anyNA)
-        TE <- matrix(0, n_features, n_features)
-        for (from_idx in seq_len(n_features)) {
-          for (to_idx in seq_len(n_features)) {
-            if (from_idx == to_idx) next
-            TE[to_idx, from_idx] <- if (has_na_row[from_idx]) {
-              NA_real_
-            } else {
-              calculate_total_effect(B, from_idx, to_idx)
-            }
-          }
-        }
+        TE <- calculate_total_effects_all(B)
+        # sources whose adjacency row is unresolved (NA) get NA effects,
+        # except the untouched diagonal (kept 0, as in the pairwise loop)
+        TE[, has_na_row] <- NA_real_
+        diag(TE) <- 0
         TE
       } else {
         NULL

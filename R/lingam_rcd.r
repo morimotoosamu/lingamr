@@ -140,7 +140,9 @@ mlhsicr_regression <- function(Y, xi, xj_list) {
     Kc <- hsic_gram_matrix(resid, width)$Kc
     total <- 0
     for (Lc in Lc_list) {
-      total <- total + sum(t(Kc) * Lc) / n
+      # Kc and Lc are symmetric, so t(Kc) is mathematically redundant and
+      # only allocated an n x n copy per objective evaluation
+      total <- total + sum(Kc * Lc) / n
     }
     total
   }
@@ -203,16 +205,30 @@ exists_ancestor_in_U <- function(M, U, xi, xj_list) {
 #' @param independence "hsic" or "fcorr"
 #' @param ind_alpha significance level (hsic only)
 #' @param ind_corr rejection threshold (fcorr only)
+#' @param pre_col function(k) returning the HSIC precompute of `Y[, k]`
+#'   (see [hsic_pre_col_cache()]), or NULL to test without caching; the
+#'   `Y[, xj]` side of every test is shared across the sink candidates of
+#'   one subset, and the residual side is shared across `xj_list`
 #' @return TRUE if independent
 #' @keywords internal
 is_independent_of_resid <- function(Y, xi, xj_list, MLHSICR, independence,
-                                    ind_alpha, ind_corr) {
+                                    ind_alpha, ind_corr, pre_col = NULL) {
   fit <- rcd_ols_resid_coef(Y[, xi], Y[, xj_list, drop = FALSE])
   resid <- fit$resid
 
+  use_pre <- independence == "hsic" && !is.null(pre_col)
+  test_indep <- function(r_pre, r_raw, xj) {
+    if (use_pre) {
+      hsic_gamma_from_pre(r_pre, pre_col(xj))$p > ind_alpha
+    } else {
+      rcd_is_independent(r_raw, Y[, xj], independence, ind_alpha, ind_corr)
+    }
+  }
+
+  pre_resid <- if (use_pre) hsic_precompute(resid) else NULL
   all_independent <- TRUE
   for (xj in xj_list) {
-    if (!rcd_is_independent(resid, Y[, xj], independence, ind_alpha, ind_corr)) {
+    if (!test_indep(pre_resid, resid, xj)) {
       all_independent <- FALSE
       break
     }
@@ -223,8 +239,9 @@ is_independent_of_resid <- function(Y, xi, xj_list, MLHSICR, independence,
 
   mlh <- mlhsicr_regression(Y, xi, xj_list)
   resid2 <- mlh$resid
+  pre_resid2 <- if (use_pre) hsic_precompute(resid2) else NULL
   for (xj in xj_list) {
-    if (!rcd_is_independent(resid2, Y[, xj], independence, ind_alpha, ind_corr)) {
+    if (!test_indep(pre_resid2, resid2, xj)) {
       return(FALSE)
     }
   }
@@ -260,6 +277,11 @@ extract_ancestors <- function(X, max_explanatory_num, cor_alpha, ind_alpha,
   l <- 1L
   hu_history <- new.env(parent = emptyenv())
   combn_cache <- vector("list", max_explanatory_num + 1L)
+  # `Y[, u]` is fully determined by (u, H_U): cache the OLS residuals across
+  # subsets sharing a conditioning set, and (hsic only) the O(n^2) Gram parts
+  # of the raw columns (the H_U-empty case, where Y == X, recurs the most).
+  resid_cache <- new.env(parent = emptyenv())
+  pre_x_cache <- if (independence == "hsic") new.env(parent = emptyenv()) else NULL
   iter_count <- 0L
   max_iter <- p * p + 10L
 
@@ -286,12 +308,38 @@ extract_ancestors <- function(X, max_explanatory_num, cor_alpha, ind_alpha,
       }
       if (!is.null(cached) && identical(cached, H_U)) next
 
+      hkey <- paste(H_U, collapse = ",")
       if (length(H_U) == 0) {
         Y <- X
       } else {
         Y <- matrix(0, nrow(X), p)
         for (u in U) {
-          Y[, u] <- rcd_ols_resid_coef(X[, u], X[, H_U, drop = FALSE])$resid
+          rkey <- paste(u, hkey, sep = "|")
+          if (!exists(rkey, envir = resid_cache, inherits = FALSE)) {
+            assign(rkey,
+              rcd_ols_resid_coef(X[, u], X[, H_U, drop = FALSE])$resid,
+              envir = resid_cache
+            )
+          }
+          Y[, u] <- get(rkey, envir = resid_cache, inherits = FALSE)
+        }
+      }
+
+      # lazy per-column HSIC precompute for this subset's Y; persisted only
+      # for the Y == X case (bounded by p entries), per-subset otherwise
+      pre_col <- NULL
+      if (independence == "hsic") {
+        local_pre <- vector("list", p)
+        pre_col <- function(k) {
+          if (length(H_U) == 0) {
+            xkey <- as.character(k)
+            if (!exists(xkey, envir = pre_x_cache, inherits = FALSE)) {
+              assign(xkey, hsic_precompute(Y[, k]), envir = pre_x_cache)
+            }
+            return(get(xkey, envir = pre_x_cache, inherits = FALSE))
+          }
+          if (is.null(local_pre[[k]])) local_pre[[k]] <<- hsic_precompute(Y[, k])
+          local_pre[[k]]
         }
       }
 
@@ -312,7 +360,7 @@ extract_ancestors <- function(X, max_explanatory_num, cor_alpha, ind_alpha,
         xj_list <- setdiff(U, xi)
         if (exists_ancestor_in_U(M, U, xi, xj_list)) next
         if (is_independent_of_resid(Y, xi, xj_list, MLHSICR, independence,
-                                     ind_alpha, ind_corr)) {
+                                     ind_alpha, ind_corr, pre_col)) {
           sink_set <- c(sink_set, xi)
         }
       }
@@ -409,16 +457,27 @@ extract_vars_sharing_confounders <- function(X, P, cor_alpha) {
   C <- vector("list", p)
   for (i in seq_len(p)) C[[i]] <- integer(0)
 
+  # each variable's parent-adjusted residual is pair-independent, so compute
+  # it (lazily) once instead of once per pair
+  res_list <- vector("list", p)
+  parent_residual <- function(v) {
+    if (is.null(res_list[[v]])) {
+      res_list[[v]] <<- if (length(P[[v]]) == 0) {
+        X[, v]
+      } else {
+        rcd_ols_resid_coef(X[, v], X[, P[[v]], drop = FALSE])$resid
+      }
+    }
+    res_list[[v]]
+  }
+
   pairs <- utils::combn(seq_len(p), 2, simplify = FALSE)
   for (pr in pairs) {
     i <- pr[1]
     j <- pr[2]
     if (j %in% P[[i]] || i %in% P[[j]]) next
 
-    ri <- if (length(P[[i]]) == 0) X[, i] else rcd_ols_resid_coef(X[, i], X[, P[[i]], drop = FALSE])$resid
-    rj <- if (length(P[[j]]) == 0) X[, j] else rcd_ols_resid_coef(X[, j], X[, P[[j]], drop = FALSE])$resid
-
-    if (rcd_is_correlated(ri, rj, cor_alpha)) {
+    if (rcd_is_correlated(parent_residual(i), parent_residual(j), cor_alpha)) {
       C[[i]] <- sort(union(C[[i]], j))
       C[[j]] <- sort(union(C[[j]], i))
     }
@@ -822,11 +881,14 @@ get_error_independence_p_values_rcd <- function(X, rcd_result) {
 
   p_values <- matrix(NA_real_, n_features, n_features)
   pairs <- which(upper.tri(matrix(TRUE, n_features, n_features)), arr.ind = TRUE)
+  # each residual column enters up to n_features - 1 pairwise HSIC tests;
+  # cache its Gram parts instead of rebuilding them per pair
+  pre_col <- hsic_pre_col_cache(E)
   for (r in seq_len(nrow(pairs))) {
     i <- pairs[r, 1]
     j <- pairs[r, 2]
     if (i %in% na_vars || j %in% na_vars) next
-    p_val <- hsic_test_gamma(E[, i], E[, j])$p
+    p_val <- hsic_gamma_from_pre(pre_col(i), pre_col(j))$p
     p_values[i, j] <- p_val
     p_values[j, i] <- p_val
   }

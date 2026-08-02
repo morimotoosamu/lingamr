@@ -21,12 +21,11 @@ multi_group_total_effect_matrix <- function(B, causal_order) {
   TE <- matrix(0, nrow = p, ncol = p)
   n <- length(causal_order)
   if (n < 2) return(TE)
+  TE_all <- calculate_total_effects_all(B)
   for (i in seq_len(n - 1)) {
     from_idx <- causal_order[i]
-    for (j in (i + 1):n) {
-      to_idx <- causal_order[j]
-      TE[to_idx, from_idx] <- calculate_total_effect(B, from_idx, to_idx)
-    }
+    to_idx <- causal_order[(i + 1):n]
+    TE[to_idx, from_idx] <- TE_all[to_idx, from_idx]
   }
   TE
 }

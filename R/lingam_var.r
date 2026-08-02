@@ -281,6 +281,13 @@ select_var_lag <- function(X, max_lag, criterion = "bic") {
   # Response is fixed to the common window for every candidate.
   Y <- X[(max_lag + 1L):n, , drop = FALSE]
 
+  # Build the lagged design once at max_lag over the common window; each
+  # candidate lag uses its leading lag * p columns (identical blocks).
+  Z_max <- matrix(0, nrow = n_obs, ncol = max_lag * p)
+  for (k in seq_len(max_lag)) {
+    Z_max[, ((k - 1L) * p + 1L):(k * p)] <- X[(max_lag + 1L - k):(n - k), , drop = FALSE]
+  }
+
   best_lag <- 1L
   best_ic <- Inf
   any_evaluated <- FALSE
@@ -297,11 +304,8 @@ select_var_lag <- function(X, max_lag, criterion = "bic") {
     if (n_obs - n_params_eq <= 2L * p) next
     any_evaluated <- TRUE
 
-    # Build the lagged design over the same window: [X_{t-1}, ..., X_{t-lag}].
-    Z <- matrix(0, nrow = n_obs, ncol = lag * p)
-    for (k in seq_len(lag)) {
-      Z[, ((k - 1L) * p + 1L):(k * p)] <- X[(max_lag + 1L - k):(n - k), , drop = FALSE]
-    }
+    # Lagged design over the same window: [X_{t-1}, ..., X_{t-lag}].
+    Z <- Z_max[, seq_len(lag * p), drop = FALSE]
     resid <- stats::.lm.fit(Z, Y)$residuals
     # Residual covariance (MLE scaling, divide by n_obs) as used by the criteria.
     sigma <- crossprod(resid) / n_obs

@@ -72,3 +72,32 @@ calculate_total_effect <- function(adjacency_matrix, from_index, to_index) {
   result <- find_all_paths(adjacency_matrix, from_index, to_index, min_causal_effect = 0.0)
   if (length(result$effects) == 0) 0.0 else sum(result$effects)
 }
+
+
+#' Compute all pairwise total causal effects at once
+#'
+#' Equivalent to calling [calculate_total_effect()] for every (from, to)
+#' pair, but computed as the truncated Neumann series `B + B^2 + ... +
+#' B^(p-1)`. In a DAG every walk is a simple path (a repeated node would
+#' imply a cycle), so the series contains exactly the same path-product
+#' terms the DFS enumerates, and entries with no connecting path are exactly
+#' zero. Only valid for acyclic `B` -- with cycles the series would count
+#' non-simple walks that [find_all_paths()] excludes.
+#'
+#' @param adjacency_matrix Adjacency matrix (p x p). `B[i,j]` is the
+#'   coefficient of j -> i; NAs are treated as absent edges.
+#' @return p x p matrix `TE` with `TE[to, from]` = total effect of from on to
+#' @keywords internal
+calculate_total_effects_all <- function(adjacency_matrix) {
+  B <- adjacency_matrix
+  B[is.na(B)] <- 0
+  p <- ncol(B)
+  TE <- matrix(0, p, p)
+  P <- B
+  for (len in seq_len(max(p - 1L, 1L))) {
+    TE <- TE + P
+    if (len == p - 1L || !any(P != 0)) break
+    P <- P %*% B
+  }
+  TE
+}

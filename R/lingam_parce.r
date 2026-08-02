@@ -281,20 +281,25 @@ parce_residual <- function(X, xi_index, j, Cov) {
 #' @param predictors predictor indices (may be empty)
 #' @param R residual vector
 #' @param independence "hsic" or "fcorr"
+#' @param pre_col per-column HSIC precompute cache from
+#'   [hsic_pre_col_cache()], or NULL to build one locally (hsic only)
 #' @return evaluation value (Fisher-combined p-value for hsic, max
 #'   F-correlation for fcorr)
 #' @keywords internal
-parce_eval_independence <- function(X, predictors, R, independence) {
+parce_eval_independence <- function(X, predictors, R, independence,
+                                    pre_col = NULL) {
   if (length(predictors) == 0) {
     return(if (independence == "hsic") 1.0 else 0.0)
   }
   if (independence == "hsic") {
+    if (is.null(pre_col)) pre_col <- hsic_pre_col_cache(X)
+    pre_R <- hsic_precompute(R)
     if (length(predictors) == 1) {
-      return(hsic_test_gamma(X[, predictors], R)$p)
+      return(hsic_gamma_from_pre(pre_col(predictors), pre_R)$p)
     }
     fisher_stat <- 0
     for (k in predictors) {
-      p_k <- hsic_test_gamma(X[, k], R)$p
+      p_k <- hsic_gamma_from_pre(pre_col(k), pre_R)$p
       fisher_stat <- fisher_stat + if (p_k <= 0) Inf else -2 * log(p_k)
     }
     return(1 - stats::pchisq(fisher_stat, df = 2 * length(predictors)))
@@ -316,14 +321,21 @@ parce_eval_independence <- function(X, predictors, R, independence) {
 #' @param independence "hsic" or "fcorr"
 #' @param Cov precomputed `stats::cov(X)`, since `X` is invariant across all
 #'   calls within a single [parce_search_causal_order()] search
+#' @param pre_col per-column HSIC precompute cache from
+#'   [hsic_pre_col_cache()], or NULL to build one locally (hsic only); the
+#'   predictor columns are invariant across the whole search, so their Gram
+#'   matrices are shared like `Cov`
 #' @return list(m = selected variable index, eval = its evaluation value)
 #' @keywords internal
-find_exo_vec <- function(X, Uc, U, independence, Cov) {
+find_exo_vec <- function(X, Uc, U, independence, Cov, pre_col = NULL) {
+  if (independence == "hsic" && is.null(pre_col)) {
+    pre_col <- hsic_pre_col_cache(X)
+  }
   if (length(Uc) == 1) {
     j <- Uc[1]
     predictors <- setdiff(U, Uc)
     R <- parce_residual(X, predictors, j, Cov)
-    ev <- parce_eval_independence(X, predictors, R, independence)
+    ev <- parce_eval_independence(X, predictors, R, independence, pre_col)
     return(list(m = j, eval = ev))
   }
 
@@ -336,15 +348,16 @@ find_exo_vec <- function(X, Uc, U, independence, Cov) {
     R <- parce_residual(X, xi_index, j, Cov)
 
     if (independence == "hsic") {
+      pre_R <- hsic_precompute(R)
       if (length(xi_index) == 1) {
-        ht <- hsic_test_gamma(X[, xi_index], R)
+        ht <- hsic_gamma_from_pre(pre_col(xi_index), pre_R)
         cand_stat <- ht$stat
         cand_eval <- ht$p
       } else {
         fisher_stat <- 0
         aborted <- FALSE
         for (k in xi_index) {
-          p_k <- hsic_test_gamma(X[, k], R)$p
+          p_k <- hsic_gamma_from_pre(pre_col(k), pre_R)$p
           fisher_stat <- fisher_stat + if (p_k <= 0) Inf else -2 * log(p_k)
           # Early break: statistics only grow as more terms are added, and we
           # are looking for the candidate with the *smallest* statistic, so a
@@ -406,12 +419,14 @@ parce_search_causal_order <- function(X, U, partial_orders, independence, thresh
   K_bttm <- integer(0)
   p_bttm <- numeric(0)
   # X does not change during this search, so its covariance matrix is
-  # computed once here rather than on every find_exo_vec()/parce_residual() call.
+  # computed once here rather than on every find_exo_vec()/parce_residual()
+  # call; likewise the per-column HSIC Gram matrices (hsic only).
   Cov <- stats::cov(X)
+  pre_col <- if (independence == "hsic") hsic_pre_col_cache(X) else NULL
 
   repeat {
     Uc <- parce_search_candidate(U, partial_orders)
-    res <- find_exo_vec(X, Uc, U, independence, Cov)
+    res <- find_exo_vec(X, Uc, U, independence, Cov, pre_col)
     m <- res$m
     ev <- res$eval
 
@@ -675,11 +690,14 @@ get_error_independence_p_values_parce <- function(X, parce_result) {
 
   p_values <- matrix(NA_real_, n_features, n_features)
   pairs <- which(upper.tri(matrix(TRUE, n_features, n_features)), arr.ind = TRUE)
+  # each residual column enters up to n_features - 1 pairwise HSIC tests;
+  # cache its Gram parts instead of rebuilding them per pair
+  pre_col <- hsic_pre_col_cache(E)
   for (r in seq_len(nrow(pairs))) {
     i <- pairs[r, 1]
     j <- pairs[r, 2]
     if (i %in% na_vars || j %in% na_vars) next
-    p_val <- hsic_test_gamma(E[, i], E[, j])$p
+    p_val <- hsic_gamma_from_pre(pre_col(i), pre_col(j))$p
     p_values[i, j] <- p_val
     p_values[j, i] <- p_val
   }

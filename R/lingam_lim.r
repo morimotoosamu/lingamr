@@ -147,8 +147,20 @@ lim_global_optimize <- function(X, con, lambda1, max_iter, h_tol, rho_max, w_thr
     w_new <- NULL
     h_new <- NULL
     while (rho < rho_max) {
-      fn <- function(w) lim_obj_grad(w, d, X, con, W_dis_mask, W_con_mask, rho, alpha, lambda1)$obj
-      gr <- function(w) lim_obj_grad(w, d, X, con, W_dis_mask, W_con_mask, rho, alpha, lambda1)$grad
+      # L-BFGS-B evaluates fn and gr at the same w back to back; cache the
+      # last lim_obj_grad() result so the expensive objective (matrix
+      # polynomial in lim_h() included) is computed once per point.
+      last_w <- NULL
+      last_res <- NULL
+      eval_cached <- function(w) {
+        if (is.null(last_w) || !identical(w, last_w)) {
+          last_w <<- w
+          last_res <<- lim_obj_grad(w, d, X, con, W_dis_mask, W_con_mask, rho, alpha, lambda1)
+        }
+        last_res
+      }
+      fn <- function(w) eval_cached(w)$obj
+      gr <- function(w) eval_cached(w)$grad
       sol <- stats::optim(w_est, fn = fn, gr = gr, method = "L-BFGS-B",
                            lower = lower, upper = upper)
       w_new <- sol$par

@@ -131,6 +131,10 @@ lingam_varma_bootstrap <- function(X,
   E_full <- filter_varma_residuals(X, phis, thetas, hr$const)
   residuals <- E_full[(k0 + 1L):n_samples, , drop = FALSE]
   n_resid <- nrow(residuals)
+  # slice the coefficient arrays once; 3D indexing inside the recursion below
+  # would copy phis[tau, , ] / thetas[w, , ] on every time step
+  phi_list <- lapply(seq_len(p_order), function(tau) phis[tau, , ])
+  theta_list <- lapply(seq_len(q_order), function(w) thetas[w, , ])
 
   # One bootstrap iteration: residual resample -> VARMA recursion -> re-estimate.
   # Wrapped in tryCatch (like lingam_direct_bootstrap) so that one pathological
@@ -150,10 +154,10 @@ lingam_varma_bootstrap <- function(X,
         } else {
           pred <- numeric(n_features)
           for (tau in seq_len(p_order)) {
-            pred <- pred + as.numeric(phis[tau, , ] %*% resampled_X[j - tau, ])
+            pred <- pred + as.numeric(phi_list[[tau]] %*% resampled_X[j - tau, ])
           }
           for (w in seq_len(q_order)) {
-            pred <- pred + as.numeric(thetas[w, , ] %*% sampled[j - w, ])
+            pred <- pred + as.numeric(theta_list[[w]] %*% sampled[j - w, ])
           }
           resampled_X[j, ] <- pred + sampled[j, ]
         }
@@ -178,7 +182,11 @@ lingam_varma_bootstrap <- function(X,
       ee_full <- E_boot %*% t(diag(n_features) - psis[1, , ])
 
       # total effects by back-door regression (same as the Python reference);
-      # instantaneous block plus AR lags only.
+      # instantaneous block plus AR lags only. The joined design depends only
+      # on the source lag, so build it once per lag, not once per pair.
+      designs <- lapply(0L:p_order, function(fl) {
+        varma_joined_design(resampled_X, ee_full, order, fl)
+      })
       te <- matrix(0, nrow = n_features, ncol = n_features * (1L + p_order))
       for (ci in seq_len(n_features)) {
         to <- rev(causal_order)[ci]
@@ -187,7 +195,8 @@ lingam_varma_bootstrap <- function(X,
         if (n_earlier >= 1L) {
           for (from in causal_order[seq_len(n_earlier)]) {
             te[to, from] <- varma_total_effect_core(
-              resampled_X, ee_full, am_joined, order, from, to, 0L
+              resampled_X, ee_full, am_joined, order, from, to, 0L,
+              X_joined = designs[[1L]]
             )
           }
         }
@@ -195,7 +204,8 @@ lingam_varma_bootstrap <- function(X,
         for (lag in seq_len(p_order)) {
           for (from in seq_len(n_features)) {
             te[to, from + n_features * lag] <- varma_total_effect_core(
-              resampled_X, ee_full, am_joined, order, from, to, lag
+              resampled_X, ee_full, am_joined, order, from, to, lag,
+              X_joined = designs[[lag + 1L]]
             )
           }
         }

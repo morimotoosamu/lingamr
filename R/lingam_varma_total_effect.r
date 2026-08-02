@@ -34,27 +34,22 @@
 #' @param from_index source variable (1-based integer)
 #' @param to_index destination variable (1-based integer)
 #' @param from_lag lag of the source variable (non-negative integer)
+#' @param X_joined precomputed [varma_joined_design()] result, or NULL to
+#'   build it here. The design depends only on (X, ee_full, order, from_lag),
+#'   so the bootstrap builds it once per lag instead of once per variable pair.
 #' @return the estimated total effect (scalar)
 #' @keywords internal
 varma_total_effect_core <- function(X, ee_full, am_joined, order,
-                                    from_index, to_index, from_lag) {
+                                    from_index, to_index, from_lag,
+                                    X_joined = NULL) {
   p_order <- order[1]
   q_order <- order[2]
   m <- ncol(X)
 
-  # --- joined design: [X_t, ..., X_{t-(p+from_lag)}, e_{t-1}, ..., e_{t-(q+from_lag)}] ---
+  if (is.null(X_joined)) {
+    X_joined <- varma_joined_design(X, ee_full, order, from_lag)
+  }
   n_x_blocks <- 1L + p_order + from_lag
-  n_e_blocks <- q_order + from_lag
-  X_joined <- matrix(0, nrow = nrow(X), ncol = m * (n_x_blocks + n_e_blocks))
-  for (b in seq_len(n_x_blocks)) {
-    pos <- (b - 1L) * m
-    # block b holds X shifted down by (b - 1) rows (b = 1 is contemporaneous).
-    X_joined[, pos + seq_len(m)] <- roll_rows(X, b - 1L)
-  }
-  for (b in seq_len(n_e_blocks)) {
-    pos <- (n_x_blocks + b - 1L) * m
-    X_joined[, pos + seq_len(m)] <- roll_rows(ee_full, b)
-  }
 
   # --- predictors: the source plus its parents, shifted into the from_lag block ---
   parents <- which(abs(am_joined[from_index, ]) > 0)
@@ -175,6 +170,36 @@ estimate_varma_total_effect <- function(X, result, from_index, to_index, from_la
   varma_total_effect_core(X, ee_full, am_joined, order,
     from_index, to_index, from_lag
   )
+}
+
+
+#' Build the joined lagged design for [varma_total_effect_core()]
+#'
+#' `[X_t, ..., X_{t-(p+from_lag)}, e_{t-1}, ..., e_{t-(q+from_lag)}]`.
+#'
+#' @param X numeric matrix (n x m), rows ordered in time
+#' @param ee_full LiNGAM residuals, full length (n x m)
+#' @param order VARMA order c(p, q)
+#' @param from_lag lag of the source variable (non-negative integer)
+#' @return matrix (n x m(1 + p + q + 2*from_lag))
+#' @keywords internal
+varma_joined_design <- function(X, ee_full, order, from_lag) {
+  p_order <- order[1]
+  q_order <- order[2]
+  m <- ncol(X)
+  n_x_blocks <- 1L + p_order + from_lag
+  n_e_blocks <- q_order + from_lag
+  X_joined <- matrix(0, nrow = nrow(X), ncol = m * (n_x_blocks + n_e_blocks))
+  for (b in seq_len(n_x_blocks)) {
+    pos <- (b - 1L) * m
+    # block b holds X shifted down by (b - 1) rows (b = 1 is contemporaneous).
+    X_joined[, pos + seq_len(m)] <- roll_rows(X, b - 1L)
+  }
+  for (b in seq_len(n_e_blocks)) {
+    pos <- (n_x_blocks + b - 1L) * m
+    X_joined[, pos + seq_len(m)] <- roll_rows(ee_full, b)
+  }
+  X_joined
 }
 
 

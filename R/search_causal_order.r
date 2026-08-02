@@ -375,7 +375,10 @@ kernel_mi_prepare_lowrank <- function(x, kappa, sigma) {
   d <- ncol(G)
   A <- crossprod(G) # t(G) %*% G
   Minv <- solve(c0 * diag(d) + A)
-  list(G = G, Minv = Minv, A = A, c0 = c0)
+  # Minv %*% A %*% Minv is independent of variable 2; precompute it here so
+  # kernel_mi_core_lowrank() does a single d1 x d2 product per candidate.
+  Q <- Minv %*% A %*% Minv
+  list(G = G, Minv = Minv, A = A, c0 = c0, Q = Q)
 }
 
 
@@ -399,7 +402,7 @@ kernel_mi_core_lowrank <- function(prep1, x2, kappa, sigma) {
   d2 <- ncol(G2)
   A2 <- crossprod(G2)
   P <- crossprod(prep1$G, G2) # t(G1) %*% G2, d1 x d2
-  D <- crossprod(P, prep1$Minv %*% (prep1$A %*% (prep1$Minv %*% P)))
+  D <- crossprod(P, prep1$Q %*% P)
   Cprime <- 2 * c0 * diag(d2) + A2 - D
 
   # logdet(S) and logdet(tmp2^2) each carry a 2*n*log(c0) term that cancels

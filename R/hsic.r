@@ -101,6 +101,107 @@ hsic_gram_matrix <- function(x, width) {
 }
 
 
+#' Precompute the per-variable parts of the HSIC gamma test
+#'
+#' Computes everything [hsic_test_gamma()] derives from one argument alone
+#' (kernel width, centered Gram matrix, and the mean term `mu`), so callers
+#' that test many pairs sharing a variable can reuse the O(n^2) Gram
+#' computation. Validation (n >= 6, no NA, constant input) matches
+#' [hsic_test_gamma()] exactly.
+#'
+#' @param x numeric vector or matrix (n x d)
+#' @return list(n, is_const, Kc = centered Gram matrix, mu = mean term);
+#'   `Kc`/`mu` are NULL when `is_const` is TRUE
+#' @keywords internal
+hsic_precompute <- function(x) {
+  X <- as_hsic_matrix(x)
+  n <- nrow(X)
+  if (n < 6) {
+    stop(
+      "hsic_test_gamma(): the gamma-approximation test requires at least ",
+      "6 observations (got n = ", n, ").",
+      call. = FALSE
+    )
+  }
+  if (anyNA(X)) {
+    stop("hsic_test_gamma(): X and Y must not contain NA/NaN values.", call. = FALSE)
+  }
+  if (all(apply(X, 2, stats::sd) == 0)) {
+    return(list(n = n, is_const = TRUE, Kc = NULL, mu = NULL))
+  }
+  width <- hsic_kernel_width(X)
+  gm <- hsic_gram_matrix(X, width)
+  K <- gm$K
+  diag(K) <- 0
+  mu <- sum(K) / n / (n - 1)
+  list(n = n, is_const = FALSE, Kc = gm$Kc, mu = mu)
+}
+
+
+#' HSIC gamma test from precomputed parts
+#'
+#' Bit-identical to `hsic_test_gamma(X, Y)` when `pre_x`/`pre_y` are
+#' [hsic_precompute()] of the same arguments in the same roles. The roles
+#' matter at the last-ulp level: the `mean_` expression is not symmetric in
+#' floating point, so `pre_x` must correspond to the first argument of the
+#' original call being replaced.
+#'
+#' @param pre_x precomputed first argument (from [hsic_precompute()])
+#' @param pre_y precomputed second argument
+#' @return list(stat = HSIC test statistic, p = gamma-approximated p-value)
+#' @keywords internal
+hsic_gamma_from_pre <- function(pre_x, pre_y) {
+  if (pre_x$n != pre_y$n) {
+    stop(
+      "hsic_test_gamma(): X and Y must have the same length ",
+      "(number of observations).",
+      call. = FALSE
+    )
+  }
+  if (pre_x$is_const || pre_y$is_const) {
+    return(list(stat = 0, p = 1))
+  }
+  n <- pre_x$n
+  Kc <- pre_x$Kc
+  Lc <- pre_y$Kc
+
+  stat <- sum(Kc * Lc) / n
+
+  var_mat <- (Kc * Lc / 6)^2
+  var_ <- (sum(var_mat) - sum(diag(var_mat))) / n / (n - 1)
+  var_ <- 72 * (n - 4) * (n - 5) / n / (n - 1) / (n - 2) / (n - 3) * var_
+
+  mu_x <- pre_x$mu
+  mu_y <- pre_y$mu
+  mean_ <- (1 + mu_x * mu_y - mu_x - mu_y) / n
+
+  alpha <- mean_^2 / var_
+  beta <- var_ * n / mean_
+
+  p <- stats::pgamma(stat, shape = alpha, scale = beta, lower.tail = FALSE)
+
+  list(stat = stat, p = p)
+}
+
+
+#' Lazy per-column cache of [hsic_precompute()] results
+#'
+#' Returns a closure `f(k)` that computes `hsic_precompute(X[, k])` on first
+#' use and returns the cached object afterwards. For callers that test many
+#' pairs of columns of a fixed matrix.
+#'
+#' @param X numeric matrix whose columns will be tested
+#' @return function(k) returning the precompute object for column k
+#' @keywords internal
+hsic_pre_col_cache <- function(X) {
+  cache <- vector("list", ncol(X))
+  function(k) {
+    if (is.null(cache[[k]])) cache[[k]] <<- hsic_precompute(X[, k])
+    cache[[k]]
+  }
+}
+
+
 #' HSIC independence test with gamma approximation
 #'
 #' Faithful port of `hsic_test_gamma()` (hsic.py). O(n^2) in the sample size

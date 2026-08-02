@@ -134,13 +134,13 @@ lingam_rcd_bootstrap <- function(X,
       te <- if (compute_total_effects) {
         has_na_row <- apply(B, 1, anyNA)
         TE <- matrix(0, n_features, n_features)
+        TE_all <- calculate_total_effects_all(B)
         for (to_idx in seq_len(n_features)) {
-          for (from_idx in M[[to_idx]]) {
-            TE[to_idx, from_idx] <- if (has_na_row[from_idx]) {
-              NA_real_
-            } else {
-              calculate_total_effect(B, from_idx, to_idx)
-            }
+          from_idx <- M[[to_idx]]
+          if (length(from_idx) > 0) {
+            TE[to_idx, from_idx] <- ifelse(
+              has_na_row[from_idx], NA_real_, TE_all[to_idx, from_idx]
+            )
           }
         }
         TE

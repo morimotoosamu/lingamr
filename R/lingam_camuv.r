@@ -175,6 +175,20 @@ camuv_is_independent <- function(X, Y, independence, alpha, ind_corr) {
 camuv_get_neighborhoods <- function(X, independence, alpha, ind_corr) {
   d <- ncol(X)
   N <- rep(list(integer(0)), d)
+  if (independence == "hsic") {
+    # every column enters d - 1 pairwise tests; precompute each column's
+    # O(n^2) Gram parts once instead of once per pair
+    pres <- lapply(seq_len(d), function(k) hsic_precompute(X[, k]))
+    for (i in seq_len(d - 1L)) {
+      for (j in seq.int(i + 1L, d)) {
+        if (!(hsic_gamma_from_pre(pres[[i]], pres[[j]])$p > alpha)) {
+          N[[i]] <- c(N[[i]], j)
+          N[[j]] <- c(N[[j]], i)
+        }
+      }
+    }
+    return(N)
+  }
   for (i in seq_len(d - 1L)) {
     for (j in seq.int(i + 1L, d)) {
       if (!camuv_is_independent(X[, i], X[, j], independence, alpha, ind_corr)) {
@@ -260,13 +274,21 @@ camuv_check_prior_knowledge <- function(pk_forbidden, parents, child) {
 #' @param Y current residual matrix
 #' @param pk_forbidden forbidden-cause list, or NULL
 #' @param reg_fn regressor function
+#' @param get_residual function(v, ids) returning the residual of `X[, v]`
+#'   regressed on `X[, ids]`; defaults to an uncached [camuv_get_residual()]
+#'   call. [camuv_find_parents()] passes a memoized version, since the same
+#'   (child, predictor set) recurs across subset rescans.
 #' @inheritParams camuv_is_independent
 #' @return list(child = index or NA, independent = logical); `independent`
 #'   reports whether the winning candidate's dependence value clears the
 #'   configured threshold (alpha / ind_corr)
 #' @keywords internal
 camuv_get_child <- function(X, vars, P, N, Y, pk_forbidden,
-                            independence, alpha, ind_corr, reg_fn) {
+                            independence, alpha, ind_corr, reg_fn,
+                            get_residual = NULL) {
+  if (is.null(get_residual)) {
+    get_residual <- function(v, ids) camuv_get_residual(X, v, ids, reg_fn)
+  }
   prev_independence <- if (independence == "hsic") 0.0 else 1.0
   max_independence_child <- NA_integer_
 
@@ -276,7 +298,7 @@ camuv_get_child <- function(X, vars, P, N, Y, pk_forbidden,
     if (camuv_check_prior_knowledge(pk_forbidden, parents, child)) next
     if (!camuv_check_correlation(child, parents, N)) next
 
-    residual <- camuv_get_residual(X, child, union(parents, P[[child]]), reg_fn)
+    residual <- get_residual(child, union(parents, P[[child]]))
     res <- camuv_is_independent_by(
       matrix(residual, ncol = 1L), Y[, parents, drop = FALSE],
       prev_independence, independence
@@ -347,6 +369,18 @@ camuv_find_parents <- function(X, maxnum_vals, N, pk_forbidden,
   t <- 2L
   Y <- X
 
+  # The regression residual is fully determined by (variable, exact predictor
+  # vector) and X; memoize it so subset rescans (t resets to 2 after every
+  # change) and the final pruning pass do not refit identical GAMs.
+  res_env <- new.env(parent = emptyenv())
+  cached_residual <- function(v, ids) {
+    key <- paste(v, paste(ids, collapse = ","), sep = "|")
+    if (!exists(key, envir = res_env, inherits = FALSE)) {
+      assign(key, camuv_get_residual(X, v, ids, reg_fn), envir = res_env)
+    }
+    get(key, envir = res_env, inherits = FALSE)
+  }
+
   repeat {
     changed <- FALSE
     # itertools.combinations() yields nothing for t > d; combn() would error
@@ -358,7 +392,8 @@ camuv_find_parents <- function(X, maxnum_vals, N, pk_forbidden,
         if (!camuv_check_identified_causality(vars, P)) next
 
         gc <- camuv_get_child(X, vars, P, N, Y, pk_forbidden,
-                              independence, alpha, ind_corr, reg_fn)
+                              independence, alpha, ind_corr, reg_fn,
+                              get_residual = cached_residual)
         if (is.na(gc$child)) next
         if (!gc$independent) next
 
@@ -373,7 +408,7 @@ camuv_find_parents <- function(X, maxnum_vals, N, pk_forbidden,
         for (parent in parents) {
           P[[child]] <- union(P[[child]], parent)
           changed <- TRUE
-          Y[, child] <- camuv_get_residual(X, child, P[[child]], reg_fn)
+          Y[, child] <- cached_residual(child, P[[child]])
         }
       }
     }
@@ -387,12 +422,13 @@ camuv_find_parents <- function(X, maxnum_vals, N, pk_forbidden,
   }
 
   # Final pruning: drop parents whose residual is independent of the child's
-  # residual computed without that parent.
+  # residual computed without that parent. residual_j depends only on
+  # (j, P[[j]]) and repeats across children i, so the memoization pays here too.
   for (i in seq_len(d)) {
     non_parents <- integer(0)
     for (j in P[[i]]) {
-      residual_i <- camuv_get_residual(X, i, setdiff(P[[i]], j), reg_fn)
-      residual_j <- camuv_get_residual(X, j, P[[j]], reg_fn)
+      residual_i <- cached_residual(i, setdiff(P[[i]], j))
+      residual_j <- cached_residual(j, P[[j]])
       if (camuv_is_independent(residual_i, residual_j,
                                independence, alpha, ind_corr)) {
         non_parents <- c(non_parents, j)
@@ -586,16 +622,23 @@ lingam_camuv <- function(X,
   P <- camuv_find_parents(X, num_explanatory_vals, N, pk_forbidden,
                           independence, alpha, ind_corr, reg_fn)
 
-  # Remaining dependent pairs with no identified edge: UCP / UBP candidates
+  # Remaining dependent pairs with no identified edge: UCP / UBP candidates.
+  # Each variable's parent-adjusted residual is pair-independent, so compute
+  # it (lazily) once instead of once per pair.
   U <- list()
+  pair_res <- vector("list", d)
+  pair_residual <- function(v) {
+    if (is.null(pair_res[[v]])) {
+      pair_res[[v]] <<- camuv_get_residual(X, v, P[[v]], reg_fn)
+    }
+    pair_res[[v]]
+  }
   for (i in seq_len(d - 1L)) {
     for (j in seq.int(i + 1L, d)) {
       if (i %in% P[[j]] || j %in% P[[i]]) next
       if (!(j %in% N[[i]]) || !(i %in% N[[j]])) next
 
-      i_residual <- camuv_get_residual(X, i, P[[i]], reg_fn)
-      j_residual <- camuv_get_residual(X, j, P[[j]], reg_fn)
-      if (!camuv_is_independent(i_residual, j_residual,
+      if (!camuv_is_independent(pair_residual(i), pair_residual(j),
                                 independence, alpha, ind_corr)) {
         U[[length(U) + 1L]] <- c(i, j)
       }
