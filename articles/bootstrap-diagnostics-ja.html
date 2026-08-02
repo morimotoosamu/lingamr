@@ -224,7 +224,7 @@ LiNGAM記事</a>の非ガウス性の実験を参照。</p>
 <span><span class="co">#&gt;   iteration 80 / 100</span></span>
 <span><span class="co">#&gt;   iteration 90 / 100</span></span>
 <span><span class="co">#&gt;   iteration 100 / 100</span></span>
-<span><span class="co">#&gt; Completed in 2.6 seconds.</span></span>
+<span><span class="co">#&gt; Completed in 3.2 seconds.</span></span>
 <span></span>
 <span><span class="va">bs_model</span></span>
 <span><span class="co">#&gt; BootstrapResult: 100 samplings, 6 features</span></span></code></pre></div>
@@ -474,10 +474,10 @@ LiNGAM記事</a>の測定誤差パラドックスに実例がある。</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reversed_adjacency</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">fit_result</span><span class="op">$</span><span class="va">adjacency_matrix</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/evaluate_model_fit.html">evaluate_model_fit</a></span><span class="op">(</span><span class="va">reversed_adjacency</span>, <span class="va">sample6</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA</span></span>
-<span><span class="co">#&gt; 1   0           15    0           NA       23023.7   1   1   NA   1   1     0</span></span>
-<span><span class="co">#&gt;         AIC       BIC   LogLik</span></span>
-<span><span class="co">#&gt; 1 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
+<span><span class="co">#&gt;   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI</span></span>
+<span><span class="co">#&gt; 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1</span></span>
+<span><span class="co">#&gt;   RMSEA       AIC       BIC   LogLik</span></span>
+<span><span class="co">#&gt; 1     0 -4264.864 -4166.708 2152.432</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="broomとの連携tidy-glance">broomとの連携（tidy / glance）<a class="anchor" aria-label="anchor" href="#broom%E3%81%A8%E3%81%AE%E9%80%A3%E6%90%BAtidy-glance"></a>

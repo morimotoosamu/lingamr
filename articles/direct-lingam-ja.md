@@ -774,7 +774,7 @@ t_cmp_ica    <- system.time(res_cmp_ica    <- pcalg::lingam(as.matrix(d_cmp$data
 cat(sprintf("Direct LiNGAM : %.2f sec\nICA-LiNGAM    : %.2f sec\n",
             t_cmp_direct["elapsed"], t_cmp_ica["elapsed"]))
 #> Direct LiNGAM : 0.01 sec
-#> ICA-LiNGAM    : 0.01 sec
+#> ICA-LiNGAM    : 0.02 sec
 ```
 
 ### 推定係数の比較
@@ -897,8 +897,8 @@ cat(sprintf(
   15^3 / 10^3,
   t15["elapsed"] / max(t10["elapsed"], 0.01)
 ))
-#> p = 10 : 0.02 sec
-#> p = 15 : 0.05 sec
+#> p = 10 : 0.03 sec
+#> p = 15 : 0.06 sec
 #> theoretical factor 3.4x vs. observed 2.1x
 ```
 
@@ -915,8 +915,8 @@ cat(sprintf(
   t10_ica["elapsed"], t15_ica["elapsed"]
 ))
 #>               p = 10   p = 15
-#> Direct LiNGAM :  0.02 sec   0.05 sec
-#> ICA-LiNGAM    :  0.01 sec   0.02 sec
+#> Direct LiNGAM :  0.03 sec   0.06 sec
+#> ICA-LiNGAM    :  0.02 sec   0.03 sec
 ```
 
 $`p`$ が大きくなるほどDirect
@@ -1174,7 +1174,7 @@ bs_paradox <- paradox$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 1.2 seconds.
+#> Completed in 1.5 seconds.
 
 # Occurrence probability of each direction (row = to, column = from)
 bs_paradox |>

@@ -151,7 +151,7 @@ bs_model <- x1k$data |>
 #>   iteration 80 / 100
 #>   iteration 90 / 100
 #>   iteration 100 / 100
-#> Completed in 2.6 seconds.
+#> Completed in 3.2 seconds.
 
 bs_model
 #> BootstrapResult: 100 samplings, 6 features
@@ -431,10 +431,10 @@ evaluate_model_fit(fit_result, sample6$data)
 
 reversed_adjacency <- t(fit_result$adjacency_matrix)
 evaluate_model_fit(reversed_adjacency, sample6$data)
-#>   DoF DoF Baseline chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI RMSEA
-#> 1   0           15    0           NA       23023.7   1   1   NA   1   1     0
-#>         AIC       BIC   LogLik
-#> 1 -4264.864 -4166.708 2152.432
+#>   DoF DoF Baseline         chi2 chi2 p-value chi2 Baseline CFI GFI AGFI NFI TLI
+#> 1   0           15 2.664535e-11           NA       23023.7   1   1   NA   1   1
+#>   RMSEA       AIC       BIC   LogLik
+#> 1     0 -4264.864 -4166.708 2152.432
 ```
 
 ## broomとの連携（tidy / glance）

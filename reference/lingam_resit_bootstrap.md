@@ -106,7 +106,7 @@ if (requireNamespace("mgcv", quietly = TRUE)) {
 }
 #> Bootstrap: 3 iterations, RESIT (sequential)
 #>   iteration 1 / 3
-#> Completed in 1.2 seconds.
+#> Completed in 1.1 seconds.
 #>      [,1] [,2] [,3] [,4]
 #> [1,]    0    0    0    0
 #> [2,]    1    0    0    0

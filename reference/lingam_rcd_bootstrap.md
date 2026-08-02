@@ -141,7 +141,7 @@ bs <- lingam_rcd_bootstrap(confounded$data,
 )
 #> Bootstrap: 5 iterations, RCD (sequential)
 #>   iteration 1 / 5
-#> Completed in 6.7 seconds.
+#> Completed in 1.9 seconds.
 get_probabilities(bs)
 #>      [,1] [,2] [,3] [,4] [,5] [,6]
 #> [1,]  0.0  0.4    0  0.0    0  0.4
