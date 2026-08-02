@@ -13,7 +13,9 @@ bootstrap_with_imputation(
   prior_knowledge = NULL,
   apply_prior_knowledge_softly = FALSE,
   seed = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  parallel = FALSE,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -42,10 +44,18 @@ custom \code{cd_fit}.}
 \item{apply_prior_knowledge_softly}{Apply prior knowledge softly (logical).
 Same restriction as \code{prior_knowledge}.}
 
-\item{seed}{Random seed (NULL allowed). Set once before the bootstrap loop;
-governs both the resampling and (via the global RNG) \code{mice}'s imputation.}
+\item{seed}{Random seed (NULL allowed). In sequential mode it is set once
+before the bootstrap loop and governs both the resampling and (via the
+global RNG) \code{mice}'s imputation; in parallel mode it seeds the L'Ecuyer
+parallel random-number streams (see Details).}
 
 \item{verbose}{Whether to display progress (logical)}
+
+\item{parallel}{Whether to use parallel processing (logical)}
+
+\item{n_cores}{Number of cores to use (integer, NULL allowed). When \code{NULL},
+the number of cores is limited to a maximum of 2 for safety. Ignored when
+\code{parallel = FALSE}.}
 }
 \value{
 An \code{ImputationBootstrapResult} (list) containing:
@@ -97,11 +107,13 @@ failing iteration (e.g. \code{mice} fails to converge on a particular resample)
 is skipped with a warning, and only if every iteration fails is an error
 raised, mirroring \code{\link[=lingam_direct_bootstrap]{lingam_direct_bootstrap()}}.
 
-\strong{Sequential execution only.} Unlike \code{\link[=lingam_direct_bootstrap]{lingam_direct_bootstrap()}}, this
-function does not support \code{parallel = TRUE}; the upstream Python
-implementation is sequential as well. If needed in the future, it can be
-parallelized following the \code{parallel::makePSOCKcluster()} pattern used by
-\code{\link[=lingam_direct_bootstrap]{lingam_direct_bootstrap()}}.
+\strong{On reproducibility:} During parallel execution, L'Ecuyer parallel random
+number streams via \code{parallel::clusterSetRNGStream()} are used. Results are
+reproducible given the same \code{seed} and same \code{n_cores}, but they do not
+numerically match the results of sequential execution (\code{parallel = FALSE}).
+If you need results that exactly match the sequential version, use
+\code{parallel = FALSE}. The 'mice' imputation draws from each worker's global
+RNG, so it is covered by the same stream mechanism.
 }
 \examples{
 set.seed(1)

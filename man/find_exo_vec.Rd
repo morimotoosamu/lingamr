@@ -4,7 +4,7 @@
 \alias{find_exo_vec}
 \title{Find the most sink-like candidate variable}
 \usage{
-find_exo_vec(X, Uc, U, independence, Cov)
+find_exo_vec(X, Uc, U, independence, Cov, pre_col = NULL)
 }
 \arguments{
 \item{X}{data matrix}
@@ -17,6 +17,11 @@ find_exo_vec(X, Uc, U, independence, Cov)
 
 \item{Cov}{precomputed \code{stats::cov(X)}, since \code{X} is invariant across all
 calls within a single \code{\link[=parce_search_causal_order]{parce_search_causal_order()}} search}
+
+\item{pre_col}{per-column HSIC precompute cache from
+\code{\link[=hsic_pre_col_cache]{hsic_pre_col_cache()}}, or NULL to build one locally (hsic only); the
+predictor columns are invariant across the whole search, so their Gram
+matrices are shared like \code{Cov}}
 }
 \value{
 list(m = selected variable index, eval = its evaluation value)

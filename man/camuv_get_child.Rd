@@ -14,7 +14,8 @@ camuv_get_child(
   independence,
   alpha,
   ind_corr,
-  reg_fn
+  reg_fn,
+  get_residual = NULL
 )
 }
 \arguments{
@@ -37,6 +38,11 @@ camuv_get_child(
 \item{ind_corr}{rejection threshold (fcorr only)}
 
 \item{reg_fn}{regressor function}
+
+\item{get_residual}{function(v, ids) returning the residual of \code{X[, v]}
+regressed on \code{X[, ids]}; defaults to an uncached \code{\link[=camuv_get_residual]{camuv_get_residual()}}
+call. \code{\link[=camuv_find_parents]{camuv_find_parents()}} passes a memoized version, since the same
+(child, predictor set) recurs across subset rescans.}
 }
 \value{
 list(child = index or NA, independent = logical); \code{independent}

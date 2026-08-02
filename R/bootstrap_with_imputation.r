@@ -191,9 +191,15 @@ validate_cd_fit_output <- function(cd_res, p, n_datasets) {
 #'   custom `cd_fit`.
 #' @param apply_prior_knowledge_softly Apply prior knowledge softly (logical).
 #'   Same restriction as `prior_knowledge`.
-#' @param seed Random seed (NULL allowed). Set once before the bootstrap loop;
-#'   governs both the resampling and (via the global RNG) `mice`'s imputation.
+#' @param seed Random seed (NULL allowed). In sequential mode it is set once
+#'   before the bootstrap loop and governs both the resampling and (via the
+#'   global RNG) `mice`'s imputation; in parallel mode it seeds the L'Ecuyer
+#'   parallel random-number streams (see Details).
 #' @param verbose Whether to display progress (logical)
+#' @param parallel Whether to use parallel processing (logical)
+#' @param n_cores Number of cores to use (integer, NULL allowed). When `NULL`,
+#'   the number of cores is limited to a maximum of 2 for safety. Ignored when
+#'   `parallel = FALSE`.
 #' @return An `ImputationBootstrapResult` (list) containing:
 #' * `causal_orders`: `n_sampling` x `p` integer matrix (1-based causal order per iteration).
 #' * `adjacency_matrices`: `array(n_sampling, n_repeats, p, p)`; `[, , i, j]`
@@ -232,11 +238,13 @@ validate_cd_fit_output <- function(cd_res, p, n_datasets) {
 #' is skipped with a warning, and only if every iteration fails is an error
 #' raised, mirroring [lingam_direct_bootstrap()].
 #'
-#' **Sequential execution only.** Unlike [lingam_direct_bootstrap()], this
-#' function does not support `parallel = TRUE`; the upstream Python
-#' implementation is sequential as well. If needed in the future, it can be
-#' parallelized following the `parallel::makePSOCKcluster()` pattern used by
-#' [lingam_direct_bootstrap()].
+#' **On reproducibility:** During parallel execution, L'Ecuyer parallel random
+#' number streams via `parallel::clusterSetRNGStream()` are used. Results are
+#' reproducible given the same `seed` and same `n_cores`, but they do not
+#' numerically match the results of sequential execution (`parallel = FALSE`).
+#' If you need results that exactly match the sequential version, use
+#' `parallel = FALSE`. The 'mice' imputation draws from each worker's global
+#' RNG, so it is covered by the same stream mechanism.
 #' @export
 #' @examples
 #' set.seed(1)
@@ -264,7 +272,9 @@ bootstrap_with_imputation <- function(X,
                                       prior_knowledge = NULL,
                                       apply_prior_knowledge_softly = FALSE,
                                       seed = NULL,
-                                      verbose = TRUE) {
+                                      verbose = TRUE,
+                                      parallel = FALSE,
+                                      n_cores = NULL) {
   var_names <- if (is.data.frame(X)) names(X) else colnames(X)
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be a numeric matrix or data frame.", call. = FALSE)
@@ -314,48 +324,26 @@ bootstrap_with_imputation <- function(X,
   n <- nrow(X)
   p <- ncol(X)
 
-  if (!is.null(seed)) set.seed(seed)
-
-  if (verbose) {
-    message(sprintf("Bootstrap with imputation: %d iterations, n_repeats=%s (sequential)",
-      n_sampling, if (is.null(imputer)) as.character(n_repeats) else "determined by imputer"
-    ))
-    t_start <- proc.time()
-  }
-
-  results <- vector("list", n_sampling)
-  effective_n_repeats <- NULL
-
-  for (i in seq_len(n_sampling)) {
-    if (verbose && (i %% 10 == 0 || i == 1)) {
-      message(sprintf("  iteration %d / %d", i, n_sampling))
-    }
+  # One bootstrap iteration: resample -> impute -> joint causal discovery.
+  # Only the estimation calls themselves (imputer / cd_fit fitting, e.g. a
+  # resample on which mice fails to converge) are treated as recoverable,
+  # per-iteration stochastic failures. Validating their return values is a
+  # contract check: a violation raises outside the tryCatch()s and aborts the
+  # whole call (also under parLapply), not just this iteration.
+  run_one <- function(i) {
     idx <- sample(n, replace = TRUE)
     X_boot <- X[idx, , drop = FALSE]
 
-    # Only the estimation calls themselves (imputer / cd_fit fitting, e.g. a
-    # resample on which mice fails to converge) are treated as recoverable,
-    # per-iteration stochastic failures. Validating their return values
-    # (below, outside this tryCatch) is a contract check: a violation means
-    # the hook is broken and must abort the whole call, not just this
-    # iteration.
     imputer_attempt <- tryCatch({
       ds <- if (is.null(imputer)) default_imputer(X_boot, n_repeats) else imputer(X_boot)
       list(ok = TRUE, datasets = ds)
     }, error = function(e) list(ok = FALSE, message = conditionMessage(e)))
 
     if (!imputer_attempt$ok) {
-      results[[i]] <- list(ok = FALSE, iteration = i, message = imputer_attempt$message)
-      next
+      return(list(ok = FALSE, iteration = i, message = imputer_attempt$message))
     }
     datasets <- validate_imputer_output(imputer_attempt$datasets, X_boot)
     this_n_repeats <- length(datasets)
-    if (!is.null(effective_n_repeats) && this_n_repeats != effective_n_repeats) {
-      contract_violation(sprintf(
-        "imputer returned %d datasets in this iteration, but %d in a previous iteration; the count must be consistent across bootstrap iterations.",
-        this_n_repeats, effective_n_repeats
-      ))
-    }
 
     cd_fit_attempt <- tryCatch({
       res <- if (is.null(cd_fit)) {
@@ -367,8 +355,7 @@ bootstrap_with_imputation <- function(X,
     }, error = function(e) list(ok = FALSE, message = conditionMessage(e)))
 
     if (!cd_fit_attempt$ok) {
-      results[[i]] <- list(ok = FALSE, iteration = i, message = cd_fit_attempt$message)
-      next
+      return(list(ok = FALSE, iteration = i, message = cd_fit_attempt$message))
     }
     cd_res <- cd_fit_attempt$cd_res
     validate_cd_fit_output(cd_res, p, this_n_repeats)
@@ -381,7 +368,7 @@ bootstrap_with_imputation <- function(X,
       imp_res[r, , ] <- slice
     }
 
-    results[[i]] <- list(
+    list(
       ok = TRUE,
       idx = idx,
       causal_order = as.integer(cd_res$causal_order),
@@ -389,12 +376,52 @@ bootstrap_with_imputation <- function(X,
       imputation_results = imp_res,
       n_repeats = this_n_repeats
     )
-    if (is.null(effective_n_repeats)) effective_n_repeats <- this_n_repeats
+  }
+
+  cores <- resolve_bootstrap_cores(parallel, n_cores, n_sampling)
+  parallel <- cores$parallel
+  n_cores <- cores$n_cores
+
+  if (verbose) {
+    message(sprintf("Bootstrap with imputation: %d iterations, n_repeats=%s (%s)",
+      n_sampling, if (is.null(imputer)) as.character(n_repeats) else "determined by imputer",
+      bootstrap_mode_string(parallel, n_cores)
+    ))
+    t_start <- proc.time()
+  }
+
+  if (parallel) {
+    cl <- parallel::makePSOCKcluster(n_cores)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+
+    setup_cluster_worker(cl, lingam_multi_group)
+
+    if (!is.null(seed)) parallel::clusterSetRNGStream(cl, seed)
+
+    results <- parallel::parLapply(cl, seq_len(n_sampling), run_one)
+  } else {
+    if (!is.null(seed)) set.seed(seed)
+    results <- lapply(seq_len(n_sampling), function(i) {
+      if (verbose && (i %% 10 == 0 || i == 1)) {
+        message(sprintf("  iteration %d / %d", i, n_sampling))
+      }
+      run_one(i)
+    })
   }
 
   results <- filter_bootstrap_failures(results)
   n_success <- length(results)
-  n_repeats_final <- effective_n_repeats
+
+  # Cross-iteration consistency of the imputer's dataset count (workers cannot
+  # share state, so this contract check runs after collection in both modes).
+  repeats_seen <- vapply(results, function(r) r$n_repeats, integer(1))
+  if (length(unique(repeats_seen)) > 1L) {
+    contract_violation(sprintf(
+      "imputer returned differing numbers of datasets across bootstrap iterations (%s); the count must be consistent.",
+      paste(sort(unique(repeats_seen)), collapse = ", ")
+    ))
+  }
+  n_repeats_final <- repeats_seen[1]
 
   causal_orders <- matrix(0L, nrow = n_success, ncol = p)
   adjacency_matrices <- array(0, dim = c(n_success, n_repeats_final, p, p))

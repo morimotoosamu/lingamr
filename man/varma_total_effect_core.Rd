@@ -11,7 +11,8 @@ varma_total_effect_core(
   order,
   from_index,
   to_index,
-  from_lag
+  from_lag,
+  X_joined = NULL
 )
 }
 \arguments{
@@ -29,6 +30,10 @@ varma_total_effect_core(
 \item{to_index}{destination variable (1-based integer)}
 
 \item{from_lag}{lag of the source variable (non-negative integer)}
+
+\item{X_joined}{precomputed \code{\link[=varma_joined_design]{varma_joined_design()}} result, or NULL to
+build it here. The design depends only on (X, ee_full, order, from_lag),
+so the bootstrap builds it once per lag instead of once per variable pair.}
 }
 \value{
 the estimated total effect (scalar)

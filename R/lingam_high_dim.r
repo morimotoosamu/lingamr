@@ -79,7 +79,15 @@ calc_taus <- function(Y, yty, pa, ch, k, cond_sets, an_sets) {
   for (z in seq_along(cond_sets)) {
     cond <- cond_sets[[z]]
 
-    b <- pinv(yty[cond, cond, drop = FALSE]) %*% yty[cond, pa, drop = FALSE]
+    # the Gram submatrix is symmetric PSD: solve via Cholesky (much cheaper
+    # than pinv()'s SVD) and fall back to the pseudo-inverse only when the
+    # submatrix is numerically singular
+    S <- yty[cond, cond, drop = FALSE]
+    rhs <- yty[cond, pa, drop = FALSE]
+    b <- tryCatch(
+      chol2inv(chol(S)) %*% rhs,
+      error = function(e) pinv(S) %*% rhs
+    )
     resid <- as.numeric(Y[, pa] - Y[, cond, drop = FALSE] %*% b)
 
     resid_k_1 <- resid^(k - 1)

@@ -4,7 +4,7 @@
 \alias{parce_eval_independence}
 \title{Evaluate the independence of a residual against a fixed set of predictors}
 \usage{
-parce_eval_independence(X, predictors, R, independence)
+parce_eval_independence(X, predictors, R, independence, pre_col = NULL)
 }
 \arguments{
 \item{X}{data matrix}
@@ -14,6 +14,9 @@ parce_eval_independence(X, predictors, R, independence)
 \item{R}{residual vector}
 
 \item{independence}{"hsic" or "fcorr"}
+
+\item{pre_col}{per-column HSIC precompute cache from
+\code{\link[=hsic_pre_col_cache]{hsic_pre_col_cache()}}, or NULL to build one locally (hsic only)}
 }
 \value{
 evaluation value (Fisher-combined p-value for hsic, max

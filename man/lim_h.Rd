@@ -8,7 +8,9 @@
 lim_h(W, d)
 }
 \description{
-Acyclicity constraint h(W) and the matrix power term used in its gradient
-(Yu et al. 2019 formulation, as used by the Python source)
+\code{E = M^(d-1)} is computed by the sequential product for small \code{d}
+(bit-identical to the Python source's loop) and by binary exponentiation
+for larger \code{d}, where the O(d^4) sequential product starts to dominate;
+the switch only reorders floating-point multiplications.
 }
 \keyword{internal}

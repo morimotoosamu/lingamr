@@ -82,14 +82,40 @@ lim_loss_mixed <- function(W, X, con, W_dis_mask, W_con_mask) {
 }
 
 
+#' Matrix power by binary exponentiation
+#' @param M square matrix
+#' @param k positive integer exponent
+#' @return `M` raised to the `k`-th power
+#' @keywords internal
+lim_matpow <- function(M, k) {
+  R <- NULL
+  P <- M
+  while (k > 0) {
+    if (k %% 2 == 1) R <- if (is.null(R)) P else R %*% P
+    k <- k %/% 2
+    if (k > 0) P <- P %*% P
+  }
+  R
+}
+
+
 #' Acyclicity constraint h(W) and the matrix power term used in its gradient
 #' (Yu et al. 2019 formulation, as used by the Python source)
+#'
+#' `E = M^(d-1)` is computed by the sequential product for small `d`
+#' (bit-identical to the Python source's loop) and by binary exponentiation
+#' for larger `d`, where the O(d^4) sequential product starts to dominate;
+#' the switch only reorders floating-point multiplications.
 #' @keywords internal
 lim_h <- function(W, d) {
   M_h <- diag(d) + (W * W) / d
-  E <- M_h
-  if (d > 2) {
-    for (k in seq_len(d - 2)) E <- E %*% M_h
+  if (d <= 16) {
+    E <- M_h
+    if (d > 2) {
+      for (k in seq_len(d - 2)) E <- E %*% M_h
+    }
+  } else {
+    E <- lim_matpow(M_h, d - 1L)
   }
   h <- sum(t(E) * M_h) - d
   list(h = h, E = E)
@@ -255,9 +281,14 @@ lim_bic_loss <- function(W, X, is_continuous, is_poisson) {
         }
       } else {
         fam <- if (is_poisson) stats::poisson() else stats::binomial()
-        df <- data.frame(y = xi, X[, parents_i, drop = FALSE])
-        fit <- suppressWarnings(stats::glm(y ~ ., data = df, family = fam))
-        ll <- as.numeric(stats::logLik(fit))
+        # glm.fit() on the explicit design matrix skips glm()'s formula /
+        # model-frame machinery (the dominant cost when the local search
+        # rescores many candidate graphs). For these families
+        # logLik(glm) == rank - aic/2, computable from the glm.fit() output.
+        fit <- suppressWarnings(
+          stats::glm.fit(cbind(1, X[, parents_i, drop = FALSE]), xi, family = fam)
+        )
+        ll <- fit$rank - fit$aic / 2
         # quasi-separation (or a non-converged fit) can drive the logLik to
         # +-Inf/NaN; treat such a candidate as maximally bad rather than
         # letting Inf/NaN propagate into total_score.
@@ -267,8 +298,10 @@ lim_bic_loss <- function(W, X, is_continuous, is_poisson) {
     } else {
       b_full <- numeric(d)
       if (length(parents_i) > 0) {
-        fit <- stats::lm(xi ~ X[, parents_i, drop = FALSE])
-        coefs <- stats::coef(fit)
+        # lm.fit() on the explicit design matrix is what lm() calls
+        # internally; aliased (rank-deficient) columns still come back as NA
+        fit <- stats::lm.fit(cbind(1, X[, parents_i, drop = FALSE]), xi)
+        coefs <- fit$coefficients
         if (anyNA(coefs)) {
           # rank-deficient design (collinear/constant parent columns); reject
           # this candidate instead of letting NA propagate through the score

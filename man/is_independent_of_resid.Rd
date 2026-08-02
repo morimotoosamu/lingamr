@@ -12,7 +12,8 @@ is_independent_of_resid(
   MLHSICR,
   independence,
   ind_alpha,
-  ind_corr
+  ind_corr,
+  pre_col = NULL
 )
 }
 \arguments{
@@ -29,6 +30,11 @@ is_independent_of_resid(
 \item{ind_alpha}{significance level (hsic only)}
 
 \item{ind_corr}{rejection threshold (fcorr only)}
+
+\item{pre_col}{function(k) returning the HSIC precompute of \code{Y[, k]}
+(see \code{\link[=hsic_pre_col_cache]{hsic_pre_col_cache()}}), or NULL to test without caching; the
+\code{Y[, xj]} side of every test is shared across the sink candidates of
+one subset, and the residual side is shared across \code{xj_list}}
 }
 \value{
 TRUE if independent
