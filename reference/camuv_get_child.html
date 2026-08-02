@@ -91,7 +91,8 @@ independent), and each accepted candidate raises the bar for the next.</p>
 <span>  <span class="va">independence</span>,</span>
 <span>  <span class="va">alpha</span>,</span>
 <span>  <span class="va">ind_corr</span>,</span>
-<span>  <span class="va">reg_fn</span></span>
+<span>  <span class="va">reg_fn</span>,</span>
+<span>  get_residual <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -137,6 +138,13 @@ independent), and each accepted candidate raises the bar for the next.</p>
 
 <dt id="arg-reg-fn">reg_fn<a class="anchor" aria-label="anchor" href="#arg-reg-fn"></a></dt>
 <dd><p>regressor function</p></dd>
+
+
+<dt id="arg-get-residual">get_residual<a class="anchor" aria-label="anchor" href="#arg-get-residual"></a></dt>
+<dd><p>function(v, ids) returning the residual of <code>X[, v]</code>
+regressed on <code>X[, ids]</code>; defaults to an uncached <code><a href="camuv_get_residual.html">camuv_get_residual()</a></code>
+call. <code><a href="camuv_find_parents.html">camuv_find_parents()</a></code> passes a memoized version, since the same
+(child, predictor set) recurs across subset rescans.</p></dd>
 
 </dl></div>
     <div class="section level2">

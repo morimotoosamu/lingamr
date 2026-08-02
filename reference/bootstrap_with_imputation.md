@@ -21,7 +21,9 @@ bootstrap_with_imputation(
   prior_knowledge = NULL,
   apply_prior_knowledge_softly = FALSE,
   seed = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  parallel = FALSE,
+  n_cores = NULL
 )
 ```
 
@@ -69,13 +71,24 @@ bootstrap_with_imputation(
 
 - seed:
 
-  Random seed (NULL allowed). Set once before the bootstrap loop;
-  governs both the resampling and (via the global RNG) `mice`'s
-  imputation.
+  Random seed (NULL allowed). In sequential mode it is set once before
+  the bootstrap loop and governs both the resampling and (via the global
+  RNG) `mice`'s imputation; in parallel mode it seeds the L'Ecuyer
+  parallel random-number streams (see Details).
 
 - verbose:
 
   Whether to display progress (logical)
+
+- parallel:
+
+  Whether to use parallel processing (logical)
+
+- n_cores:
+
+  Number of cores to use (integer, NULL allowed). When `NULL`, the
+  number of cores is limited to a maximum of 2 for safety. Ignored when
+  `parallel = FALSE`.
 
 ## Value
 
@@ -135,14 +148,15 @@ skipped with a warning, and only if every iteration fails is an error
 raised, mirroring
 [`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md).
 
-**Sequential execution only.** Unlike
-[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md),
-this function does not support `parallel = TRUE`; the upstream Python
-implementation is sequential as well. If needed in the future, it can be
-parallelized following the
-[`parallel::makePSOCKcluster()`](https://rdrr.io/r/parallel/makeCluster.html)
-pattern used by
-[`lingam_direct_bootstrap()`](https://morimotoosamu.github.io/lingamr/reference/lingam_direct_bootstrap.md).
+**On reproducibility:** During parallel execution, L'Ecuyer parallel
+random number streams via
+[`parallel::clusterSetRNGStream()`](https://rdrr.io/r/parallel/RngStream.html)
+are used. Results are reproducible given the same `seed` and same
+`n_cores`, but they do not numerically match the results of sequential
+execution (`parallel = FALSE`). If you need results that exactly match
+the sequential version, use `parallel = FALSE`. The 'mice' imputation
+draws from each worker's global RNG, so it is covered by the same stream
+mechanism.
 
 ## Examples
 

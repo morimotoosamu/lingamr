@@ -87,7 +87,9 @@ order. R port of the Python <code>lingam.tools.bootstrap_with_imputation()</code
 <span>  prior_knowledge <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  apply_prior_knowledge_softly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -135,12 +137,24 @@ Same restriction as <code>prior_knowledge</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Random seed (NULL allowed). Set once before the bootstrap loop;
-governs both the resampling and (via the global RNG) <code>mice</code>'s imputation.</p></dd>
+<dd><p>Random seed (NULL allowed). In sequential mode it is set once
+before the bootstrap loop and governs both the resampling and (via the
+global RNG) <code>mice</code>'s imputation; in parallel mode it seeds the L'Ecuyer
+parallel random-number streams (see Details).</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Whether to display progress (logical)</p></dd>
+
+
+<dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
+<dd><p>Whether to use parallel processing (logical)</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>Number of cores to use (integer, NULL allowed). When <code>NULL</code>,
+the number of cores is limited to a maximum of 2 for safety. Ignored when
+<code>parallel = FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -179,11 +193,13 @@ collapse the <code>n_repeats</code> dimension (aggregating by median or mean) in
 failing iteration (e.g. <code>mice</code> fails to converge on a particular resample)
 is skipped with a warning, and only if every iteration fails is an error
 raised, mirroring <code><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>.</p>
-<p><strong>Sequential execution only.</strong> Unlike <code><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>, this
-function does not support <code>parallel = TRUE</code>; the upstream Python
-implementation is sequential as well. If needed in the future, it can be
-parallelized following the <code><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">parallel::makePSOCKcluster()</a></code> pattern used by
-<code><a href="lingam_direct_bootstrap.html">lingam_direct_bootstrap()</a></code>.</p>
+<p><strong>On reproducibility:</strong> During parallel execution, L'Ecuyer parallel random
+number streams via <code><a href="https://rdrr.io/r/parallel/RngStream.html" class="external-link">parallel::clusterSetRNGStream()</a></code> are used. Results are
+reproducible given the same <code>seed</code> and same <code>n_cores</code>, but they do not
+numerically match the results of sequential execution (<code>parallel = FALSE</code>).
+If you need results that exactly match the sequential version, use
+<code>parallel = FALSE</code>. The 'mice' imputation draws from each worker's global
+RNG, so it is covered by the same stream mechanism.</p>
     </div>
 
     <div class="section level2">

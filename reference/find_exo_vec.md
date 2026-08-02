@@ -8,7 +8,7 @@ the residual is from those explanatory variables.
 ## Usage
 
 ``` r
-find_exo_vec(X, Uc, U, independence, Cov)
+find_exo_vec(X, Uc, U, independence, Cov, pre_col = NULL)
 ```
 
 ## Arguments
@@ -35,6 +35,14 @@ find_exo_vec(X, Uc, U, independence, Cov)
   within a single
   [`parce_search_causal_order()`](https://morimotoosamu.github.io/lingamr/reference/parce_search_causal_order.md)
   search
+
+- pre_col:
+
+  per-column HSIC precompute cache from
+  [`hsic_pre_col_cache()`](https://morimotoosamu.github.io/lingamr/reference/hsic_pre_col_cache.md),
+  or NULL to build one locally (hsic only); the predictor columns are
+  invariant across the whole search, so their Gram matrices are shared
+  like `Cov`
 
 ## Value
 

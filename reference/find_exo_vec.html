@@ -72,7 +72,7 @@ independent the residual is from those explanatory variables.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">find_exo_vec</span><span class="op">(</span><span class="va">X</span>, <span class="va">Uc</span>, <span class="va">U</span>, <span class="va">independence</span>, <span class="va">Cov</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">find_exo_vec</span><span class="op">(</span><span class="va">X</span>, <span class="va">Uc</span>, <span class="va">U</span>, <span class="va">independence</span>, <span class="va">Cov</span>, pre_col <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -98,6 +98,13 @@ independent the residual is from those explanatory variables.</p>
 <dt id="arg-cov">Cov<a class="anchor" aria-label="anchor" href="#arg-cov"></a></dt>
 <dd><p>precomputed <code>stats::cov(X)</code>, since <code>X</code> is invariant across all
 calls within a single <code><a href="parce_search_causal_order.html">parce_search_causal_order()</a></code> search</p></dd>
+
+
+<dt id="arg-pre-col">pre_col<a class="anchor" aria-label="anchor" href="#arg-pre-col"></a></dt>
+<dd><p>per-column HSIC precompute cache from
+<code><a href="hsic_pre_col_cache.html">hsic_pre_col_cache()</a></code>, or NULL to build one locally (hsic only); the
+predictor columns are invariant across the whole search, so their Gram
+matrices are shared like <code>Cov</code></p></dd>
 
 </dl></div>
     <div class="section level2">

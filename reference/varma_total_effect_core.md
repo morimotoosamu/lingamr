@@ -17,7 +17,8 @@ varma_total_effect_core(
   order,
   from_index,
   to_index,
-  from_lag
+  from_lag,
+  X_joined = NULL
 )
 ```
 
@@ -51,6 +52,14 @@ varma_total_effect_core(
 - from_lag:
 
   lag of the source variable (non-negative integer)
+
+- X_joined:
+
+  precomputed
+  [`varma_joined_design()`](https://morimotoosamu.github.io/lingamr/reference/varma_joined_design.md)
+  result, or NULL to build it here. The design depends only on (X,
+  ee_full, order, from_lag), so the bootstrap builds it once per lag
+  instead of once per variable pair.
 
 ## Value
 

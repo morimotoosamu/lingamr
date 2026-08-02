@@ -73,7 +73,8 @@ lines).</p>
 <span>  <span class="va">MLHSICR</span>,</span>
 <span>  <span class="va">independence</span>,</span>
 <span>  <span class="va">ind_alpha</span>,</span>
-<span>  <span class="va">ind_corr</span></span>
+<span>  <span class="va">ind_corr</span>,</span>
+<span>  pre_col <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -107,6 +108,13 @@ lines).</p>
 
 <dt id="arg-ind-corr">ind_corr<a class="anchor" aria-label="anchor" href="#arg-ind-corr"></a></dt>
 <dd><p>rejection threshold (fcorr only)</p></dd>
+
+
+<dt id="arg-pre-col">pre_col<a class="anchor" aria-label="anchor" href="#arg-pre-col"></a></dt>
+<dd><p>function(k) returning the HSIC precompute of <code>Y[, k]</code>
+(see <code><a href="hsic_pre_col_cache.html">hsic_pre_col_cache()</a></code>), or NULL to test without caching; the
+<code>Y[, xj]</code> side of every test is shared across the sink candidates of
+one subset, and the residual side is shared across <code>xj_list</code></p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -21,7 +21,8 @@ camuv_get_child(
   independence,
   alpha,
   ind_corr,
-  reg_fn
+  reg_fn,
+  get_residual = NULL
 )
 ```
 
@@ -66,6 +67,16 @@ camuv_get_child(
 - reg_fn:
 
   regressor function
+
+- get_residual:
+
+  function(v, ids) returning the residual of `X[, v]` regressed on
+  `X[, ids]`; defaults to an uncached
+  [`camuv_get_residual()`](https://morimotoosamu.github.io/lingamr/reference/camuv_get_residual.md)
+  call.
+  [`camuv_find_parents()`](https://morimotoosamu.github.io/lingamr/reference/camuv_find_parents.md)
+  passes a memoized version, since the same (child, predictor set)
+  recurs across subset rescans.
 
 ## Value
 

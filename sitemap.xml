@@ -42,6 +42,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calc_tau.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calc_taus.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/calculate_total_effect.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/calculate_total_effects_all.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_build_adjacency_matrix.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_check_correlation.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/camuv_check_identified_causality.html</loc></url>
@@ -142,8 +143,11 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/glance.ResitResult.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/high_dim_causal_order.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hr_long_ar_order.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_gamma_from_pre.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_gram_matrix.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_kernel_width.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_pre_col_cache.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_precompute.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_sqdist.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/hsic_test_gamma.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/ic_glmnet.html</loc></url>
@@ -169,6 +173,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_log1pexp.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_logcosh.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_loss_mixed.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_matpow.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_obj_grad.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lim_topological_order.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/lingam_camuv.html</loc></url>
@@ -279,6 +284,7 @@
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_sample_args.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/validate_varma_coef_array.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/var_total_effect_graph.html</loc></url>
+<url><loc>https://morimotoosamu.github.io/lingamr/reference/varma_joined_design.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/varma_total_effect_core.html</loc></url>
 <url><loc>https://morimotoosamu.github.io/lingamr/reference/zero_lingam_result.html</loc></url>
 </urlset>

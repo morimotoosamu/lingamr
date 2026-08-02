@@ -13,7 +13,8 @@ is_independent_of_resid(
   MLHSICR,
   independence,
   ind_alpha,
-  ind_corr
+  ind_corr,
+  pre_col = NULL
 )
 ```
 
@@ -49,6 +50,14 @@ is_independent_of_resid(
 - ind_corr:
 
   rejection threshold (fcorr only)
+
+- pre_col:
+
+  function(k) returning the HSIC precompute of `Y[, k]` (see
+  [`hsic_pre_col_cache()`](https://morimotoosamu.github.io/lingamr/reference/hsic_pre_col_cache.md)),
+  or NULL to test without caching; the `Y[, xj]` side of every test is
+  shared across the sink candidates of one subset, and the residual side
+  is shared across `xj_list`
 
 ## Value
 

@@ -7,7 +7,7 @@ where there is nothing left to compare against.
 ## Usage
 
 ``` r
-parce_eval_independence(X, predictors, R, independence)
+parce_eval_independence(X, predictors, R, independence, pre_col = NULL)
 ```
 
 ## Arguments
@@ -27,6 +27,12 @@ parce_eval_independence(X, predictors, R, independence)
 - independence:
 
   "hsic" or "fcorr"
+
+- pre_col:
+
+  per-column HSIC precompute cache from
+  [`hsic_pre_col_cache()`](https://morimotoosamu.github.io/lingamr/reference/hsic_pre_col_cache.md),
+  or NULL to build one locally (hsic only)
 
 ## Value
 
